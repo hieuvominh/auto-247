@@ -1,6 +1,6 @@
 <?php
 define('WP_HOME', 'https://xedep.herokuapp.com');
-define('WP_SITEURL', 'https://xedep.herokuapp.com');
+// define('WP_SITEURL', 'https://xedep.herokuapp.com');
 define('WP_CACHE', true);
 /**
  * The base configuration for WordPress
