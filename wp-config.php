@@ -1,4 +1,7 @@
 <?php
+define('WP_HOME', 'https://xedep.herokuapp.com');
+define('WP_SITEURL', 'https://xedep.herokuapp.com');
+define('WP_CACHE', true);
 /**
  * The base configuration for WordPress
  *
@@ -42,8 +45,7 @@ define('DB_HOST', 'r4wkv4apxn9btls2.cbetxkdyhwsb.us-east-1.rds.amazonaws.com');
 
 define('DB_CHARSET', 'utf8mb4');
 
-define('WP_HOME', 'https://xedep.herokuapp.com');
-define('WP_SITEURL', 'https://xedep.herokuapp.com/');
+
 
 /**#@+
  * Authentication unique keys and salts.
