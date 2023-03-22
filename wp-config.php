@@ -35,13 +35,13 @@ define('WP_CACHE', true);
 define('DB_COLLATE', '');
 
 
-define('DB_NAME', 'w4dg0ekav0q0a215');
+define('DB_NAME', 'sd9dsvn2h1q6ojjt');
 
-define('DB_USER', 'n4z9nqtkqc1ke3gp');
+define('DB_USER', 'd8gxiihd37kmxydi');
 
-define('DB_PASSWORD', 'x3w4dlk7f25hvv1g');
+define('DB_PASSWORD', 'cqo5gcavqsn4o8v9');
 
-define('DB_HOST', 'r4wkv4apxn9btls2.cbetxkdyhwsb.us-east-1.rds.amazonaws.com');
+define('DB_HOST', 'q0h7yf5pynynaq54.cbetxkdyhwsb.us-east-1.rds.amazonaws.com');
 
 define('DB_CHARSET', 'utf8mb4');
 
