@@ -36,7 +36,8 @@ define('DB_CHARSET', 'utf8mb4');
 
 /** The database collate type. Don't change this if in doubt. */
 define('DB_COLLATE', '');
-
+define('WP_HOME', 'https://xedep.herokuapp.com/');
+define('WP_SITEURL', 'https://xedep.herokuapp.com/');
 /**#@+
  * Authentication unique keys and salts.
  *
