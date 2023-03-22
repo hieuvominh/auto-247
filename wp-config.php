@@ -20,24 +20,26 @@
 
 // ** Database settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
-define('DB_NAME', 'w4dg0ekav0q0a215');
+// define('DB_NAME', 'auto247');
 
-/** Database username */
-define('DB_USER', 'n4z9nqtkqc1ke3gp');
+// /** Database username */
+// define('DB_USER', 'root');
 
-/** Database password */
-define('DB_PASSWORD', 'x3w4dlk7f25hvv1g');
+// /** Database password */
+// define('DB_PASSWORD', '');
 
-/** Database hostname */
-define('DB_HOST', 'r4wkv4apxn9btls2.cbetxkdyhwsb.us-east-1.rds.amazonaws.com');
+// /** Database hostname */
+// define('DB_HOST', 'localhost');
 
 /** Database charset to use in creating database tables. */
-define('DB_CHARSET', 'utf8mb4');
+define('DB_NAME', 'w4dg0ekav0q0a215');
+define('DB_USER', 'n4z9nqtkqc1ke3gp');
+define('DB_PASSWORD', 'x3w4dlk7f25hvv1g');
+define('DB_HOST', 'r4wkv4apxn9btls2.cbetxkdyhwsb.us-east-1.rds.amazonaws.com');
 
-/** The database collate type. Don't change this if in doubt. */
-define('DB_COLLATE', '');
 define('WP_HOME', 'https://xedep.herokuapp.com/');
 define('WP_SITEURL', 'https://xedep.herokuapp.com/');
+
 /**#@+
  * Authentication unique keys and salts.
  *
