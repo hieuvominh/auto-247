@@ -34,7 +34,6 @@
 // /** Database charset to use in creating database tables. */
 // define( 'DB_CHARSET', 'utf8mb4' );
 
-define('DB_COLLATE', '');
 
 define('DB_NAME', 'w4dg0ekav0q0a215');
 
