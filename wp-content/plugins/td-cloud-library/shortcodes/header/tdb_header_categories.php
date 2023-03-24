@@ -8,12 +8,110 @@ class tdb_header_categories extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+                
+                /* @style_general_header_categories */
+                .tdb_header_categories {
+                  margin-bottom: 0;
+                  z-index: 1000;
+                  clear: none;
+                }
+                .tdb_header_categories .tdb-block-inner {
+                  display: inline-block;
+                }
+                .tdb_header_categories .tdb-block-inner:hover .tdb-head-cat-list {
+                  visibility: visible;
+                  opacity: 1;
+                  -webkit-transform: translate3d(0, 0, 0);
+                  transform: translate3d(0, 0, 0);
+                }
+                .tdb_header_categories .tdb-head-cat-toggle {
+                  cursor: pointer;
+                  text-align: center;
+                }
+                .tdb_header_categories .tdb-head-cat-toggle-svg {
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                }
+                .tdb_header_categories .tdb-head-cat-toggle-svg svg {
+                  height: auto;
+                }
+                .tdb_header_categories .tdb-head-cat-list {
+                  visibility: hidden;
+                  opacity: 0;
+                  position: absolute;
+                  top: auto;
+                  left: 0;
+                  width: 210px;
+                  padding: 15px 30px;
+                  background-color: #fff;
+                  -webkit-transform: translate3d(0, 20px, 0);
+                  transform: translate3d(0, 20px, 0);
+                  -webkit-transition: all 0.4s ease;
+                  transition: all 0.4s ease;
+                  z-index: 10;
+                }
+                .tdb_header_categories .tdb-head-cat-list-inner {
+                  display: flex;
+                  flex-wrap: wrap;
+                  margin: 0 -10px;
+                }
+                .tdb_header_categories .tdb-head-cat-item {
+                  padding: 0 10px;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 12px;
+                  line-height: 20px;
+                }
+                .tdb_header_categories .tdb-head-cat-item a {
+                  position: relative;
+                  padding: 10px 0;
+                  display: block;
+                  background-size: cover;
+                  background-position: center center;
+                  color: #111;
+                  -webkit-transform: translateZ(0);
+                  transform: translateZ(0);
+                  overflow: hidden;
+                  pointer-events: auto;
+                }
+                .tdb_header_categories .tdb-head-cat-item a:hover {
+                  color: #4db2ec;
+                }
+                .tdb_header_categories .tdb-head-cat-item a:before,
+                .tdb_header_categories .tdb-head-cat-item a .tdb-head-cat-overlay {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  z-index: -1;
+                }
+                .tdb_header_categories .tdb-head-cat-item a .tdb-head-cat-txt {
+                  z-index: 1;
+                }
+                .tdc-dragged .tdb-head-cat-list {
+                  visibility: hidden !important;
+                  opacity: 0 !important;
+                  -webkit-transition: all 0.3s ease;
+                  transition: all 0.3s ease;
+                }
+
                 
                 /* @disable_hover */
                 .$unique_block_class:not(.tdc-element-selected) .tdb-head-cat-list {
@@ -65,11 +163,20 @@ class tdb_header_categories extends td_block {
                 .$unique_block_class .tdb-head-cat-toggle {
                     font-size: @icon_size;
                 }
+                /* @svg_size */
+                .$unique_block_class .tdb-head-cat-toggle svg {
+                    width: @svg_size;
+                }
                 /* @icon_padding */
                 .$unique_block_class .tdb-head-cat-toggle {
                     width: @icon_padding;
 					height: @icon_padding;
 					line-height:  @icon_padding;
+                }
+                /* @icon_svg_padding */
+                .$unique_block_class .tdb-head-cat-toggle-svg {
+                    width: @icon_svg_padding;
+					height: @icon_svg_padding;
                 }
                 
                 
@@ -138,9 +245,17 @@ class tdb_header_categories extends td_block {
                 .$unique_block_class .tdb-head-cat-toggle {
                     color: @icon_color;
                 }
+                .$unique_block_class .tdb-head-cat-toggle-svg svg,
+                .$unique_block_class .tdb-head-cat-toggle-svg svg * {
+                    fill: @icon_color;
+                }
                 /* @icon_color_h */
                 .$unique_block_class .tdb-block-inner:hover .tdb-head-cat-toggle {
                     color: @icon_color_h;
+                }
+                .$unique_block_class .tdb-block-inner:hover .tdb-head-cat-toggle-svg svg,
+                .$unique_block_class .tdb-block-inner:hover .tdb-head-cat-toggle-svg svg * {
+                    fill: @icon_color_h;
                 }
                 
                 /* @bg_color */
@@ -222,6 +337,9 @@ class tdb_header_categories extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_header_categories', 1 );
+        $res_ctx->load_settings_raw( 'style_general_header_align', 1 );
+
         // show list
         if ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) {
             $res_ctx->load_settings_raw('disable_hover', 1);
@@ -242,11 +360,18 @@ class tdb_header_categories extends td_block {
 
 
         /*-- ICON -- */
+        $icon = $res_ctx->get_icon_att( 'tdicon' );
         // icon size
         $icon_size = $res_ctx->get_shortcode_att('icon_size');
-        $res_ctx->load_settings_raw('icon_size', $icon_size . 'px');
+        $res_ctx->load_settings_raw( 'icon_size', $icon_size . 'px');
+        if( base64_encode( base64_decode( $icon ) ) == $icon ) {
+            $res_ctx->load_settings_raw( 'svg_size', $icon_size . 'px' );
+        }
         // icon padding
         $res_ctx->load_settings_raw('icon_padding', $icon_size * $res_ctx->get_shortcode_att('icon_padding') . 'px');
+        if( base64_encode( base64_decode( $icon ) ) == $icon ) {
+            $res_ctx->load_settings_raw('icon_svg_padding', $icon_size * $res_ctx->get_shortcode_att('icon_padding') . 'px');
+        }
 
 
 
@@ -362,9 +487,20 @@ class tdb_header_categories extends td_block {
         parent::render( $atts ); // sets the live atts, $this->atts, $this->block_uid, $this->td_query (it runs the query)
 
         // toggle icon
-        $toggle_icon = $this->get_att('tdicon');
+        $toggle_icon = $this->get_icon_att('tdicon');
+        $tdicon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $tdicon_data = 'data-td-svg-icon="' . $this->get_att('tdicon') . '"';
+        }
+        $toggle_icon_html = '';
         if( $toggle_icon == '' ) {
-            $toggle_icon = 'td-icon-mobile';
+            $toggle_icon_html = '<i class="tdb-head-cat-toggle td-icon-mobile"></i>';
+        } else {
+            if( base64_encode( base64_decode( $toggle_icon ) ) == $toggle_icon ) {
+                $toggle_icon_html = '<span class="tdb-head-cat-toggle tdb-head-cat-toggle-svg" ' . $tdicon_data . '>' . base64_decode( $toggle_icon ) . '</span>';
+            } else {
+                $toggle_icon_html = '<i class="tdb-head-cat-toggle ' . $toggle_icon . '"></i>';
+            }
         }
 
 
@@ -409,7 +545,7 @@ class tdb_header_categories extends td_block {
 
             $buffy .= '<div class="tdb-block-inner td-fix-index">';
 
-                $buffy .= '<i class="tdb-head-cat-toggle ' . $toggle_icon . '"></i>';
+                $buffy .= $toggle_icon_html;
 
                 $buffy .= '<div class="tdb-head-cat-list">';
                     $buffy .= '<div class="tdb-head-cat-list-inner">';

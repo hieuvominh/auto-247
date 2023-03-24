@@ -22,6 +22,14 @@ abstract class tdb_module {
         $this->title_attribute = $this->post['post_title_attribute'];
         $this->href            = $this->post['post_link'];
 
+        // create a post obj for the unique posts filter
+        $wp_post_obj = new stdClass();
+        $wp_post_obj->ID = $this->post['post_id']; // we add just the id for now @todo if we need other post properties set here..
+
+        // this filter is used by td_unique_posts.php - to add unique posts to the td_unique_posts::$rendered_posts_ids array
+        // ... to be applied in the tdb_state_single_page->loop as 'post__not_in' wp query args
+        apply_filters( "td_wp_booster_module_constructor", $this, new WP_Post( $wp_post_obj ) );
+
         if ( has_post_thumbnail( $this->post['post_id'] ) ) {
             $tmp_get_post_thumbnail_id = get_post_thumbnail_id( $this->post['post_id'] );
             if ( !empty( $tmp_get_post_thumbnail_id ) ) {
@@ -79,42 +87,108 @@ abstract class tdb_module {
     function get_author_photo() {
         $buffy = '';
 
-        $buffy .= '<a href="' . $this->post['post_author_url'] . '" class="tdb-author-photo">' . get_avatar( $this->post['post_author_email'], '96' ) . '</a>';
+        $buffy .= '<a href="' . $this->post['post_author_url'] . '" aria-label="author-photo" rel="nofollow" class="tdb-author-photo">' . get_avatar( $this->post['post_author_email'], '96' ) . '</a>';
 
         return $buffy;
     }
 
-    function get_author() {
+    function get_author($show_when_review = false) {
         $buffy = '';
 
-        if (td_util::get_option('tds_m_show_author_name') != 'hide') {
-            $buffy .= '<span class="td-post-author-name">';
-                $buffy .= '<a href="' . $this->post['post_author_url'] . '">' . $this->post['post_author_name'] . '</a>';
-                if (td_util::get_option('tds_m_show_author_name') != 'hide' and td_util::get_option('tds_m_show_date') != 'hide') {
-                    $buffy .= ' <span>-</span> ';
-                }
-            $buffy .= '</span>';
+        if ($show_when_review or ($this->is_review === false or td_util::get_option('tds_m_show_review') == 'hide')) {
+            if (td_util::get_option('tds_m_show_author_name') != 'hide') {
+                $buffy .= '<span class="td-post-author-name">';
+                    $buffy .= '<a href="' . $this->post['post_author_url'] . '">' . $this->post['post_author_name'] . '</a>';
+                    if (td_util::get_option('tds_m_show_author_name') != 'hide' and td_util::get_option('tds_m_show_date') != 'hide') {
+                        $buffy .= ' <span>-</span> ';
+                    }
+                $buffy .= '</span>';
+            }
         }
 
         return $buffy;
     }
 
-    function get_date($modified_date = '') {
+    function get_date($modified_date = '', $show_when_review = false, $time_ago = '', $time_ago_add_txt = '', $time_ago_txt_pos = '') {
         $visibility_class = '';
         if ( td_util::get_option('tds_m_show_date') == 'hide' ) {
             $visibility_class = ' td-visibility-hidden';
         }
 
         $buffy = '';
-        if (td_util::get_option('tds_m_show_date') != 'hide') {
-            
-            $buffy .= '<span class="td-post-date">';
-            if ($modified_date == 'yes' || td_util::get_option('tds_m_show_modified_date') == 'yes') {
-                $buffy .= '<time class="entry-date updated td-module-date' . $visibility_class . '" datetime="' . date(DATE_W3C, $this->post['post_date_unix']) . '" >' . $this->post['post_modified'] . '</time>';
-            }else {
-                $buffy .= '<time class="entry-date updated td-module-date' . $visibility_class . '" datetime="' . date(DATE_W3C, $this->post['post_date_unix']) . '" >' . $this->post['post_date'] . '</time>';
-            }
+        if (!$show_when_review and ( $this->is_review and td_util::get_option('tds_m_show_review') != 'hide' )) {
+            //if review show stars
+            $buffy .= '<span class="entry-review-stars">';
+            $buffy .=  td_review::render_stars($this->td_review);
             $buffy .= '</span>';
+
+        } else {
+            if (td_util::get_option('tds_m_show_date') != 'hide') {
+
+                global $wp_version;
+                //old WP support
+                if (version_compare($wp_version, '5.3', '<')) {
+                    $td_article_date = date(DATE_W3C, $this->post['post_date_unix']);
+                    $td_article_modified_date = date(DATE_W3C, $this->post['post_date_unix']);
+                } else {
+                    // get_post_datetime() used from WP 5.3
+                    $td_article_date = get_post_datetime($this->post["post_id"], 'date', 'gmt');
+                    if ($td_article_date !== false) {
+                        $td_article_date = $td_article_date->format(DATE_W3C);
+                    }
+                    $td_article_modified_date = get_post_datetime($this->post["post_id"], 'modified', 'gmt');
+                    if ($td_article_modified_date !== false) {
+                        $td_article_modified_date = $td_article_modified_date->format(DATE_W3C);
+                    }
+                }
+
+                $buffy .= '<span class="td-post-date">';
+                    if ($modified_date == 'yes' || td_util::get_option('tds_m_show_modified_date') == 'yes') {
+                        $display_modified_date = $this->post['post_modified'];
+
+                        if( $time_ago != '' ) {
+                            $current_time = current_time( 'timestamp' );
+                            $post_time_u  = get_the_modified_date('U', $this->post["post_id"] );
+                            $diff = (int) abs( $current_time - $post_time_u );
+
+                            if ( $diff < WEEK_IN_SECONDS ) {
+                                $display_modified_date = human_time_diff( $post_time_u, $current_time );
+                                if( $time_ago_add_txt != '' ) {
+                                    if ( $time_ago_txt_pos == 'yes' ) {
+                                        $display_modified_date = $time_ago_add_txt . ' ' . $display_modified_date;
+
+                                    } else {
+                                        $display_modified_date .= ' ' . $time_ago_add_txt;
+                                    }
+                                }
+                            }
+                        }
+
+                        $buffy .= '<time class="entry-date updated td-module-date' . $visibility_class . '" datetime="' . $td_article_modified_date . '" >' . $display_modified_date . '</time>';
+                    } else {
+                        $display_date = $this->post['post_date'];
+
+                        if( $time_ago != '' ) {
+                            $current_time = current_time( 'timestamp' );
+                            $post_time_u  = get_the_time('U', $this->post["post_id"] );
+                            $diff = (int) abs( $current_time - $post_time_u );
+
+                            if ( $diff < WEEK_IN_SECONDS ) {
+                                $display_date = human_time_diff( $post_time_u, $current_time );
+                                if( $time_ago_add_txt != '' ) {
+                                    if ( $time_ago_txt_pos == 'yes' ) {
+                                        $display_date = $time_ago_add_txt . ' ' . $display_date;
+                                    } else {
+                                        $display_date .= ' ' . $time_ago_add_txt;
+                                    }
+                                }
+                            }
+                        }
+
+                        $buffy .= '<time class="entry-date updated td-module-date' . $visibility_class . '" datetime="' . $td_article_date . '" >' . $display_date . '</time>';
+                    }
+                $buffy .= '</span>';
+            }
         }
 
         return $buffy;
@@ -145,9 +219,15 @@ abstract class tdb_module {
         return $buffy;
     }
 
-    function get_title( $cut_at = '' ) {
+    function get_title( $cut_at = '', $title_tag = '' ) {
+
+        $module_title_tag = 'h3';
+        if ( $title_tag != '' ) {
+            $module_title_tag = $title_tag;
+        }
+        
         $buffy = '';
-        $buffy .= '<h3 class="entry-title td-module-title">';
+        $buffy .= '<' . $module_title_tag . ' class="entry-title td-module-title">';
         $buffy .='<a href="' . $this->href . '" rel="bookmark" title="' . $this->title_attribute . '">';
 
         //see if we have to cut the title and if we have the title lenght in the panel for ex: td_module_6__title_excerpt
@@ -179,7 +259,7 @@ abstract class tdb_module {
 
         }
         $buffy .='</a>';
-        $buffy .= '</h3>';
+        $buffy .= '</' . $module_title_tag . '>';
         return $buffy;
     }
 
@@ -269,19 +349,38 @@ abstract class tdb_module {
                     $td_temp_image_url[2] = $td_thumb_parameters['height'];
                 }
 
+                $custom_placeholder = td_util::get_option('tds_thumb_placeholder');
+
+                if ( $custom_placeholder != '' && !empty($_wp_additional_image_sizes) && array_key_exists($thumbType, $_wp_additional_image_sizes) ) {
+                    global $wpdb;
+                    $placeholder_id = $wpdb->get_col($wpdb->prepare("SELECT ID FROM $wpdb->posts WHERE guid='%s';", $custom_placeholder ));
+                    $td_temp_image_url = wp_get_attachment_image_src($placeholder_id[0], $thumbType);
+                } else if( $custom_placeholder != '' ) {
+                    $td_temp_image_url[0] = $custom_placeholder;
+                } else {
+                    // For custom wordpress sizes (not 'thumbnail', 'medium', 'medium_large' or 'large'), get the image path using the api (no_image_path)
+                    if (strpos($thumbType, 'td_') === 0) {
+                        $no_thumb_path = rtrim(td_api_thumb::get_key($thumbType, 'no_image_path'), '/');
+                        $td_temp_image_url[0] = $no_thumb_path . '/images/no-thumb/' . $thumbType . '.png';
+                    } else {
+                        $no_thumb_path = td_global::$get_template_directory_uri;
+
+                        if ( strpos( $thumbType, 'td_' ) === 0 ) {
+                            $no_thumb_path = rtrim( td_api_thumb::get_key( $thumbType, 'no_image_path' ), '/');
+                        }
+
+                        $td_temp_image_url[0] = $no_thumb_path . '/images/no-thumb/' . $thumbType . '.png';
+                    }
+                }
+
                 /**
                  * for custom wp sizes (not 'thumbnail', 'medium', 'medium_large' or 'large'), get the image path using the api (no_image_path)
                  */
-                $no_thumb_path = td_global::$get_template_directory_uri;
 
-                if ( strpos( $thumbType, 'td_' ) === 0 ) {
-                    $no_thumb_path = rtrim( td_api_thumb::get_key( $thumbType, 'no_image_path' ), '/');
-                }
-
-                $td_temp_image_url[0] = $no_thumb_path . '/images/no-thumb/' . $thumbType . '.png';
             }
 
             $buffy .= '<div class="td-module-thumb">';
+                $post_type = get_post_format($this->post['post_id']);
 
                 // the edit link
                 if ( $this->post['post_type'] === 'sample' ) {
@@ -294,7 +393,55 @@ abstract class tdb_module {
                     }
                 }
 
-                $buffy .= '<a href="' . $this->href . '" rel="bookmark" class="td-image-wrap" title="' . $this->title_attribute . '">';
+                $video_popup_class = '';
+                $video_popup_data = '';
+                if ( $post_type == 'video' && isset($this->module_atts['video_popup']) && $this->module_atts['video_popup'] != '' ) {
+                    $video_url = get_post_meta($this->post['post_id'], 'td_post_video');
+
+                    $autoplay_vid = '';
+                    if( isset($this->module_atts['autoplay_vid']) ) {
+                        $autoplay_vid = $this->module_atts['autoplay_vid'];
+                    }
+
+                    if( isset($video_url[0]['td_video']) && $video_url[0]['td_video'] != '' ) {
+                        $video_source = td_video_support::detect_video_service($video_url[0]['td_video']);
+
+                        $video_popup_class = 'td-module-video-modal';
+                        $video_popup_data = 'data-video-source="' . $video_source . '" data-video-autoplay="' . $autoplay_vid . '" data-video-url="'. $video_url[0]['td_video'] . '"';
+                        $video_rec = rawurldecode( base64_decode( strip_tags( $this->module_atts['video_rec'] ) ) );
+
+                        $video_popup_ad = array(
+                            'code' => do_shortcode( stripslashes( $video_rec ) ),
+                            'title' => $this->module_atts['video_rec_title'],
+                            'disable' => false,
+                        );
+
+                        if( $this->module_atts['video_rec_disable'] != '' && ( current_user_can('administrator') || current_user_can('editor') ) ) {
+                            $video_popup_ad['disable'] = true;
+                        }
+
+                        if( $video_popup_ad['code'] == '' ) {
+                            $video_popup_ad['code'] = stripslashes( td_options::get( 'tds_modal_video_ad') );
+                        }
+                        if( $video_popup_ad['title'] == '' ) {
+                            $video_popup_ad['title'] = td_options::get( 'tds_modal_video_ad_title');
+                        }
+                        if( !$video_popup_ad['disable'] && ( current_user_can('administrator') || current_user_can('editor') ) ) {
+                            if( td_options::get( 'tds_modal_video_ad_disable') != '' ) {
+                                $video_popup_ad['disable'] = true;
+                            }
+                        }
+
+                        if( $video_popup_ad['code'] != '' ) {
+                            $video_popup_data .= 'data-video-rec="' . base64_encode( json_encode($video_popup_ad) ) . '"';
+                        }
+                    }
+                }
+                $nofollow = '';
+                if ( td_util::get_option('tds_m_nofollow_image') == 'yes') {
+                    $nofollow = 'nofollow ';
+                }
+                $buffy .= '<a href="' . $this->href . '" rel="' . $nofollow . 'bookmark" class="td-image-wrap ' . $video_popup_class . '" title="' . $this->title_attribute . '" ' . $video_popup_data . '>';
 
                 $tds_animation_stack = td_util::get_option('tds_animation_stack');
 
@@ -338,9 +485,6 @@ abstract class tdb_module {
 
                 $buffy .= '<span class="entry-thumb td-thumb-css ' . $retina_uuid . '" style="background-image: url(' . $td_temp_image_url[0] . ')"></span>';
             }
-
-            // on video or audio type posts add the specific icon
-            $post_type = get_post_format($this->post['post_id']);
 
             if ($post_type == 'video' || $post_type == 'audio') {
 
@@ -419,6 +563,35 @@ abstract class tdb_module {
 
     }
 
+
+    /**
+     * This method is used by modules to get the featured video duration
+     * @return string
+     */
+    function get_video_duration() {
+
+        $buffy = '';
+
+        if( get_post_format( $this->post['post_id'] ) == 'video' ) {
+            $video_url = get_post_meta($this->post['post_id'], 'td_post_video');
+
+            if( isset($video_url[0]['td_video']) && $video_url[0]['td_video'] != '' ) {
+                if ( metadata_exists('post', $this->post['post_id'], 'td_post_video_duration') ) {
+                    $video_duration = get_post_meta( $this->post['post_id'], 'td_post_video_duration', true );
+                } else {
+                    $video_duration = td_video_support::get_video_duration($video_url[0]['td_video']);
+                    update_post_meta( $this->post['post_id'], 'td_post_video_duration', $video_duration );
+                }
+
+                $buffy .= '<div class="td-post-vid-time">' . $video_duration . '</div>';
+            }
+        }
+
+        return $buffy;
+
+    }
+
+
     function get_category() {
 
         $buffy = '';
@@ -490,6 +663,13 @@ abstract class tdb_module {
             die;
         }
 
-        return $this->module_atts[$att_name];
+        $attr_value = $this->module_atts[$att_name];
+        if (strpos($attr_value, 'td_encval') === 0) {
+            $attr_value = str_replace('td_encval', '', $attr_value);
+            $attr_value = base64_decode($attr_value);
+        }
+
+        return $attr_value;
+
     }
 }

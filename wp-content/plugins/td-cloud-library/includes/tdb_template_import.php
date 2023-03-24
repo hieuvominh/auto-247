@@ -1,13 +1,23 @@
 <?php
 ?>
-<div id="tdb-modal" style="display: none;">
+<div id="tdb-modal" style="display: none">
     <router-view></router-view>
+</div>
+
+<div id="tdb-modal-website-manager" style="display: none" class="tdw-drag-dialog tdc-window-sidebar">
+    <header class="tdb-wm-header-drag"></header>
+    <div class="tdw-content">
+        <router-view></router-view>
+    </div>
+    <footer>
+        <div class="tdw-resize"></div>
+    </footer>
 </div>
 
 <div id="tdb-es6-not-supported" style="display: none;">
     <div class="tdb-es6-wrap">
         <div class="tdb-es6-content">
-            <h1 class="tdb-es6-title">Javascript ES6 not supported</h1>
+            <span class="tdb-es6-title" style="display: block;font-size: 2em;color: #23282d;margin: .67em 0;">Javascript ES6 not supported</span>
             <div class="tdb-es6-message">This feature is not available on this browser. Please use a browser that supports javascript ES6:</div>
             <table>
                 <tr>

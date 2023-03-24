@@ -3,13 +3,97 @@ class tdb_single_post_share extends td_block {
 
 	public function get_custom_css() {
 		// $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-		$unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
 
-		$compiled_css = '';
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
+
+        $compiled_css = '';
 
 		$raw_css =
 			"<style>
 
+				/* @style_general_single_post_share */
+				.tdb_single_post_share {
+                  margin-bottom: 23px;
+                }
+                .tdb-share-classic {
+                  position: relative;
+                  height: 20px;
+                  margin-bottom: 15px;
+                }
+
+				
+				
+				/* @share_radius */
+                .$unique_block_class .td-social-share-text {
+                    border-radius: @share_radius;
+                }
+				
+				/* @btn_radius_general */
+                .$unique_block_class .td-social-network .td-social-but-icon {
+                    border-top-left-radius: @btn_radius_general;
+                    border-bottom-left-radius: @btn_radius_general;
+                }
+                .$unique_block_class .td-social-network .td-social-but-text {
+                    border-top-right-radius: @btn_radius_general;
+                    border-bottom-right-radius: @btn_radius_general;
+                }
+                .$unique_block_class .td-social-expand-tabs {
+                    border-radius: @btn_radius_general;
+                }
+                
+                /* @btn_radius_td-ps-notext */
+				.$unique_block_class .td-ps-notext .td-social-network .td-social-but-icon,
+                .$unique_block_class .td-ps-notext .td-social-handler .td-social-but-icon {
+                    border-top-right-radius: @btn_radius_td-ps-notext;
+                    border-bottom-right-radius: @btn_radius_td-ps-notext;
+                }
+                
+                
+                /* @btn_radius_td-ps-rounded */
+                .$unique_block_class .td-ps-rounded .td-social-network .td-social-but-icon {
+                    border-top-left-radius: @btn_radius_td-ps-rounded;
+                    border-bottom-left-radius: @btn_radius_td-ps-rounded;
+                }
+                .$unique_block_class .td-ps-rounded .td-social-network .td-social-but-text {
+                    border-top-right-radius: @btn_radius_td-ps-rounded;
+                    border-bottom-right-radius: @btn_radius_td-ps-rounded;
+                }
+                .$unique_block_class .td-ps-rounded.td-ps-notext .td-social-network .td-social-but-icon {
+                    border-top-right-radius: @btn_radius_td-ps-rounded;
+                    border-bottom-right-radius: @btn_radius_td-ps-rounded;
+                }
+                .$unique_block_class .td-ps-rounded .td-social-expand-tabs {
+                    border-radius: @btn_radius_td-ps-rounded;
+                }
+                
+                /* @btn_radius_td-ps-padding_td-ps-big */
+                .$unique_block_class .td-ps-big.td-ps-padding .td-social-but-icon {
+                    border-bottom-left-radius: 0;
+                    border-top-right-radius: @btn_radius_td-ps-padding_td-ps-big;
+                }
+                .$unique_block_class .td-ps-big.td-ps-padding .td-social-but-text {
+                    border-top-left-radius: 0;
+                    border-top-right-radius: 0;
+                    border-bottom-left-radius: @btn_radius_td-ps-padding_td-ps-big;
+                }
+                
+				/* @btn_radius_icon_before */
+                .$unique_block_class .td-social-network .td-social-but-icon:before {
+                    border-top-left-radius: @btn_radius_icon_before;
+                    border-bottom-left-radius: @btn_radius_icon_before;
+                }
+
+				
+				
 				/* @align_center */
 				.$unique_block_class .td-post-sharing,
 				.$unique_block_class .tdb-share-classic {
@@ -58,6 +142,7 @@ class tdb_single_post_share extends td_block {
 				}
 				
 				/* @btn_i_color */
+				.$unique_block_class .td-social-network .td-social-but-icon .td-social-copy_url-check,
 				.$unique_block_class .td-social-network .td-social-but-icon i {
 					color: @btn_i_color;
 				}
@@ -100,9 +185,70 @@ class tdb_single_post_share extends td_block {
 
 	static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_single_post_share', 1 );
+
+		/*-- LAYOUT -- */
+        $like_share_style = $res_ctx->get_shortcode_att('like_share_style');
+        if( $like_share_style == '' ) {
+            $like_share_style = 'style1';
+        }
+
+        $share_radius = $res_ctx->get_shortcode_att('share_radius');
+        if( $share_radius != '' && is_numeric( $share_radius ) ) {
+            $res_ctx->load_settings_raw( 'share_radius', $share_radius . 'px' );
+        }
+
+        $btn_radius = $res_ctx->get_shortcode_att('btn_radius');
+        if( $btn_radius != '' && is_numeric( $btn_radius ) ) {
+            $res_ctx->load_settings_raw( 'btn_radius_general', $btn_radius . 'px' );
+        }
+
+        switch ( $like_share_style ) {
+            case 'style1':
+            case 'style3':
+            case 'style5':
+            case 'style8':
+            case 'style10':
+            case 'style12':
+            case 'style14':
+            case 'style16':
+                if( $btn_radius != '' && is_numeric( $btn_radius ) ) {
+                    $res_ctx->load_settings_raw( 'btn_radius_td-ps-notext', $btn_radius . 'px' );
+                }
+
+                break;
+
+            case 'style3':
+            case 'style4':
+            case 'style18':
+                if( $btn_radius != '' && is_numeric( $btn_radius ) ) {
+                    $res_ctx->load_settings_raw( 'btn_radius_td-ps-rounded', $btn_radius . 'px' );
+                }
+
+                break;
+
+            case 'style9':
+            case 'style11':
+            case 'style13':
+                if( $btn_radius != '' && is_numeric( $btn_radius ) ) {
+                    $res_ctx->load_settings_raw( 'btn_radius_td-ps-padding_td-ps-big', $btn_radius . 'px' );
+                }
+
+                break;
+
+            case 'style7':
+                if( $btn_radius != '' && is_numeric( $btn_radius ) ) {
+                    $res_ctx->load_settings_raw( 'btn_radius_icon_before', $btn_radius . 'px' );
+                }
+
+                break;
+        }
+
+
 		/*-- FONTS -- */
 		$res_ctx->load_font_settings( 'f_share' );
 		$res_ctx->load_font_settings( 'f_txt' );
+
 
 		/*-- COLORS -- */
 		$res_ctx->load_settings_raw( 'share_i_color', $res_ctx->get_shortcode_att('share_i_color') );
@@ -131,30 +277,54 @@ class tdb_single_post_share extends td_block {
         parent::disable_loop_block_features();
     }
 
-
     function render( $atts, $content = null ) {
         parent::render( $atts ); // sets the live atts, $this->atts, $this->block_uid, $this->td_query (it runs the query)
 
 	    global $tdb_state_single;
-	    $post_socials_data = $tdb_state_single->post_socials->__invoke( $this->get_all_atts() );
+//        var_dump(tdb_state_template::get_template_type());
 
-        $buffy = ''; //output buffer
+	    if ( tdb_state_template::get_template_type() === 'woo_product'  ) {
+		    global $td_woo_state_single_product_page;
+
+		    // update the hide like btn attribute to hide it all the time
+		    $atts['like'] = 'yes';
+
+		    $post_socials_data = $td_woo_state_single_product_page->product_socials->__invoke( $this->get_all_atts() );
+	    } elseif ( is_page() || 'page' === tdb_state_template::get_template_type() ) {
+            global $tdb_state_single_page;
+
+		    // update the hide like btn attribute to hide it all the time
+		    $atts['like'] = 'yes';
+
+		    $post_socials_data = $tdb_state_single_page->page_socials->__invoke( $this->get_all_atts() );
+	    } else {
+		    $post_socials_data = $tdb_state_single->post_socials->__invoke( $this->get_all_atts() );
+	    }
+
+        $buffy = ''; // output buffer
 
         $buffy .= '<div class="' . $this->get_block_classes() . '" ' . $this->get_block_html_atts() . '>';
 
-	        //get the block css
+	        // get the block css
 	        $buffy .= $this->get_block_css();
 
-	        //get the js for this block
+	        // get the js for this block
 	        $buffy .= $this->get_block_js();
 
-		    if( $this->get_att( 'like' ) !== 'yes' and $post_socials_data['is_amp'] === false ) {
+	        // like button
+	        $show_like_btn = isset( $atts['like'] ) && $atts['like'] !== 'yes';
+
+	        // is amp
+	        $is_amp = $post_socials_data['is_amp'];
+
+		    if( $show_like_btn and !$is_amp ) {
 
 			    $buffy .= '<div class="tdb-share-classic">';
-			        $buffy .= '<iframe frameBorder="0" src="' . td_global::$http_or_https . '://www.facebook.com/plugins/like.php?href=' . $post_socials_data['post_permalink'] . '&amp;layout=button_count&amp;show_faces=false&amp;width=105&amp;action=like&amp;colorscheme=light&amp;height=21" style="border:none; overflow:hidden; width:105px; height:21px; background-color:transparent;"></iframe>';
+			        $buffy .= '<iframe title="Share article" frameBorder="0" src="' . td_global::$http_or_https . '://www.facebook.com/plugins/like.php?href=' . $post_socials_data['post_permalink'] . '&amp;layout=button_count&amp;show_faces=false&amp;width=105&amp;action=like&amp;colorscheme=light&amp;height=21" style="border:none; overflow:hidden; width:105px; height:21px; background-color:transparent;"></iframe>';
 			    $buffy .= '</div>';
+
 		    }
-		    //$buffy .= td_social_sharing::render_generic( $post_socials_data, 'td_social_sharing_article');
+
 		    $buffy .= td_social_sharing::render_generic( $post_socials_data, $this->block_uid );
 
 	    $buffy .= '</div>';

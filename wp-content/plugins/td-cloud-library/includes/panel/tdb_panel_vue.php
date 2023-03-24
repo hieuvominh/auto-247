@@ -21,6 +21,7 @@ class tdb_panel_vue {
 
 		$buffy = array();
 		$data_type = td_util::get_http_post_val('td_data_type');
+		$woo_template_type = td_util::get_http_post_val('td_woo_template_type');
 
 		switch($data_type) {
 			case 'author-templates':
@@ -47,6 +48,10 @@ class tdb_panel_vue {
                 $tag_data = self::get_tag_data();
                 $buffy = array_merge($buffy, $tag_data);
 				break;
+			case 'woo-templates':
+	            $woo_data = self::get_template_data($woo_template_type);
+	            $buffy = array_merge($buffy, $woo_data);
+				break;
 			default:
 				die;
 		}
@@ -67,10 +72,21 @@ class tdb_panel_vue {
      */
     private static function get_template_data( $template_type ) {
 
-        // the template type panel option
-        $template = td_util::get_option('tdb_' . $template_type . '_template');
+		$option_id = 'tdb_' . $template_type . '_template';
+		if ( class_exists( 'SitePress', false ) ) {
+			global $sitepress;
+			$sitepress_settings = $sitepress->get_settings();
+			if ( isset($sitepress_settings['custom_posts_sync_option'][ 'tdb_templates']) ) {
+				$translation_mode = (int)$sitepress_settings['custom_posts_sync_option']['tdb_templates'];
+				if (1 === $translation_mode) {
+					$option_id .= $sitepress->get_current_language();
+				}
+			}
+		}
 
-        // check the template id .. if is not a valid id set an empty string
+        // the template type panel option
+        $template = td_util::get_option($option_id);
+		// check the template id .. if is not a valid id set an empty string
         $tdb_panel_template_id = td_global::is_tdb_template( $template, true ) ? $template : '';
 
         // return a list of available templates and the panel set template id
@@ -95,8 +111,20 @@ class tdb_panel_vue {
 		$wp_users_list = self::get_wp_users();
 		//tdb templates
 		$tdb_author_templates = self::get_tdb_templates( 'author' );
+
+		$option_id = 'tdb_author_templates';
+		if ( class_exists( 'SitePress', false ) ) {
+			global $sitepress;
+			$sitepress_settings = $sitepress->get_settings();
+			if ( isset($sitepress_settings['custom_posts_sync_option'][ 'tdb_templates']) ) {
+				$translation_mode = (int)$sitepress_settings['custom_posts_sync_option']['tdb_templates'];
+				if (1 === $translation_mode) {
+					$option_id .= $sitepress->get_current_language();
+				}
+			}
+		}
 		//theme panel
-		$panel_author_templates = td_util::get_option('tdb_author_templates');
+		$panel_author_templates = td_util::get_option( $option_id );
 
 		foreach ( $wp_users_list as $user ) {
 			$tdb_template_id = '';
@@ -117,10 +145,22 @@ class tdb_panel_vue {
 			);
 		}
 
+		$option_id = 'tdb_author_template';
+		if ( class_exists( 'SitePress', false ) ) {
+			global $sitepress;
+			$sitepress_settings = $sitepress->get_settings();
+			if ( isset($sitepress_settings['custom_posts_sync_option'][ 'tdb_templates']) ) {
+				$translation_mode = (int)$sitepress_settings['custom_posts_sync_option']['tdb_templates'];
+				if (1 === $translation_mode) {
+					$option_id .= $sitepress->get_current_language();
+				}
+			}
+		}
+
 		return array(
 			'td_users_list' => $td_users_list,
 			'td_author_templates' => $tdb_author_templates,
-            'tdb_panel_general_template_id' => td_util::get_option('tdb_author_template')
+            'tdb_panel_general_template_id' => td_util::get_option( $option_id )
 		);
 	}
 
@@ -131,13 +171,28 @@ class tdb_panel_vue {
 	private static function get_tag_data() {
 
 		$tag_data = self::get_template_data( 'tag' );
-        $tdb_tag_templates = td_util::get_option('tdb_tag_templates');
+
+		$option_id = 'tdb_tag_templates';
+		if ( class_exists( 'SitePress', false ) ) {
+			global $sitepress;
+			$sitepress_settings = $sitepress->get_settings();
+			if ( isset($sitepress_settings['custom_posts_sync_option'][ 'tdb_templates']) ) {
+				$translation_mode = (int)$sitepress_settings['custom_posts_sync_option']['tdb_templates'];
+				if (1 === $translation_mode) {
+					$option_id .= $sitepress->get_current_language();
+				}
+			}
+		}
+
+        $tdb_tag_templates = td_util::get_option( $option_id );
 
         foreach ($tag_data['tdb_tag_templates'] as $tdb_tag_template_id => &$tdb_tag_template ) {
         	$tdb_tag_template = ['name' => $tdb_tag_template];
-        	if ( array_key_exists( $tdb_tag_template_id, $tdb_tag_templates )) {
-        		$tdb_tag_template['tags'] = $tdb_tag_templates[$tdb_tag_template_id];
-	        }
+            if (!empty($tdb_tag_templates)) {
+                if (array_key_exists($tdb_tag_template_id, $tdb_tag_templates)) {
+                    $tdb_tag_template['tags'] = $tdb_tag_templates[$tdb_tag_template_id];
+                }
+            }
         }
 
         return $tag_data;
@@ -172,11 +227,32 @@ class tdb_panel_vue {
     private static function get_tdb_templates( $type ) {
         $tdb_templates = array();
 
-        $wp_query_templates = new WP_Query( array(
-                'post_type' => 'tdb_templates',
-                'posts_per_page' => -1
-            )
-        );
+        $args = array(
+	        'post_type' => array('tdb_templates'),
+	        'post_status' => 'publish',
+	        'meta_query' => array(
+	            array(
+	                'key'     => 'tdc_is_mobile_template',
+	                'compare' => 'NOT EXISTS'
+	            )
+	        ),
+	        'posts_per_page' => '-1'
+	    );
+
+        if ( !empty($type) ) {
+
+			// for tags & attributes template types get the 'woo_archive' type templates
+			if ( in_array( $type, array( 'woo_archive_tag', 'woo_archive_attribute' ) ) ) {
+				$type = 'woo_archive';
+			}
+
+        	$args['meta_query'][] = array(
+                'key'     => 'tdb_template_type',
+                'value'   => $type,
+            );
+        }
+
+	    $wp_query_templates = new WP_Query( $args );
 
         if ( !empty( $wp_query_templates->posts ) ) {
             foreach ( $wp_query_templates->posts as $post ) {

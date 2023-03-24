@@ -24,12 +24,41 @@ class tds_menu_active3 extends td_style {
         $compiled_css = '';
 
         $unique_style_class = $this->unique_style_class;
-        $unique_block_class = '.' . $this->unique_block_class;
+        $general_block_class = (td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax()) ? '.tdc-row' : '';
+        $unique_block_class = ((td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax()) ? '.tdc-row .tdc-column .' : '.') . $this->unique_block_class;
 
 
 		$raw_css =
 			"<style>
 
+				/* @style_general_menu_active3 */
+				$general_block_class .tds_menu_active3 .tdb-menu > li > a:after {
+                  opacity: 0;
+                  -webkit-transition: opacity 0.2s ease;
+                  transition: opacity 0.2s ease;
+                  height: 100%;
+                  z-index: -1;
+                }
+                $general_block_class .tds_menu_active3 .tdb-menu > li.current-menu-item > a:after,
+                $general_block_class .tds_menu_active3 .tdb-menu > li.current-menu-ancestor > a:after,
+                $general_block_class .tds_menu_active3 .tdb-menu > li.current-category-ancestor > a:after,
+                $general_block_class .tds_menu_active3 .tdb-menu > li:hover > a:after,
+                $general_block_class .tds_menu_active3 .tdb-menu > li.tdb-hover > a:after {
+                  opacity: 1;
+                }
+                $general_block_class .tds_menu_active3 .tdb-menu-items-dropdown .td-subcat-more:after {
+                  opacity: 0;
+                  -webkit-transition: opacity 0.2s ease;
+                  transition: opacity 0.2s ease;
+                  height: 100%;
+                  z-index: -1;
+                }
+                $general_block_class .tds_menu_active3 .tdb-menu-items-dropdown:hover .td-subcat-more:after {
+                  opacity: 1;
+                }
+
+				
+				
 				/* @text_color_h */
 				$unique_block_class .tdb-menu > li.current-menu-item > a,
 				$unique_block_class .tdb-menu > li.current-menu-ancestor > a,
@@ -38,6 +67,20 @@ class tds_menu_active3 extends td_style {
 				$unique_block_class .tdb-menu > li.tdb-hover > a,
 				$unique_block_class .tdb-menu-items-dropdown:hover .td-subcat-more {
 					color: @text_color_h;
+				}
+				$unique_block_class .tdb-menu > li.current-menu-item > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu > li.current-menu-item > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu > li.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu > li.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu > li.current-category-ancestor > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu > li.current-category-ancestor > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu > li:hover > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu > li:hover > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu > li.tdb-hover > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu > li.tdb-hover > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu-items-dropdown:hover .td-subcat-more .tdb-menu-more-icon-svg svg,
+				$unique_block_class .tdb-menu-items-dropdown:hover .td-subcat-more .tdb-menu-more-icon-svg svg * {
+					fill: @text_color_h;
 				}
 				
 				/* @main_sub_color_h */
@@ -48,6 +91,20 @@ class tds_menu_active3 extends td_style {
 				$unique_block_class .tdb-menu > li.tdb-hover > a .tdb-sub-menu-icon,
 				$unique_block_class .tdb-menu-items-dropdown:hover .td-subcat-more .tdb-menu-more-icon {
 					color: @main_sub_color_h;
+				}
+				$unique_block_class .tdb-menu > li.current-menu-item > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu > li.current-menu-item > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu > li.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu > li.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu > li.current-category-ancestor > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu > li.current-category-ancestor > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu > li:hover > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu > li:hover > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu > li.tdb-hover > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu > li.tdb-hover > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu-items-dropdown:hover .td-subcat-more .tdb-menu-more-icon-svg svg,
+				$unique_block_class .tdb-menu-items-dropdown:hover .td-subcat-more .tdb-menu-more-icon-svg svg *  {
+					fill: @main_sub_color_h;
 				}
 				
 				/* @bg_color */
@@ -80,6 +137,8 @@ class tds_menu_active3 extends td_style {
      */
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_menu_active3', 1 );
+
         // text hover color
         $res_ctx->load_settings_raw( 'text_color_h', $res_ctx->get_style_att( 'text_color_h', __CLASS__ ) );
 
@@ -104,7 +163,7 @@ class tds_menu_active3 extends td_style {
 		}
         $this->unique_style_class = td_global::td_generate_unique_id();
 
-		$buffy = PHP_EOL . '<style>' . PHP_EOL . $this->get_css() . PHP_EOL . '</style>';
+		$buffy = $this->get_style($this->get_css());
 
 		return $buffy;
 	}

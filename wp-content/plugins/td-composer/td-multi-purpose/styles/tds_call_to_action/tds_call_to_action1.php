@@ -92,6 +92,7 @@ class tds_call_to_action1 extends td_style {
 
         $title = rawurldecode( base64_decode( strip_tags( $this->get_shortcode_att( 'title_text' ) ) ) );
         $button_text = $this->get_shortcode_att( 'button_text' );
+        $button_icon = $this->get_shortcode_att( 'button_tdicon' );
         $description = rawurldecode( base64_decode( strip_tags( $this->get_shortcode_att( 'description' ) ) ) );
         $flip_content = $this->get_shortcode_att( 'flip_content' );
 
@@ -115,7 +116,7 @@ class tds_call_to_action1 extends td_style {
         // button
         $buffy_btn = '';
         $buffy_btn .= '<div class="td-block-span3 tdm-col">';
-        if ( ! empty( $button_text ) ) {
+        if ( ! empty( $button_text ) || ! empty( $button_icon ) ) {
             // Get tds_button
             $tds_button = $this->get_shortcode_att('tds_button');
             if ( empty( $tds_button ) ) {
@@ -126,7 +127,7 @@ class tds_call_to_action1 extends td_style {
         }
         $buffy_btn .= '</div>';
 
-        $buffy = PHP_EOL . '<style>' . PHP_EOL . $this->get_css() . PHP_EOL . '</style>';
+        $buffy = $this->get_style($this->get_css());
 
         $buffy .= '<div class="td-block-width ' . self::get_class_style(__CLASS__) . ' ' . $this->unique_style_class . '">';
             $buffy .= '<div class="td-block-row tdm-row td-fix-index">';

@@ -16,6 +16,9 @@ class td_module_mx12 extends td_module {
         ob_start();
         $title_length = $this->get_shortcode_att('mx12_tl');
         $modified_date = $this->get_shortcode_att('show_modified_date');
+        $time_ago = $this->get_shortcode_att('time_ago');
+        $time_ago_add_txt = $this->get_shortcode_att('time_ago_add_txt');
+        $time_ago_txt_pos = $this->get_shortcode_att('time_ago_txt_pos');
         ?>
 
         <div class="<?php echo $this->get_module_classes(array("td-big-grid-post-$order_no", "td-big-grid-post", "td-small-thumb")); ?>">
@@ -30,7 +33,7 @@ class td_module_mx12 extends td_module {
                     </div>
                     <div class="td-module-meta-info">
                         <?php echo $this->get_author();?>
-                        <?php echo $this->get_date($modified_date);?>
+                        <?php echo $this->get_date($modified_date, false, $time_ago, $time_ago_add_txt, $time_ago_txt_pos);?>
                     </div>
                 </div>
             </div>

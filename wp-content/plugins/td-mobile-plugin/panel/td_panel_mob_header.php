@@ -25,6 +25,24 @@ echo td_panel_generator::box_start('Header', false); ?>
     </div>
 </div>
 
+<!-- Sticky Menu: enable disable -->
+<div class="td-box-row">
+    <div class="td-box-description">
+        <span class="td-box-title">Sticky Menu</span>
+        <p>Enable or disable the sticky menu section</p>
+    </div>
+    <div class="td-box-control-full">
+        <?php
+        echo td_panel_generator::checkbox(array(
+            'ds' => 'td_option',
+            'option_id' => 'tdm_sticky_menu',
+            'true_value' => '',
+            'false_value' => 'hide'
+        ));
+        ?>
+    </div>
+</div>
+
 <!-- Sign In / Join: enable disable -->
 <div class="td-box-row">
     <div class="td-box-description">
@@ -36,6 +54,24 @@ echo td_panel_generator::box_start('Header', false); ?>
         echo td_panel_generator::checkbox(array(
             'ds' => 'td_option',
             'option_id' => 'tds_login_mobile',
+            'true_value' => '',
+            'false_value' => 'hide'
+        ));
+        ?>
+    </div>
+</div>
+
+<!-- Live search: enable disable -->
+<div class="td-box-row">
+    <div class="td-box-description">
+        <span class="td-box-title">Live search</span>
+        <p> Use ajax search </p>
+    </div>
+    <div class="td-box-control-full">
+        <?php
+        echo td_panel_generator::checkbox(array(
+            'ds' => 'td_option',
+            'option_id' => 'tds_live_search_mob',
             'true_value' => '',
             'false_value' => 'hide'
         ));
@@ -107,6 +143,24 @@ echo td_panel_generator::box_start('Header', false); ?>
         echo td_panel_generator::input(array(
             'ds' => 'td_option',
             'option_id' => 'tds_logo_title_mob'
+        ));
+        ?>
+    </div>
+</div>
+
+<!-- H1 Logo: enable disable -->
+<div class="td-box-row">
+    <div class="td-box-description">
+        <span class="td-box-title">H1 Logo</span>
+        <p> Use H1 Logo on Homepage and Blog </p>
+    </div>
+    <div class="td-box-control-full">
+        <?php
+        echo td_panel_generator::checkbox(array(
+            'ds' => 'td_option',
+            'option_id' => 'tds_h1_on_logo',
+            'true_value' => '',
+            'false_value' => 'hide'
         ));
         ?>
     </div>

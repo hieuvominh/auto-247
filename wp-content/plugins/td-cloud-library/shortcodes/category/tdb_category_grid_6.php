@@ -10,6 +10,9 @@ class tdb_category_grid_6 extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_cat_bgf', 1 );
+        $res_ctx->load_settings_raw( 'style_general_cat_bgf_6_specific', 1 );
+
         // modules gap
         $modules_gap = $res_ctx->get_shortcode_att('modules_gap');
         $res_ctx->load_settings_raw( 'modules_gap', $modules_gap );
@@ -454,12 +457,112 @@ class tdb_category_grid_6 extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+                /* @style_general_cat_bgf_6_specific */
+                .tdb_category_grid_6 .tdb-cat-grid-column {
+                  width: 25%;
+                  display: block;
+                  *zoom: 1;
+                }
+                .tdb_category_grid_6 .tdb-cat-grid-column:before,
+                .tdb_category_grid_6 .tdb-cat-grid-column:after {
+                  display: table;
+                  content: '';
+                  line-height: 0;
+                }
+                .tdb_category_grid_6 .tdb-cat-grid-column:after {
+                  clear: both;
+                }
+                @media (min-width: 767px) {
+                  .tdb_category_grid_6 .tdb-cat-grid-column {
+                    float: left;
+                  }
+                }
+                .tdb_category_grid_6 .tdb-cat-grid-column .tdb_module_cat_grid_1 {
+                  width: 100%;
+                }
+                .tdb_category_grid_6 .tdb_module_cat_grid_1 {
+                  width: 25%;
+                }
+                .tdb_category_grid_6 .tdb_module_cat_grid_1 .td-image-wrap {
+                  padding-bottom: 195px;
+                }
+                .tdb_category_grid_6 .tdb_module_cat_grid_1 .td-module-meta-info {
+                  padding: 13px 10px;
+                }
+                .tdb_category_grid_6 .tdb_module_cat_grid_1 .entry-title {
+                  margin-bottom: 0;
+                  font-size: 13px;
+                  line-height: 18px;
+                }
+                @media (min-width: 768px) and (max-width: 1018px) {
+                  .tdb_category_grid_6 .tdb_module_cat_grid_1 .entry-title {
+                    font-size: 12px;
+                    line-height: 15px;
+                  }
+                }
+                .tdb_category_grid_6 .tdb_module_cat_grid_2 {
+                  width: 50%;
+                }
+                .tdb_category_grid_6 .tdb_module_cat_grid_2 .td-image-wrap {
+                  padding-bottom: 400px;
+                }
+                .tdb_category_grid_6 .tdb_module_cat_grid_2 .td-module-meta-info {
+                  padding: 20px;
+                }
+                .tdb_category_grid_6 .tdb_module_cat_grid_2 .entry-title {
+                  margin-bottom: 9px;
+                  font-size: 19px;
+                  line-height: 24px;
+                  font-weight: 500;
+                }
+                @media (max-width: 767px) {
+                  .tdb_category_grid_6 .tdb_module_cat_grid_2 .entry-title {
+                    font-size: 13px;
+                    line-height: 18px;
+                    font-weight: 400;
+                  }
+                }
+                @media (max-width: 767px) {
+                  .tdb_category_grid_6 div.tdb-cat-grid-post-0 .entry-title,
+                  .tdb_category_grid_6 div.tdb-cat-grid-post-1 .entry-title {
+                    font-size: 22px;
+                    line-height: 28px;
+                  }
+                  .tdb_category_grid_6 div.tdb-cat-grid-post-3,
+                  .tdb_category_grid_6 div.tdb-cat-grid-post-4 {
+                    width: 80%;
+                  }
+                  .tdb_category_grid_6 div.tdb-cat-grid-post-3 .td-image-wrap,
+                  .tdb_category_grid_6 div.tdb-cat-grid-post-4 .td-image-wrap {
+                    padding-bottom: 165px;
+                  }
+                  .tdb_category_grid_6 div.tdb-cat-grid-post-3 .td-module-meta-info,
+                  .tdb_category_grid_6 div.tdb-cat-grid-post-4 .td-module-meta-info {
+                    padding: 16px 15px 11px;
+                  }
+                  .tdb_category_grid_6 div.tdb-cat-grid-post-3 .entry-title,
+                  .tdb_category_grid_6 div.tdb-cat-grid-post-4 .entry-title {
+                    margin: 0;
+                    font-size: 13px;
+                    line-height: 18px;
+                  }
+                }
 
 				/* @modules_gap */
                 .$unique_block_class .tdb-cat-grid-post {

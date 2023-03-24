@@ -100,7 +100,7 @@
     <div class="td-box-row">
         <div class="td-box-description td-box-full">
             <span class="td-box-title">YOUR CUSTOM JAVASCRIPT</span>
-            <p>Add custom javascript easly, using this editor. Please do not include the &lt;script&gt; &lt;/script&gt;.</p>
+            <p>Add custom javascript easily, using this editor. Please do not include the &lt;script&gt; &lt;/script&gt;.</p>
         </div>
     </div>
     <div class="td-box-row-margin-bottom">
@@ -121,7 +121,7 @@
     <div class="td-box-row">
         <div class="td-box-description td-box-full">
             <span class="td-box-title">YOUR CUSTOM HTML</span>
-            <p>Add custom html easly, using this editor. The html will be placed at the end of the page.</p>
+            <p>Add custom html easily, using this editor. The html will be placed at the end of the page.</p>
         </div>
     </div>
     <div class="td-box-row-margin-bottom">
@@ -132,4 +132,27 @@
         ));
         ?>
     </div>
-<?php echo td_panel_generator::box_end();
+<?php echo td_panel_generator::box_end();?>
+
+
+<!--<hr>-->
+<!--<div class="td-section-separator">Other settings</div>-->
+<!---->
+<?php //echo td_panel_generator::box_start('Lighthouse options (beta)', false); ?>
+<!--<div class="td-box-row">-->
+<!--    <div class="td-box-description" style="width: 400px;">-->
+<!--        <span class="td-box-title">Prevent layout shift from scroll bar</span>-->
+<!--        <p>This will improve you CLS score, preventing the layout shift caused by the scroll bar on load. Now the content of the site will fully occupy the width space of the browser, whether there is scroll or not.</p>-->
+<!--    </div>-->
+<!--    <div class="td-box-control-full" style="width: 320px;">-->
+<!--        --><?php
+//        echo td_panel_generator::checkbox(array(
+//            'ds' => 'td_option',
+//            'option_id' => 'tds_cls_scroll_bar',
+//            'true_value' => '',
+//            'false_value' => 'yes'
+//        ));
+//        ?>
+<!--    </div>-->
+<!--</div>-->
+<?php //echo td_panel_generator::box_end();?>

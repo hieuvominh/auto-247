@@ -6,5 +6,6 @@
     </div>
 
 <?php }
+if ( !is_user_logged_in() ) {
     require_once(TDC_PATH_LEGACY . '/parts/header/td-login-modal.php');
-?>
+} ?>

@@ -23,12 +23,27 @@ $category_id = td_util::get_http_post_val('category_id');
             foreach ( $wp_query_templates->posts as $post ) {
 
                 $tdb_template_type = get_post_meta( $post->ID, 'tdb_template_type', true );
+                $meta_is_mobile_template = get_post_meta($post->ID, 'tdc_is_mobile_template', true);
 
-                if ( $tdb_template_type === 'category' ) {
+                if ( $tdb_template_type === 'category' && (empty($meta_is_mobile_template) || '0' === $meta_is_mobile_template)) {
                     $tdb_category_template_type_values [] = array(
                         'text' => $post->post_title,
                         'val' => 'tdb_template_' . $post->ID
                     );
+                }
+            }
+        }
+
+        $option_id = 'tdb_category_template';
+        $lang = '';
+
+        if (class_exists('SitePress', false)) {
+            global $sitepress;
+            $sitepress_settings = $sitepress->get_settings();
+            if ( isset($sitepress_settings['custom_posts_sync_option'][ 'tdb_templates']) ) {
+                $translation_mode = (int)$sitepress_settings['custom_posts_sync_option']['tdb_templates'];
+                if (1 === $translation_mode) {
+                    $lang = $sitepress->get_current_language();
                 }
             }
         }
@@ -39,7 +54,7 @@ $category_id = td_util::get_http_post_val('category_id');
     <div class="td-box-row">
         <div class="td-box-description">
             <span class="td-box-title">Category Cloud Library Template</span>
-            <p>Set a <a href="<?php echo admin_url( 'edit.php?post_type=tdb_templates&meta_key=tdb_template_type&meta_value=category#/' ) ?>" target="_blank">Cloud Library</a> category template for this category.</p>
+            <p>Set a <a href="<?php echo admin_url( 'admin.php?page=tdb_cloud_templates' ) ?>" target="_blank">Cloud Library</a> category template for this category.</p>
         </div>
         <div class="td-box-control-full">
 
@@ -48,7 +63,7 @@ $category_id = td_util::get_http_post_val('category_id');
             echo td_panel_generator::dropdown(array(
                 'ds' => 'td_category',
                 'item_id' => $category_id,
-                'option_id' => 'tdb_category_template',
+                'option_id' => 'tdb_category_template' . $lang,
                 'values' => array_merge(
                     array(
                         array(
@@ -73,7 +88,7 @@ $category_id = td_util::get_http_post_val('category_id');
     <div class="td-box-row">
         <div class="td-box-description">
             <span class="td-box-title">Post Cloud Library Template</span>
-            <p>Set a <a href="<?php echo admin_url( 'edit.php?post_type=tdb_templates&meta_key=tdb_template_type&meta_value=category#/' ) ?>" target="_blank">Cloud Library</a> post template for posts of this category.</p>
+            <p>Set a <a href="<?php echo admin_url( 'admin.php?page=tdb_cloud_templates' ) ?>" target="_blank">Cloud Library</a> post template for posts of this category.</p>
         </div>
         <div class="td-box-control-full">
 
@@ -82,7 +97,7 @@ $category_id = td_util::get_http_post_val('category_id');
             echo td_panel_generator::dropdown(array(
                 'ds' => 'td_category',
                 'item_id' => $category_id,
-                'option_id' => 'tdb_post_category_template',
+                'option_id' => 'tdb_post_category_template' . $lang,
                 'values' => array_merge(
                     array(
                         array(
@@ -384,23 +399,21 @@ if( 'Newsmag' == TD_THEME_NAME || ( 'Newspaper' == TD_THEME_NAME && defined('TD_
         </div>
     </div>
 
-<?php if( 'Newsmag' == TD_THEME_NAME || ( 'Newspaper' == TD_THEME_NAME && defined('TD_STANDARD_PACK') ) ) { ?>
     <!-- Hide category tag on post -->
     <div class="td-box-row">
-    <div class="td-box-description">
-        <span class="td-box-title">HIDE CATEGORY ON POST AND ON CATEGORY PAGES</span>
-        <p>Show or hide category on single post page and on category pages. Useful if you want to have hidden categories to sort things up.</p>
+        <div class="td-box-description">
+            <span class="td-box-title">HIDE CATEGORY ON POST AND ON CATEGORY PAGES</span>
+            <p>Show or hide category on single post page and on category pages. Useful if you want to have hidden categories to sort things up.</p>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::checkbox(array(
+                'ds' => 'td_category',
+                'item_id' => $category_id,
+                'option_id' => 'tdc_hide_on_post',
+                'true_value' => 'hide',
+                'false_value' => ''
+            ));
+            ?>
+        </div>
     </div>
-    <div class="td-box-control-full">
-        <?php
-        echo td_panel_generator::checkbox(array(
-            'ds' => 'td_category',
-            'item_id' => $category_id,
-            'option_id' => 'tdc_hide_on_post',
-            'true_value' => 'hide',
-            'false_value' => ''
-        ));
-        ?>
-    </div>
-<?php } ?>
-</div>

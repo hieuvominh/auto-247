@@ -41,9 +41,9 @@ class tdn_block_newsletter_subscribe extends td_block {
             // Get tds_newsletter
             $tds_newsletter = $this->get_shortcode_att('tds_newsletter');
             if ( empty( $tds_newsletter ) ) {
-                $tds_newsletter = td_util::get_option( 'tds_newsletter', 'tds_newsletter1');
+                $tds_newsletter = td_util::get_option( 'tds_newsletter', 'tds_newsletter1' );
             }
-            $tds_newsletter_instance = new $tds_newsletter( $this->shortcode_atts, $this->unique_block_class );
+            $tds_newsletter_instance = new $tds_newsletter( $this->shortcode_atts, $this->block_uid );
             $buffy .= $tds_newsletter_instance->render();
 
         $buffy .= '</div>';

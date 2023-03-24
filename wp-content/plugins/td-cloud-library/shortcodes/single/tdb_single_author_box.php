@@ -7,7 +7,17 @@ class tdb_single_author_box extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
@@ -269,6 +279,8 @@ class tdb_single_author_box extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_author_box', 1 );
+
         // box padding
         $box_padding = $res_ctx->get_shortcode_att( 'box_padding' );
         $res_ctx->load_settings_raw( 'box_padding', $box_padding );
@@ -513,9 +525,20 @@ class tdb_single_author_box extends td_block {
             $td_target = ' target="_blank" ';
         }
 
+        $td_link_rel = '';
+        if ('' !== $this->get_att('url_rel')) {
+            $td_link_rel = ' rel="' . $this->get_att('url_rel') . '" ';
+        }
+
         $content_align_vertical = $this->get_att('align_vert');
         if( !empty( $content_align_vertical ) ) {
             $additional_classes[] = 'tdb-' . $content_align_vertical;
+        }
+
+        //set rel on social links
+        $td_social_rel = '';
+        if ('' !== $this->get_att('social_rel')) {
+            $td_social_rel = ' rel="' . $this->get_att('social_rel') . '" ';
         }
 
 
@@ -531,19 +554,20 @@ class tdb_single_author_box extends td_block {
 
 
             $buffy .= '<div class="tdb-block-inner td-fix-index">';
-                $buffy .= '<a href="' . $author_box_data['author_url'] . '" class="tdb-author-photo">' . $author_box_data['author_avatar'] . '</a>';
+                $buffy .= '<a href="' . $author_box_data['author_url'] . '" class="tdb-author-photo" title="' . $author_box_data['author_name'] . '">' . $author_box_data['author_avatar'] . '</a>';
 
                 $buffy .= '<div class="tdb-author-info">';
                     $buffy .= '<a href="' . $author_box_data['author_url'] . '" class="tdb-author-name">' . $author_box_data['author_name'] . '</a>' ;
 
-                    $buffy .= '<a href="' . $author_box_data['user_url'] . '" ' . $td_target . ' class="tdb-author-url">' . $author_box_data['user_url'] . '</a>';
-
+                    if ( isset($author_box_data['user_url']) && !empty($author_box_data['user_url']) ) {
+                        $buffy .= '<a href="' . $author_box_data['user_url'] . '" ' . $td_link_rel . $td_target . ' class="tdb-author-url">' . $author_box_data['user_url'] . '</a>';
+                    }
                     $buffy .= '<div class="tdb-author-descr">' . $author_box_data['description'] . '</div>';
 
                     $buffy .= '<div class="tdb-author-social">';
                         if ( !empty( $author_box_data['author_social_icons'] ) ) {
                             foreach ( $author_box_data['author_social_icons'] as $td_social_icon ) {
-                                $buffy .= '<a href="' . $td_social_icon['social_link'] . '" target="_blank" title="' . $td_social_icon['social_id'] . '" class="tdb-social-item">';
+                                $buffy .= '<a href="' . $td_social_icon['social_link'] . '"' . $td_social_rel . ' target="_blank" title="' . $td_social_icon['social_id'] . '" class="tdb-social-item">';
                                     $buffy .= '<i class="td-icon-font td-icon-' . $td_social_icon['social_id'] . '"></i>';
                                 $buffy .= '</a>';
                             }

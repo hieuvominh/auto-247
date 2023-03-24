@@ -8,6 +8,9 @@ class tdb_category_grid_1 extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_cat_bgf', 1 );
+        $res_ctx->load_settings_raw( 'style_general_cat_bgf_1_specific', 1 );
+
         // container_width
         $container_width = $res_ctx->get_shortcode_att('container_width');
         if ( is_numeric( $container_width ) ) {
@@ -296,13 +299,50 @@ class tdb_category_grid_1 extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
-
+                /* @style_general_cat_bgf_1_specific */
+                @media (max-width: 767px) {
+                  .tdb_category_grid_1 .tdb-cat-grid-post {
+                    width: 100%;
+                  }
+                }
+                .tdb_category_grid_1 .td-module-container {
+                  display: flex;
+                  flex-direction: column;
+                  position: relative;
+                }
+                .tdb_category_grid_1 .td-image-wrap {
+                  padding-bottom: 75%;
+                }
+                .tdb_category_grid_1 .td-module-meta-info {
+                  padding: 22px 20px;
+                }
+                .tdb_category_grid_1 .td-module-title {
+                  font-family: 'Roboto', sans-serif;
+                  font-size: 27px;
+                  font-weight: 500;
+                  line-height: 34px;
+                  margin: 0 0 9px 0;
+                }
+                .tdb_category_grid_1 .td-editor-date {
+                  display: inline-block;
+                }
+    
 				/* @container_width */
 				.$unique_block_class {
 					width: @container_width; float: left;

@@ -9,16 +9,20 @@ class td_module_mob_1 extends td_module {
 
     function render() {
         ob_start();
+
+        $additional_classes_array = array();
+        $additional_classes_array = apply_filters( 'td_composer_module_exclusive_class', $additional_classes_array, $this->post );
         ?>
 
-        <div class="<?php echo $this->get_module_classes();?>">
+        <div class="<?php echo $this->get_module_classes($additional_classes_array);?>">
             <?php echo $this->get_image('td_265x198');?>
             <div class="item-details">
                 <?php echo $this->get_title();?>
 
                 <div class="td-module-meta-info">
 	                <?php if ( td_util::get_option('tds_category_mobule_mob_1') == 'yes' ) { echo $this->get_category(); }?>
-	                <?php echo $this->get_date();?>
+                    <?php echo $this->get_author();?>
+                    <?php echo $this->get_date();?>
                 </div>
             </div>
 

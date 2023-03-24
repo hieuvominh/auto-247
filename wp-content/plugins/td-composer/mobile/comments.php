@@ -103,6 +103,16 @@ if ((td_util::get_option('tds_disable_comments_sidewide') == '') && post_type_su
 
 	        $defaults['must_log_in'] = '<p class="must-log-in"><a class="td-login-modal-js" href="' . $url . '">' . __td('Log in to leave a comment', TD_THEME_NAME) . ' </a></p>';
 
+			$defaults['logged_in_as'] = '<p class="logged-in-as">' . sprintf(
+				/* 1: edit user link, 2: accessibility text, 3: user name, 4: logout URL */
+					'<a href="%1$s" aria-label="%2$s">' . __td('Logged in as', TD_THEME_NAME) . ' %3$s</a>. <a href="%4$s">' . __td('Log out?', TD_THEME_NAME) . '</a>',
+					get_edit_user_link(),
+					/* %s: user name */
+					esc_attr( sprintf( __td( 'Logged in as %s. Edit your profile.' , TD_THEME_NAME), $user_identity ) ),
+					$user_identity,
+					wp_logout_url( apply_filters( 'the_permalink', get_permalink( get_the_ID() ) ) )
+				) . '</p>';
+
             comment_form($defaults);
             //comment_form();
 
@@ -156,9 +166,9 @@ function td_comment( $comment, $args, $depth ) {
                 </footer>
 	            <div class="comment-content">
                     <?php if ($comment->comment_approved == '0') { ?>
-                        <em><?php __td('Your comment is awaiting moderation', TD_THEME_NAME); ?></em>
-                    <?php } ?>
-                    <?php comment_text() ?>
+                        <em><?php echo __td('Your comment is awaiting moderation', TD_THEME_NAME); ?></em>
+                    <?php }
+                    comment_text() ?>
                 </div>
 	            <div class="comment-meta" id="comment-<?php comment_ID() ?>">
                     <?php comment_reply_link(array_merge( $args, array(

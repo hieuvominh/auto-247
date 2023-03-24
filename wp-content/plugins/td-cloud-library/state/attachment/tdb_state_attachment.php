@@ -11,6 +11,7 @@
  * @property tdb_method attachment_image_links
  * @property tdb_method attachment_pag_prev
  * @property tdb_method attachment_pag_next
+ * @property tdb_method attachment_custom_field
  *
  */
 class tdb_state_attachment extends tdb_state_base {
@@ -332,6 +333,53 @@ class tdb_state_attachment extends tdb_state_base {
 
             return $data_array;
 
+        };
+
+        // attachment custom field
+        $this->attachment_custom_field = function ($atts) {
+            $dummy_field_data = array(
+                'value' => 'Sample field data',
+                'type' => 'text',
+            );
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_field_data;
+            }
+
+            $attachment_object = $this->attachment_wp_query->post;
+            $attachment_id = $attachment_object->ID;
+
+            $field_data = array(
+                'value' => '',
+                'type' => '',
+                'meta_exists' => false,
+            );
+
+            $field_name = '';
+            if( isset( $atts['wp_field'] ) ) {
+                $field_name = $atts['wp_field'];
+            } else if( isset( $atts['acf_field'] ) ) {
+                $field_name = $atts['acf_field'];
+            }
+
+            if( $field_name != '' ) {
+                $field_data = td_util::get_acf_field_data($field_name, $attachment_object);
+
+                if( !$field_data['meta_exists'] ) {
+                    if( metadata_exists('post', $attachment_id, $field_name) ) {
+                        $field_data['value'] = get_post_meta($attachment_id, $field_name, true);
+                        $field_data['type'] = 'text';
+                        $field_data['meta_exists'] = true;
+                    }
+                }
+            }
+
+
+            if( empty($field_data['value']) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) ) {
+                return $dummy_field_data;
+            }
+
+            return $field_data;
         };
 
         parent::lock_state_definition();

@@ -49,10 +49,10 @@ $post_id = $tdb_state_single->get_wp_query()->post->ID;
 $post_title = $tdb_state_single->get_wp_query()->post->post_title;
 $post_url = get_permalink($post_id);
 
-// autoload(inf) loading settings
-$tdb_p_autoload_status = td_util::get_option('tdb_p_autoload_status', 'off');
-$tdb_p_autoload_count = td_util::get_option('tdb_p_autoload_count', 5);
-$tdb_p_autoload_type = td_util::get_option('tdb_p_autoload_type', '');
+// autoload(inf) loading settings, only on post type
+$tdb_p_autoload_status = ( get_post_type() === 'post' ) ? td_util::get_option('tdb_p_autoload_status', 'off') : 'off';
+$tdb_p_autoload_count = ( get_post_type() === 'post' ) ? td_util::get_option('tdb_p_autoload_count', 5) : '';
+$tdb_p_autoload_type = ( get_post_type() === 'post' ) ? td_util::get_option('tdb_p_autoload_type', '') : '';
 
 // this class is common and added to all posts loaded via ajax > iframe.. when the autoload feature is enabled on single cloud templates
 $tdb_p_autoload_content_wrap_class = ( $tdb_p_autoload_status === 'on' ) ? ' tdb-autoload-wrap' : '';
@@ -64,6 +64,35 @@ $data_post_title = ( $tdb_p_autoload_status === 'on' ) ? ' data-post-title="' . 
 
 ?>
     <div id="tdb-autoload-article" data-autoload="<?php echo esc_attr($tdb_p_autoload_status); ?>" data-autoload-org-post-id="<?php echo esc_attr($post_id); ?>" data-autoload-type="<?php echo esc_attr($tdb_p_autoload_type); ?>" data-autoload-count="<?php echo esc_attr($tdb_p_autoload_count); ?>" >
+    <style>
+        .tdb-autoload-wrap {
+            position: relative;
+        }
+        .tdb-autoload-wrap .tdb-loader-autoload {
+            top: auto !important;
+            bottom: 50px !important;
+        }
+        .tdb-autoload-debug {
+            display: none;
+            width: 1068px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+        @media (min-width: 1019px) and (max-width: 1018px) {
+            .tdb-autoload-debug {
+                width: 740px;
+            }
+        }
+        @media (max-width: 767px) {
+            .tdb-autoload-debug {
+                display: none;
+                width: 100%;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+    </style>
+
 <?php
 
 if ( have_posts() ) {
@@ -76,7 +105,7 @@ if ( have_posts() ) {
 
     td_global::load_single_post($post);
 
-    if (!tdc_state::is_live_editor_ajax() && !tdc_state::is_live_editor_iframe()) {
+    if ( !tdc_state::is_live_editor_ajax() && !tdc_state::is_live_editor_iframe() ) {
 
         // increment the views counter
         td_page_views::update_page_views($post->ID);
@@ -96,15 +125,19 @@ if ( have_posts() ) {
         ?>
         <div class="td-main-content-wrap td-container-wrap">
             <div class="tdc-content-wrap<?php echo $tdb_p_autoload_content_wrap_class ?>">
-                <article
-                        id="template-id-<?php the_ID() ?>"
+                <article id="template-id-<?php the_ID() ?>"
                     <?php post_class() ?>
                     <?php echo $post_item_scope ?>
                     <?php echo $data_post_url; ?>
                     <?php echo $data_post_edit_url; ?>
                     <?php echo $data_post_title; ?>
                 >
-                    <?php the_content(); ?>
+	                <?php //the_content(); ?>
+                    <?php
+                        add_filter( 'tdb_template_content', 'do_shortcode' );
+                        $content = $post->post_content;
+                        echo apply_filters( 'tdb_template_content', $content );
+                    ?>
                     <?php echo $post_item_scope_meta ?>
                 </article>
             </div>

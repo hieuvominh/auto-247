@@ -6,6 +6,49 @@
 
 class tdb_attachment_img extends td_block {
 
+    public function get_custom_css() {
+        // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
+
+        $compiled_css = '';
+
+        $raw_css =
+            "<style>
+
+                /* @style_general_attachment_img */
+                .tdb_attachment_img {
+                  margin-bottom: 2px;
+                }
+                .tdb_attachment_img img {
+                  display: block;
+                }
+				
+			</style>";
+
+
+        $td_css_res_compiler = new td_css_res_compiler( $raw_css );
+        $td_css_res_compiler->load_settings( __CLASS__ . '::cssMedia', $this->get_all_atts() );
+
+        $compiled_css .= $td_css_res_compiler->compile_css();
+        return $compiled_css;
+    }
+
+    static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_attachment_img', 1 );
+
+    }
+
     // disable loop block features. This block does not use a loop and it doesn't need to run a query.
     function __construct() {
         parent::disable_loop_block_features();

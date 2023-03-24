@@ -24,6 +24,32 @@ class td_panel_core {
         //print_r($global_panels_array);
 
         ?>
+        <style>
+            .td-panel-main-header {
+                display: flex;
+                align-items: center;
+            }
+            .td-panel-main-header img {
+                position: static;
+                top: inherit;
+            }
+            .td-panel-main-header .td-panel-header-name {
+                position: static;
+            }
+            .td-panel-main-header .td-panel-header-version {
+                position: static;
+            }
+            .td-panel-main-header .td-admin-web-services {
+                margin-left: auto;
+                order: 2;
+            }
+            .td-panel-main-header .td-admin-web-services .td-services-img {
+                height: auto;
+                margin-right:0;
+                position: relative;
+                top: 2px;
+            }
+        </style>
         <form id="td_panel_big_form" action="?page=td_theme_panel" method="post">
 
 
@@ -43,8 +69,15 @@ class td_panel_core {
 
                     <div class="td-panel-main-header">
                         <img src="<?php echo td_global::$get_template_directory_uri . '/legacy/common/wp_booster/wp-admin/images/panel/panel-wrap/panel-logo.png'?>" alt="Panel logo"/>
-                        <span class="td-panel-header-name"><?php echo '<!-- panel header name -->' . $all_theme_panels_list[$panel_spot_id]['title']; ?></span>
-                        <span class="td-panel-header-version"><?php echo '<!-- panel header version -->' . $all_theme_panels_list[$panel_spot_id]['subtitle']; ?></span>
+                        <div class="td-panel-header-desc">
+                            <span class="td-panel-header-name"><?php echo '<!-- panel header name -->' . $all_theme_panels_list[$panel_spot_id]['title']; ?></span>
+                            <span class="td-panel-header-version"><?php echo '<!-- panel header version -->' . $all_theme_panels_list[$panel_spot_id]['subtitle']; ?></span>
+                        </div>
+                        <div class="td-admin-web-services">
+                            <a class="td-services-link" title="Get free quote" href="https://tagdiv.com/submit-a-request/?utm_source=theme_panel&utm_medium=banner&utm_campaign=custom_work&utm_content=TP_gen_top" target="_blank">
+                                <img class="td-services-img" alt="banner-theme-panel" src="https://cloud.tagdiv.com/services-img/banner-theme-panel.png">
+                            </a>
+                        </div>
                     </div>
 
 

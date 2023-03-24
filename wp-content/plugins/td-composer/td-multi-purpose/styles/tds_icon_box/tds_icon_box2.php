@@ -31,6 +31,32 @@ class tds_icon_box2 extends td_style {
 		$raw_css =
 			"<style>              
 
+                /* @style_general_icon_box2 */
+                .tds_icon_box2_wrap .tds-icon-box {
+                  display: inline-block;
+                }
+                .tds_icon_box2_wrap .tds-icon-box2:after {
+                  display: table;
+                  content: '';
+                  line-height: 0;
+                  clear: both;
+                }
+                .tds_icon_box2_wrap .tdm-col-icon,
+                .tds_icon_box2_wrap .tdm-col-text {
+                  display: table-cell;
+                  vertical-align: top;
+                }
+                .tds_icon_box2_wrap .icon_box_url_wrap {
+                  display: block;
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                }
+
+                
+                
                 /* @icon_right_space */
 				.$unique_style_class .tdm-col-icon {
 				    padding-right: @icon_right_space;
@@ -88,6 +114,8 @@ class tds_icon_box2 extends td_style {
      * @param $res_ctx td_res_context
      */
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_icon_box2', 1 );
 
         /*-- ICON -- */
         $icon_right = $res_ctx->get_style_att( 'icon_right', __CLASS__ );
@@ -157,63 +185,65 @@ class tds_icon_box2 extends td_style {
             $buffy_text .= $tds_title_instance->render();
 
             // Description
-            $description = rawurldecode( base64_decode( strip_tags( $this->get_shortcode_att('description') ) ) );
+            $description = td_util::get_custom_field_value_from_string( rawurldecode( base64_decode( strip_tags( $this->get_shortcode_att('description') ) ) ) );
             $buffy_text .= '<p class="tdm-descr td-fix-index">' . $description . '</p>';
-        //url on icon box
-        $icon_box_url = $this->get_style_att( 'icon_box_url' );
-        if ( !empty( $icon_box_url ) ) {
-            // with link
-            $target_blank = '';
 
-            /**
-             * Google Analytics tracking settings
-             */
-            $data_ga_event_cat = '';
-            $data_ga_event_action = '';
-            $data_ga_event_label = '';
+            //url on icon box
+            $icon_box_url = td_util::get_custom_field_value_from_string( $this->get_style_att( 'icon_box_url' ) );
+            if ( !empty( $icon_box_url ) ) {
+                // with link
+                $target_blank = '';
 
-            // don't add tracking options in td composer
-            if ( !tdc_state::is_live_editor_ajax() && !tdc_state::is_live_editor_iframe() ) {
-                $ga_event_category = $this->get_shortcode_att('ga_event_category');
-                if ( ! empty( $ga_event_category ) ) {
-                    $data_ga_event_cat = ' data-ga-event-cat="' . $ga_event_category . '" ';
+                /**
+                 * Google Analytics tracking settings
+                 */
+                $data_ga_event_cat = '';
+                $data_ga_event_action = '';
+                $data_ga_event_label = '';
+
+                // don't add tracking options in td composer
+                if ( !tdc_state::is_live_editor_ajax() && !tdc_state::is_live_editor_iframe() ) {
+                    $ga_event_category = $this->get_shortcode_att('ga_event_category');
+                    if ( ! empty( $ga_event_category ) ) {
+                        $data_ga_event_cat = ' data-ga-event-cat="' . $ga_event_category . '" ';
+                    }
+
+                    $ga_event_action = $this->get_shortcode_att('ga_event_action');
+                    if ( ! empty( $ga_event_action ) ) {
+                        $data_ga_event_action = ' data-ga-event-action="' . $ga_event_action . '" ';
+                    }
+
+                    $ga_event_label = $this->get_shortcode_att('ga_event_label');
+                    if ( ! empty( $ga_event_label ) ) {
+                        $data_ga_event_label = ' data-ga-event-label="' . $ga_event_label . '" ';
+                    }
                 }
 
-                $ga_event_action = $this->get_shortcode_att('ga_event_action');
-                if ( ! empty( $ga_event_action ) ) {
-                    $data_ga_event_action = ' data-ga-event-action="' . $ga_event_action . '" ';
+                /**
+                 * FB Pixel tracking settings
+                 */
+                $data_fb_event_name = '';
+                $data_fb_event_cotent_name = '';
+
+                // don't add tracking options in td composer
+                if ( !tdc_state::is_live_editor_ajax() && !tdc_state::is_live_editor_iframe() ) {
+                    $fb_event_name = $this->get_shortcode_att('fb_pixel_event_name');
+                    if ( ! empty( $fb_event_name ) ) {
+                        $data_fb_event_name = ' data-fb-event-name="' . $fb_event_name . '" ';
+                    }
+                    $fb_event_content_name = $this->get_shortcode_att('fb_pixel_event_content_name');
+                    if ( ! empty( $fb_event_content_name ) ) {
+                        $data_fb_event_cotent_name = ' data-fb-event-content-name="' . $fb_event_content_name . '" ';
+                    }
                 }
 
-                $ga_event_label = $this->get_shortcode_att('ga_event_label');
-                if ( ! empty( $ga_event_label ) ) {
-                    $data_ga_event_label = ' data-ga-event-label="' . $ga_event_label . '" ';
+                $open_in_new_window = $this->get_style_att( 'open_in_new_window' );
+                if  ( !empty( $open_in_new_window ) ) {
+                    $target_blank = 'target="_blank"';
                 }
+                $buffy_text .= '<a href="' . $icon_box_url . '" aria-label="icon_box" class="icon_box_url_wrap" ' . $target_blank . $data_ga_event_cat . $data_ga_event_action . $data_ga_event_label . $data_fb_event_name . $data_fb_event_cotent_name . '> </a>';
             }
 
-            /**
-             * FB Pixel tracking settings
-             */
-            $data_fb_event_name = '';
-            $data_fb_event_cotent_name = '';
-
-            // don't add tracking options in td composer
-            if ( !tdc_state::is_live_editor_ajax() && !tdc_state::is_live_editor_iframe() ) {
-                $fb_event_name = $this->get_shortcode_att('fb_pixel_event_name');
-                if ( ! empty( $fb_event_name ) ) {
-                    $data_fb_event_name = ' data-fb-event-name="' . $fb_event_name . '" ';
-                }
-                $fb_event_content_name = $this->get_shortcode_att('fb_pixel_event_content_name');
-                if ( ! empty( $fb_event_content_name ) ) {
-                    $data_fb_event_cotent_name = ' data-fb-event-content-name="' . $fb_event_content_name . '" ';
-                }
-            }
-
-            $open_in_new_window = $this->get_style_att( 'open_in_new_window' );
-            if  ( !empty( $open_in_new_window ) ) {
-                $target_blank = 'target="_blank"';
-            }
-            $buffy_text .= '<a href="' . $this->get_style_att( 'icon_box_url' ) . '" class="icon_box_url_wrap" ' . $target_blank . $data_ga_event_cat . $data_ga_event_action . $data_ga_event_label . $data_fb_event_name . $data_fb_event_cotent_name . '> </a>';
-        }
             // Button
             $button_text = $this->get_shortcode_att('button_text');
             if ( !empty( $button_text ) ) {
@@ -229,7 +259,7 @@ class tds_icon_box2 extends td_style {
         $buffy_text .= '</div>';
 
 
-        $buffy = PHP_EOL . '<style>' . PHP_EOL . $this->get_css() . PHP_EOL . '</style>';
+        $buffy = $this->get_style($this->get_css());
 
         $buffy .= '<div class="' . self::get_group_style( __CLASS__ ) . ' ' . self::get_class_style(__CLASS__) . ' ' . 'td-fix-index' . ' ' . $icon_position . ' ' . $this->unique_style_class . '">';
 

@@ -8,13 +8,50 @@ class tdb_single_review_summary extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_review_summary */
+                .td-review-summary-content {
+                  font-size: 12px;
+                  margin: 0;
+                }
+                .tdb_single_review_summary .td-review {
+                  margin-bottom: 0;
+                }
+                .td-review .tdb-review-summary {
+                  padding: 21px 14px;
+                  vertical-align: top;
+                }
+                @media (max-width: 767px) {
+                  .td-review .tdb-review-summary {
+                    display: block;
+                    width: 100%;
+                    clear: both;
+                    border: 0;
+                  }
+                }
+                .td-review .tdb-review-summary .block-title,
+                .td-review .tdb-review-summary .td-block-title {
+                  margin-bottom: 13px;
+                }
+
+                
+                
                 /* @descr_color */
                 .$unique_block_class .td-review-summary-content {
                     color: @descr_color;
@@ -64,6 +101,9 @@ class tdb_single_review_summary extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_review', 1 );
+        $res_ctx->load_settings_raw( 'style_general_review_summary', 1 );
 
         // description color
         $res_ctx->load_settings_raw( 'descr_color', $res_ctx->get_shortcode_att('descr_color') );
@@ -152,15 +192,22 @@ class tdb_single_review_summary extends td_block {
         $buffy .= $this->get_block_js();
 
         $custom_title = $this->get_att( 'custom_title' );
+        $title_tag = 'h4';
+
+        // title_tag used only on Title shortcode
+        $block_title_tag = $this->get_att('title_tag');
+        if(!empty($block_title_tag)) {
+            $title_tag = $block_title_tag ;
+        }
 
         $buffy .= '<table class="td-review td-fix-index">';
 
             $buffy .= '<td class="tdb-review-summary">';
                 if( $custom_title != '' ) {
                     $buffy .= '<div class="td-block-title-wrap">';
-                    $buffy .= '<h4 class="' . $td_css_cls_block_title . '">';
+                    $buffy .= '<' . $title_tag . ' class="' . $td_css_cls_block_title . '">';
                     $buffy .= '<span>' . $custom_title . '</span>';
-                    $buffy .= '</h4>';
+                    $buffy .= '</' . $title_tag . '>';
                     $buffy .= '</div>';
                 }
 

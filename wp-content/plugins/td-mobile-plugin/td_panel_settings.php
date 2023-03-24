@@ -89,6 +89,24 @@ if (defined('TD_DEPLOY_MODE') && TD_DEPLOY_MODE === 'dev') {
 
 <?php } ?>
 
+<!-- Enable mobile -->
+<div class="td-box-row">
+    <div class="td-box-description">
+        <span class="td-box-title">Mobile Theme on Multisite</span>
+        <p>Enable this option only if you use <a href="https://wordpress.org/support/article/create-a-network/" target="_blank">WP Multisite</a> and the Mobile Theme doesn't load properly.</p>
+    </div>
+    <div class="td-box-control-full">
+        <?php
+        echo td_panel_generator::checkbox(array(
+            'ds' => 'td_option',
+            'option_id' => 'tdm_is_multisite',
+            'true_value' => 'yes',
+            'false_value' => ''
+        ));
+        ?>
+    </div>
+</div>
+
 <?php echo td_panel_generator::box_end();?>
 
 <!-- HEADER -->
@@ -96,6 +114,9 @@ if (defined('TD_DEPLOY_MODE') && TD_DEPLOY_MODE === 'dev') {
 
 <!-- FOOTER -->
 <?php require_once('panel/td_panel_mob_footer.php'); ?>
+
+<!-- POST -->
+<?php require_once('panel/td_panel_post_settings.php'); ?>
 
 <!-- COLORS -->
 <?php require_once('panel/td_panel_colors.php'); ?>
@@ -120,6 +141,12 @@ if ( td_util::is_amp_plugin_installed() ){
 }
 
 ?>
+
+<!-- SMARTLIST -->
+<?php require_once('panel/td_panel_mob_smartlist.php'); ?>
+
+<!-- BREADCRUMBS -->
+<?php require_once('panel/td_panel_mob_breadcrumbs.php'); ?>
 
 <!-- EXCERPTS -->
 <?php require_once('panel/td_panel_excerpts.php'); ?>

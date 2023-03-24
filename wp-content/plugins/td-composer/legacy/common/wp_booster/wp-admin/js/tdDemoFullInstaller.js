@@ -1,7 +1,7 @@
 /**
  * Created by ra on 3/15/2016.
  *
- * Installs the full demo. It has a list of steps and it starts recusivley from 0 to the last step. If an error is encounter,
+ * Installs the full demo. It has a list of steps and it starts recursively from 0 to the last step. If an error is encounter,
  * the class will show a warning to the user but it will continue with the install as if nothing happened
  */
 
@@ -9,10 +9,9 @@
 /* global jQuery:{} */
 /* global console:{} */
 /* global alert:{} */
-/* global confirm:{} */
 /* global td_ajax_url:{} */
 /* global tdDemoProgressBar:{} */
-
+/* global tdWpAdminImportNonce:{} */
 
 var tdDemoFullInstaller = {};
 
@@ -20,18 +19,21 @@ var tdDemoFullInstaller = {};
     'use strict';
     tdDemoFullInstaller = {
 
-
         /**
          * Recursive function, it will start from step 0 and work it's way up from there.
          * On error the function will show an alert and it will continue with the install process
          * @see tdDemoFullInstaller._getSteps()
          * @param demoId - the demo id that you want to install
          * @param step - not needed, it will be 0 by default
-         * @param onFinishCallback - this callback is called whent he install is finished. Event on error, the install will be finished!
+         * @param onFinishCallback - this callback is called when the install is finished. Event on error, the install will be finished!
          * @param noContent - boolean - not needed. If it's true the .._no_content.php file steps are loaded
          */
         installNextStep: function (demoId, step, onFinishCallback, noContent) {
-            if (typeof step === 'undefined') {
+
+            //console.log('%c tdDemoFullInstaller START !! .. demoId: ' + demoId + ' step: ' + step, 'color: #40a200;');
+            //return;
+
+            if ( typeof step === 'undefined' ) {
                 step = 0;
             }
 
@@ -48,58 +50,50 @@ var tdDemoFullInstaller = {};
                 currentStep.data.td_demo_action += '_no_content';
             }
 
-
-
             //console.log(currentStep);
-
             currentStep.data.td_magic_token = tdWpAdminImportNonce;
 
             jQuery.ajax({
                 type: 'POST',
                 url: tdDemoFullInstaller._getAdminAjax(currentStep.data.td_demo_action),
-                cache:false,
+                cache: false,
                 data: currentStep.data,
                 dataType: 'json',
-                success: function(data, textStatus, XMLHttpRequest){
-                    if (typeof steps[step + 1] !== 'undefined') {
-                        tdDemoFullInstaller.installNextStep(demoId, step + 1, onFinishCallback, content);
+                success: function(){
+                    if ( typeof steps[step + 1] !== 'undefined' ) {
+                        tdDemoFullInstaller.installNextStep( demoId, step + 1, onFinishCallback, content );
                     } else {
                         // on finish finally call the callback
                         onFinishCallback();
                     }
                 },
-                error: function(MLHttpRequest, textStatus, errorThrown){
+                error: function(MLHttpRequest, textStatus, errorThrown) {
 
                     var responseText = MLHttpRequest.responseText.replace(/<br>/g, '\n');
-
 
                     console.log('textStatus: ' + textStatus);
                     console.log('errorThrown: ' + errorThrown);
                     console.log('responseText: ' + responseText);
 
-
-
-                    alert('tagDiv importer detected an error. The importer will try to recover and continue to install the demo after you click ok on this dialog.\n' +
+                    alert('tagDiv Importer detects that your server is not properly configured. Don\'t worry, the importer will continue to install the demo after you click the OK button.\n' +
                         '\n' +
-                        'Steps to troubleshoot:\n' +
-                        '- Check the permissions on your upload folder\n' +
-                        '- Please make sure that WP_DEBUG is set to false in wp-config.php\n' +
+                        'Steps to verify:\n' +
+                        '- Please go to the SYSTEM STATUS tab and check if all parameters are green' +
+                        '- Verify the permissions on your upload folder\n' +
                         '- Contact our support via email contact@tagdiv.com (please provide your product license key)'
                     );
 
-
-
                     // continue even on error :)
-                    if (typeof steps[step + 1] !== 'undefined') {
+                    if ( typeof steps[step + 1] !== 'undefined' ) {
                         tdDemoFullInstaller.installNextStep(demoId, step + 1, onFinishCallback, content);
                     } else {
                         // on finish finally call the callback
                         onFinishCallback();
                     }
+
                 }
             });
         },
-
 
 
         /**
@@ -124,7 +118,6 @@ var tdDemoFullInstaller = {};
         /**
          * generates the steps needed for a particular demoId
          * @param demoId
-          @param noContent - boolean - not needed. If it's true the .._no_content.php file steps are loaded
          * @returns {{0: {progress: number, data: {action: string, td_demo_action: string, td_demo_id: string}}, 1: {progress: number, data: {action: string, td_demo_action: string, td_demo_id: *}}, 2: {progress: number, data: {action: string, td_demo_action: string, td_demo_id: *}}, 3: {progress: number, data: {action: string, td_demo_action: string, td_demo_id: *}}, 4: {progress: number, data: {action: string, td_demo_action: string, td_demo_id: *}}, 5: {progress: number, data: {action: string, td_demo_action: string, td_demo_id: *}}, 6: {progress: number, data: {action: string, td_demo_action: string, td_demo_id: *}}, 7: {progress: number, data: {action: string, td_demo_action: string, td_demo_id: *}}}}
          * @private
          */
@@ -139,7 +132,7 @@ var tdDemoFullInstaller = {};
                     }
                 },
                 1: {
-                    progress: 22,
+                    progress: 18,
                     data: {
                         action: 'td_ajax_demo_install',
                         td_demo_action:'td_media_1',
@@ -148,7 +141,7 @@ var tdDemoFullInstaller = {};
 
                 },
                 2: {
-                    progress: 34,
+                    progress: 29,
                     data: {
                         action: 'td_ajax_demo_install',
                         td_demo_action:'td_media_2',
@@ -156,7 +149,7 @@ var tdDemoFullInstaller = {};
                     }
                 },
                 3: {
-                    progress: 46,
+                    progress: 38,
                     data: {
                         action: 'td_ajax_demo_install',
                         td_demo_action:'td_media_3',
@@ -164,7 +157,7 @@ var tdDemoFullInstaller = {};
                     }
                 },
                 4: {
-                    progress: 58,
+                    progress: 51,
                     data: {
                         action: 'td_ajax_demo_install',
                         td_demo_action:'td_media_4',
@@ -172,7 +165,7 @@ var tdDemoFullInstaller = {};
                     }
                 },
                 5: {
-                    progress: 70,
+                    progress: 63,
                     data: {
                         action: 'td_ajax_demo_install',
                         td_demo_action:'td_media_5',
@@ -180,7 +173,7 @@ var tdDemoFullInstaller = {};
                     }
                 },
                 6: {
-                    progress: 82,
+                    progress: 72,
                     data: {
                         action: 'td_ajax_demo_install',
                         td_demo_action:'td_media_6',
@@ -188,7 +181,39 @@ var tdDemoFullInstaller = {};
                     }
                 },
                 7: {
-                    progress: 98,
+                    progress: 80,
+                    data: {
+                        action: 'td_ajax_demo_install',
+                        td_demo_action:'td_media_7',
+                        td_demo_id: demoId
+                    }
+                },
+                8: {
+                    progress: 85,
+                    data: {
+                        action: 'td_ajax_demo_install',
+                        td_demo_action:'td_media_8',
+                        td_demo_id: demoId
+                    }
+                },
+                9: {
+                    progress: 87,
+                    data: {
+                        action: 'td_ajax_demo_install',
+                        td_demo_action:'td_media_9',
+                        td_demo_id: demoId
+                    }
+                },
+                10: {
+                    progress: 92,
+                    data: {
+                        action: 'td_ajax_demo_install',
+                        td_demo_action:'td_media_10',
+                        td_demo_id: demoId
+                    }
+                },
+                11: {
+                    progress: 95,
                     data: {
                         action: 'td_ajax_demo_install',
                         td_demo_action:'td_import',
@@ -197,6 +222,7 @@ var tdDemoFullInstaller = {};
                 }
             };
         }
+
     };
 })();
 

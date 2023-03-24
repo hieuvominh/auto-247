@@ -63,8 +63,12 @@ class tds_newsletter5 extends td_style {
                 .$unique_style_class .tdn-icon {
                     font-size: @icon_size;
                 }
+                .$unique_style_class .tdn-icon svg {
+                    width: @icon_size;
+                }
                 /* @icon_padding */
-				.$unique_style_class .tdn-icon {
+				.$unique_style_class .tdn-icon,
+				.$unique_style_class .tdn-icon-svg {
 					width: @icon_padding;
 					height: @icon_padding;
 				}
@@ -78,6 +82,10 @@ class tds_newsletter5 extends td_style {
                 /* @icon_color */
                 .$unique_style_class .tdn-icon {
                     color: @icon_color;
+                }
+                .$unique_style_class .tdn-icon-svg svg,
+                .$unique_style_class .tdn-icon-svg svg * {
+                    fill: @icon_color;
                 }
                 /* @icon_bg_color */
                 .$unique_style_class .tdn-icon {
@@ -167,6 +175,10 @@ class tds_newsletter5 extends td_style {
                 .$unique_style_class button {
                     color: @btn_text_color;
                 }
+                .$unique_style_class button .tdn-btn-icon-svg svg,
+                .$unique_style_class button .tdn-btn-icon-svg svg * {
+                    fill: @btn_text_color;
+                }
                 /* @btn_bg_color */
                 .$unique_style_class button {
                     background-color: @btn_bg_color;
@@ -174,6 +186,10 @@ class tds_newsletter5 extends td_style {
                 /* @btn_text_color_hover */
                 .$unique_style_class button:hover {
                    color: @btn_text_color_hover;
+                }
+                .$unique_style_class button:hover .tdn-btn-icon-svg svg,
+                .$unique_style_class button:hover .tdn-btn-icon-svg svg * {
+                    fill: @btn_text_color_hover;
                 }
                 /* @btn_bg_color_hover */
                 .$unique_style_class button:hover {
@@ -194,28 +210,40 @@ class tds_newsletter5 extends td_style {
                     border-color: @btn_border_color_hover;
                 }
                 /* @btn_icon_size */
-                .$unique_style_class button i {
+                .$unique_style_class button .tdn-btn-icon {
                     font-size: @btn_icon_size;
                 }
+                /* @btn_icon_svg_size */
+                .$unique_style_class button .tdn-btn-icon-svg svg {
+                    width: @btn_icon_svg_size;
+                }
                 /* @btn_icon_align */
-                .$unique_style_class button i {
+                .$unique_style_class button .tdn-btn-icon {
                     top: @btn_icon_align;
                 }
                 /* @btn_icon_space_left */
-                .$unique_style_class button i {
+                .$unique_style_class button .tdn-btn-icon {
                     margin-left: @btn_icon_space_left;
                 }
                 /* @btn_icon_space_right */
-                .$unique_style_class button i {
+                .$unique_style_class button .tdn-btn-icon {
                     margin-right: @btn_icon_space_right;
                 }
                 /* @btn_icon_color */
                 .$unique_style_class button i {
                     color: @btn_icon_color;
                 }
+                .$unique_style_class button .tdn-btn-icon-svg svg,
+                .$unique_style_class button .tdn-btn-icon-svg svg * {
+                    fill: @btn_icon_color;
+                }
                 /* @btn_icon_color_hover */
                 .$unique_style_class button:hover i {
                     color: @btn_icon_color_hover;
+                }   
+                .$unique_style_class button:hover .tdn-btn-icon-svg svg,
+                .$unique_style_class button:hover .tdn-btn-icon-svg svg * {
+                    fill: @btn_icon_color_hover;
                 }
                 
                 
@@ -487,10 +515,18 @@ class tds_newsletter5 extends td_style {
         // button hover border color
         $res_ctx->load_settings_raw( 'btn_border_color_hover', $res_ctx->get_style_att( 'btn_border_color_hover', __CLASS__ ) );
         // button icon size
+        $btn_icon = $res_ctx->get_icon_att('btn_tdicon');
         $btn_icon_size = $res_ctx->get_shortcode_att( 'btn_icon_size' );
-        $res_ctx->load_settings_raw( 'btn_icon_size', $btn_icon_size );
-        if( $btn_icon_size != '' && is_numeric( $btn_icon_size ) ) {
-            $res_ctx->load_settings_raw( 'btn_icon_size', $btn_icon_size . 'px' );
+        if ( base64_encode( base64_decode( $btn_icon ) ) == $btn_icon ) {
+            $res_ctx->load_settings_raw( 'btn_icon_svg_size', $btn_icon_size );
+            if( $btn_icon_size != '' && is_numeric( $btn_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'btn_icon_svg_size', $btn_icon_size . 'px' );
+            }
+        } else {
+            $res_ctx->load_settings_raw( 'btn_icon_size', $btn_icon_size );
+            if( $btn_icon_size != '' && is_numeric( $btn_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'btn_icon_size', $btn_icon_size . 'px' );
+            }
         }
         // button icon align
         $res_ctx->load_settings_raw( 'btn_icon_align', $res_ctx->get_shortcode_att( 'btn_icon_align' ) . 'px' );
@@ -536,15 +572,43 @@ class tds_newsletter5 extends td_style {
         $this->unique_style_class = td_global::td_generate_unique_id();
 
         $title_text = $this->get_shortcode_att( 'title_text', $this->index_style);
+        $title_tag = 'h3';
+        $block_title_tag = $this->get_shortcode_att( 'title_tag', $this->index_style);
+        if ( $block_title_tag != '' ) {
+            $title_tag = $block_title_tag ;
+        }
         $description = rawurldecode( base64_decode( strip_tags( $this->get_shortcode_att( 'description', $this->index_style ) ) ) );
         $disclaimer = $this->get_shortcode_att( 'disclaimer', $this->index_style);
         $disclaimer2 = $this->get_shortcode_att( 'disclaimer2', $this->index_style);
-        $icon = $this->get_style_att('tdicon');
+        $icon = $this->get_icon_style_att('tdicon', $this->index_style);
+        $icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $icon_data = 'data-td-svg-icon="' . $this->get_style_att('tdicon') . '"';
+        }
+        $icon_html = '';
+        if( $icon != '' ) {
+            $icon_html .= '<div class="tdn-icon-wrap">';
+                if( base64_encode( base64_decode( $icon ) ) == $icon ) {
+                    $icon_html .= '<span class="tdn-icon tdn-icon-svg" ' . $icon_data . '>' . base64_decode( $icon ) . '</span>';
+                } else {
+                    $icon_html .= '<i class="tdn-icon ' . $icon . '"></i>';
+                }
+            $icon_html .= '</div>';
+        }
         $input_placeholder = $this->get_shortcode_att('input_placeholder', $this->index_style);
         $btn_text = $this->get_shortcode_att('btn_text', $this->index_style);
-        $btn_icon = '';
-        if( $this->get_shortcode_att('btn_tdicon', $this->index_style) != '' ) {
-            $btn_icon = '<i class="' . $this->get_shortcode_att('btn_tdicon', $this->index_style) . '"></i>';
+        $btn_icon = $this->get_icon_att('btn_tdicon', $this->index_style);
+        $btn_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $btn_icon_data = 'data-td-svg-icon="' . $this->get_shortcode_att('btn_tdicon', $this->index_style) . '"';
+        }
+        $btn_icon_html = '';
+        if( $btn_icon != '' ) {
+            if( base64_encode( base64_decode( $btn_icon ) ) == $btn_icon ) {
+                $btn_icon_html = '<span class="tdn-btn-icon tdn-btn-icon-svg" ' . $btn_icon_data . '>' . base64_decode( $btn_icon ) . '</span>';
+            } else {
+                $btn_icon_html = '<i class="tdn-btn-icon ' . $btn_icon . '"></i>';
+            }
         }
         $btn_icon_pos = $this->get_shortcode_att('btn_icon_pos', $this->index_style);
 
@@ -606,17 +670,13 @@ class tds_newsletter5 extends td_style {
                 $buffy .= PHP_EOL . '<style>' . PHP_EOL . $this->get_css() . PHP_EOL . '</style>';
                 $buffy .= '<div class="' . self::get_group_style( __CLASS__ ) . ' ' . self::get_class_style(__CLASS__) . ' ' . $this->unique_style_class . ' tdn-style-bordered td-fix-index">';
 
-                    if( !empty( $icon ) ) {
-                        $buffy .= '<div class="tdn-icon-wrap">';
-                            $buffy .= '<i class="tdn-icon ' . $icon . '"></i>';
-                        $buffy .= '</div>';
-                    }
+                    $buffy .= $icon_html;
 
                     $buffy .= '<div class="tdn-info-wrap">';
                         if( $title_text != '' || $description != '' ) {
                             $buffy .= '<div class="tdn-info">';
                             if( $title_text != '' ) {
-                                $buffy .= '<h3 class="tdn-title">' . $title_text . '</h3>';
+                                $buffy .= '<' . $title_tag . ' class="tdn-title">' . $title_text . '</' . $title_tag . '>';
                             }
 
                             if( $description != '' ) {
@@ -629,19 +689,19 @@ class tds_newsletter5 extends td_style {
                             $buffy .= '<form class="tdn-form" action="' . $newsletter_data['url'] . '" method="post" name="mc-embedded-subscribe-form" target="_blank">';
                                 $buffy .= '<div class="tdn-email-bar">';
                                     $buffy .= '<div class="tdn-input-wrap">';
-                                        $buffy .= '<input type="email" name="EMAIL" placeholder="' . $input_placeholder . '">';
+                                        $buffy .= '<input type="email" aria-label="email" name="EMAIL" placeholder="' . $input_placeholder . '" required>';
                                     $buffy .= "</div>";
 
                                     $buffy .= '<div class="tdn-btn-wrap">';
                                         $buffy .= '<button class="tdn-submit-btn" type="submit" name="subscribe" ' . $data_ga_event_cat . $data_ga_event_action . $data_ga_event_label . $data_fb_event_name . $data_fb_event_content_name . '>';
                                             if( $btn_icon_pos == 'before' ) {
-                                                $buffy .= $btn_icon;
+                                                $buffy .= $btn_icon_html;
                                             }
 
                                             $buffy .= $btn_text;
 
                                             if( $btn_icon_pos == '' || $btn_icon_pos == 'after' ) {
-                                                $buffy .= $btn_icon;
+                                                $buffy .= $btn_icon_html;
                                             }
                                         $buffy .= '</button>';
                                     $buffy .= "</div>";
@@ -672,7 +732,7 @@ class tds_newsletter5 extends td_style {
 
                                 $buffy .= '<div class="tdn-email-bar">';
                                     $buffy .= '<div class="tdn-input-wrap">';
-                                        $buffy .= '<input type="email" name="fields[email]" placeholder="' . $input_placeholder . '" value="" autocomplete="email" x-autocompletetype="email" spellcheck="false" autocapitalize="off" autocorrect="off">';
+                                        $buffy .= '<input type="email" aria-label="email" name="fields[email]" placeholder="' . $input_placeholder . '" value="" autocomplete="email" x-autocompletetype="email" spellcheck="false" autocapitalize="off" autocorrect="off" required>';
                                     $buffy .= "</div>";
 
                                     $buffy .= '<div class="tdn-btn-wrap">';
@@ -691,7 +751,7 @@ class tds_newsletter5 extends td_style {
 
                                 $buffy .= '<div class="tdn-email-bar">';
                                     $buffy .= '<div class="tdn-input-wrap">';
-                                        $buffy .= '<input type="email" name="email" autocomplete="email" x-autocompletetype="email" spellcheck="false" autocapitalize="off" autocorrect="off" id="feedburner-email" placeholder="' . $input_placeholder . '">';
+                                        $buffy .= '<input type="email" aria-label="email" name="email" autocomplete="email" x-autocompletetype="email" spellcheck="false" autocapitalize="off" autocorrect="off" id="feedburner-email" placeholder="' . $input_placeholder . '" required>';
                                     $buffy .= "</div>";
 
                                     $buffy .= '<div class="tdn-btn-wrap">';
@@ -771,7 +831,7 @@ class tds_newsletter5 extends td_style {
 
                 preg_match( '/action="([^"]*?)"/i', $newsletter_form_data, $matched );
 
-                if ( ! empty( $matched[1] ) && strpos( $matched[1], 'app.mailerlite.com/webforms') !== false ) {
+                if ( ! empty( $matched[1] ) && ( strpos( $matched[1], 'static.mailerlite.com/webforms') !== false || strpos( $matched[1], 'app.mailerlite.com/webforms') !== false  || strpos( $matched[1], 'assets.mailerlite.com/jsonp') !== false ) ) {
 
                     $newsletter_data['url'] = $matched[1];
 
@@ -813,6 +873,16 @@ class tds_newsletter5 extends td_style {
 
     function get_style_att( $att_name ) {
         return $this->get_att( $att_name ,__CLASS__, $this->index_style );
+    }
+    function get_icon_style_att( $att_name ) {
+        $icon_class = $this->get_att($att_name, __CLASS__, $this->index_style);
+        $svg_list = td_global::$svg_theme_font_list;
+
+        if( array_key_exists( $icon_class, $svg_list ) ) {
+            return $svg_list[$icon_class];
+        }
+
+        return $icon_class;
     }
 
     function get_atts() {

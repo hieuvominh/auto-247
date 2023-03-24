@@ -13,13 +13,181 @@ class tdb_mobile_horiz_menu extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_mobile_horiz_menu */
+                .tdb_mobile_horiz_menu {
+                  margin-bottom: 0;
+                  clear: none;
+                }
+                .tdb_mobile_horiz_menu.tdb-horiz-menu-singleline {
+                  width: 100%;
+                }
+                .tdb_mobile_horiz_menu.tdb-horiz-menu-singleline .tdb-horiz-menu {
+                  display: block;
+                  width: 100%;
+                  overflow-x: auto;
+                  overflow-y: hidden;
+                  font-size: 0;
+                  white-space: nowrap;
+                }
+                .tdb_mobile_horiz_menu.tdb-horiz-menu-singleline .tdb-horiz-menu > li {
+                  position: static;
+                  display: inline-block;
+                  float: none;
+                }
+                .tdb_mobile_horiz_menu.tdb-horiz-menu-singleline .tdb-horiz-menu ul {
+                  left: 0;
+                  width: 100%;
+                  z-index: -1;
+                }
+                .tdb-horiz-menu {
+                  display: table;
+                  margin: 0;
+                }
+                .tdb-horiz-menu,
+                .tdb-horiz-menu ul {
+                  list-style-type: none;
+                }
+                .tdb-horiz-menu ul,
+                .tdb-horiz-menu li {
+                  line-height: 1;
+                }
+                .tdb-horiz-menu li {
+                  margin: 0;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                }
+                .tdb-horiz-menu li.current-menu-item > a,
+                .tdb-horiz-menu li.current-menu-ancestor > a,
+                .tdb-horiz-menu li.current-category-ancestor > a,
+                .tdb-horiz-menu li:hover > a,
+                .tdb-horiz-menu li.tdb-hover > a {
+                  color: #4db2ec;
+                }
+                .tdb-horiz-menu li.current-menu-item > a .tdb-sub-menu-icon-svg,
+                .tdb-horiz-menu li.current-menu-ancestor > a .tdb-sub-menu-icon-svg,
+                .tdb-horiz-menu li.current-category-ancestor > a .tdb-sub-menu-icon-svg,
+                .tdb-horiz-menu li:hover > a .tdb-sub-menu-icon-svg,
+                .tdb-horiz-menu li.tdb-hover > a .tdb-sub-menu-icon-svg,
+                .tdb-horiz-menu li.current-menu-item > a .tdb-sub-menu-icon-svg *,
+                .tdb-horiz-menu li.current-menu-ancestor > a .tdb-sub-menu-icon-svg *,
+                .tdb-horiz-menu li.current-category-ancestor > a .tdb-sub-menu-icon-svg *,
+                .tdb-horiz-menu li:hover > a .tdb-sub-menu-icon-svg *,
+                .tdb-horiz-menu li.tdb-hover > a .tdb-sub-menu-icon-svg * {
+                  fill: #4db2ec;
+                }
+                .tdb-horiz-menu > li {
+                  position: relative;
+                  float: left;
+                  font-size: 0;
+                }
+                .tdb-horiz-menu > li:hover ul {
+                  visibility: visible;
+                  opacity: 1;
+                }
+                .tdb-horiz-menu > li > a {
+                  display: inline-block;
+                  padding: 0 9px;
+                  font-weight: 700;
+                  font-size: 13px;
+                  line-height: 41px;
+                  vertical-align: middle;
+                  -webkit-backface-visibility: hidden;
+                  color: #000;
+                }
+                .tdb-horiz-menu > li > a > .tdb-menu-item-text {
+                  display: inline-block;
+                }
+                .tdb-horiz-menu > li > a .tdb-sub-menu-icon {
+                  margin: 0 0 0 6px;
+                }
+                .tdb-horiz-menu > li > a .tdb-sub-menu-icon-svg svg {
+                  position: relative;
+                  top: -1px;
+                  width: 13px;
+                }
+                .tdb-horiz-menu > li .tdb-menu-sep {
+                  position: relative;
+                }
+                .tdb-horiz-menu > li:last-child .tdb-menu-sep {
+                  display: none;
+                }
+                .tdb-horiz-menu .tdb-sub-menu-icon-svg,
+                .tdb-horiz-menu .tdb-menu-sep-svg {
+                  line-height: 0;
+                }
+                .tdb-horiz-menu .tdb-sub-menu-icon-svg svg,
+                .tdb-horiz-menu .tdb-menu-sep-svg svg {
+                  height: auto;
+                }
+                .tdb-horiz-menu .tdb-sub-menu-icon-svg svg,
+                .tdb-horiz-menu .tdb-menu-sep-svg svg,
+                .tdb-horiz-menu .tdb-sub-menu-icon-svg svg *,
+                .tdb-horiz-menu .tdb-menu-sep-svg svg * {
+                  fill: #000;
+                }
+                .tdb-horiz-menu .tdb-sub-menu-icon {
+                  vertical-align: middle;
+                }
+                .tdb-horiz-menu .tdb-sub-menu-icon {
+                  position: relative;
+                  top: 0;
+                  padding-left: 0;
+                }
+                .tdb-horiz-menu .tdb-menu-sep {
+                  vertical-align: middle;
+                  font-size: 12px;
+                }
+                .tdb-horiz-menu .tdb-menu-sep-svg svg {
+                  width: 12px;
+                }
+                .tdb-horiz-menu ul {
+                  position: absolute;
+                  top: auto;
+                  left: -7px;
+                  padding: 8px 0;
+                  background-color: #fff;
+                  visibility: hidden;
+                  opacity: 0;
+                }
+                .tdb-horiz-menu ul li > a {
+                  white-space: nowrap;
+                  display: block;
+                  padding: 5px 18px;
+                  font-size: 11px;
+                  line-height: 18px;
+                  color: #111;
+                }
+                .tdb-horiz-menu ul li > a .tdb-sub-menu-icon {
+                  float: right;
+                  font-size: 7px;
+                  line-height: 20px;
+                }
+                .tdb-horiz-menu ul li > a .tdb-sub-menu-icon-svg svg {
+                  width: 7px;
+                }
+                .tdc-dragged .tdb-horiz-menu ul {
+                  visibility: hidden !important;
+                  opacity: 0 !important;
+                  -webkit-transition: all 0.3s ease;
+                  transition: all 0.3s ease;
+                }                
+                
                 /* @disable_hover */
                 .$unique_block_class:not(.tdc-element-selected) .sub-menu {
                     visibility: hidden !important;
@@ -70,6 +238,10 @@ class tdb_mobile_horiz_menu extends td_block {
                 .$unique_block_class .tdb-horiz-menu > li .tdb-menu-sep {
                     font-size: @sep_icon_size;
                 }
+                /* @sep_icon_svg_size */
+                .$unique_block_class .tdb-horiz-menu > li .tdb-menu-sep-svg svg {
+                    width: @sep_icon_svg_size;
+                }
                 /* @sep_icon_space */
                 .$unique_block_class .tdb-horiz-menu > li .tdb-menu-sep {
                     margin: 0 @sep_icon_space;
@@ -80,8 +252,12 @@ class tdb_mobile_horiz_menu extends td_block {
                 }
                 
                 /* @main_sub_icon_size */
-                .$unique_block_class .tdb-horiz-menu > li > a  .tdb-sub-menu-icon {
+                .$unique_block_class .tdb-horiz-menu > li > a .tdb-sub-menu-icon {
                     font-size: @main_sub_icon_size;
+                }
+                /* @main_sub_icon_svg_size */
+                .$unique_block_class .tdb-horiz-menu > li > a .tdb-sub-menu-icon-svg svg {
+                    width: @main_sub_icon_svg_size;
                 }
                 /* @main_sub_icon_space */
                 .$unique_block_class .tdb-horiz-menu > li > a .tdb-sub-menu-icon {
@@ -105,6 +281,10 @@ class tdb_mobile_horiz_menu extends td_block {
                 .$unique_block_class .tdb-horiz-menu > li > a {
                     color: @text_color;
                 }
+                .$unique_block_class .tdb-horiz-menu > li > a .tdb-sub-menu-icon-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li > a .tdb-sub-menu-icon-svg svg * {
+                    fill: @text_color;
+                }
                 /* @text_color_h */
                 .$unique_block_class .tdb-horiz-menu > li.current-menu-item > a,
                 .$unique_block_class .tdb-horiz-menu > li.current-menu-ancestor > a,
@@ -112,13 +292,31 @@ class tdb_mobile_horiz_menu extends td_block {
                 .$unique_block_class .tdb-horiz-menu > li:hover > a {
                     color: @text_color_h;
                 }
+                .$unique_block_class .tdb-horiz-menu > li.current-menu-item > a .tdb-sub-menu-icon-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li.current-menu-item > a .tdb-sub-menu-icon-svg svg *,
+                .$unique_block_class .tdb-horiz-menu > li.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg *,
+                .$unique_block_class .tdb-horiz-menu > li.current-category-ancestor > a .tdb-sub-menu-icon-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li.current-category-ancestor > a .tdb-sub-menu-icon-svg svg *,
+                .$unique_block_class .tdb-horiz-menu > li:hover > a .tdb-sub-menu-icon-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li:hover > a .tdb-sub-menu-icon-svg svg * {
+                    fill: @text_color_h;
+                }
                 /* @main_sub_color */
                 .$unique_block_class .tdb-horiz-menu > li > a .tdb-sub-menu-icon {
                     color: @main_sub_color;
                 }
+                .$unique_block_class .tdb-horiz-menu > li > a .tdb-sub-menu-icon-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li > a .tdb-sub-menu-icon-svg svg * {
+                    fill: @main_sub_color;
+                }
                 /* @sep_color */
                 .$unique_block_class .tdb-horiz-menu > li .tdb-menu-sep {
                     color: @sep_color;
+                }
+                .$unique_block_class .tdb-horiz-menu > li .tdb-menu-sep-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li .tdb-menu-sep-svg svg * {
+                    fill: @sep_color;
                 }
                 /* @main_sub_color_h */
                 .$unique_block_class .tdb-horiz-menu > li.current-menu-item > a .tdb-sub-menu-icon,
@@ -126,6 +324,16 @@ class tdb_mobile_horiz_menu extends td_block {
                 .$unique_block_class .tdb-horiz-menu > li.current-category-ancestor > a .tdb-sub-menu-icon,
                 .$unique_block_class .tdb-horiz-menu > li:hover > a .tdb-sub-menu-icon {
                     color: @main_sub_color_h;
+                }
+                .$unique_block_class .tdb-horiz-menu > li.current-menu-item > a .tdb-sub-menu-icon-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li.current-menu-item > a .tdb-sub-menu-icon-svg svg *,
+                .$unique_block_class .tdb-horiz-menu > li.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg *,
+                .$unique_block_class .tdb-horiz-menu > li.current-category-ancestor > a .tdb-sub-menu-icon-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li.current-category-ancestor > a .tdb-sub-menu-icon-svg svg *,
+                .$unique_block_class .tdb-horiz-menu > li:hover > a .tdb-sub-menu-icon-svg svg,
+                .$unique_block_class .tdb-horiz-menu > li:hover > a .tdb-sub-menu-icon-svg svg * {
+                    fill: @main_sub_color_h;
                 }
                 
                 /* @f_elem */
@@ -221,6 +429,9 @@ class tdb_mobile_horiz_menu extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_mobile_horiz_menu', 1 );
+        $res_ctx->load_settings_raw( 'style_general_header_align', 1 );
+
         if ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) {
             $res_ctx->load_settings_raw('disable_hover', 1);
             $res_ctx->load_settings_raw('show_subcat', $res_ctx->get_shortcode_att('show_subcat'));
@@ -256,10 +467,18 @@ class tdb_mobile_horiz_menu extends td_block {
         }
 
         // separator icon size
+        $sep_icon = $res_ctx->get_icon_att('sep_tdicon');
         $sep_icon_size = $res_ctx->get_shortcode_att('sep_icon_size');
-        $res_ctx->load_settings_raw( 'sep_icon_size', $sep_icon_size );
-        if( $sep_icon_size != '' && is_numeric( $sep_icon_size ) ) {
-            $res_ctx->load_settings_raw( 'sep_icon_size', $sep_icon_size . 'px' );
+        if( base64_encode( base64_decode( $sep_icon ) ) == $sep_icon ) {
+            $res_ctx->load_settings_raw( 'sep_icon_svg_size', $sep_icon_size );
+            if( $sep_icon_size != '' && is_numeric( $sep_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'sep_icon_svg_size', $sep_icon_size . 'px' );
+            }
+        } else {
+            $res_ctx->load_settings_raw( 'sep_icon_size', $sep_icon_size );
+            if( $sep_icon_size != '' && is_numeric( $sep_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'sep_icon_size', $sep_icon_size . 'px' );
+            }
         }
         // separator icon space
         $sep_icon_space = $res_ctx->get_shortcode_att('sep_icon_space');
@@ -270,10 +489,18 @@ class tdb_mobile_horiz_menu extends td_block {
         $res_ctx->load_settings_raw( 'sep_icon_align', $res_ctx->get_shortcode_att('sep_icon_align') . 'px' );
 
         // sub menu icon size
+        $main_sub_icon = $res_ctx->get_icon_att('main_sub_tdicon');
         $main_sub_icon_size = $res_ctx->get_shortcode_att('main_sub_icon_size');
-        $res_ctx->load_settings_raw( 'main_sub_icon_size', $main_sub_icon_size );
-        if( $main_sub_icon_size != '' && is_numeric( $main_sub_icon_size ) ) {
-            $res_ctx->load_settings_raw( 'main_sub_icon_size', $main_sub_icon_size . 'px' );
+        if( base64_encode( base64_decode( $main_sub_icon ) ) == $main_sub_icon ) {
+            $res_ctx->load_settings_raw( 'main_sub_icon_svg_size', $main_sub_icon_size );
+            if( $main_sub_icon_size != '' && is_numeric( $main_sub_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'main_sub_icon_svg_size', $main_sub_icon_size . 'px' );
+            }
+        } else {
+            $res_ctx->load_settings_raw( 'main_sub_icon_size', $main_sub_icon_size );
+            if( $main_sub_icon_size != '' && is_numeric( $main_sub_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'main_sub_icon_size', $main_sub_icon_size . 'px' );
+            }
         }
         // sub menu icon space
         $main_sub_icon_space = $res_ctx->get_shortcode_att('main_sub_icon_space');
@@ -287,6 +514,8 @@ class tdb_mobile_horiz_menu extends td_block {
         $res_ctx->load_color_settings( 'bg_color', 'bg_color', 'bg_color_gradient', 'bg_color_gradient_1', '' );
         $res_ctx->load_settings_raw( 'text_color', $res_ctx->get_shortcode_att('text_color') );
         $res_ctx->load_settings_raw( 'text_color_h', $res_ctx->get_shortcode_att('text_color_h') );
+        $res_ctx->load_settings_raw( 'main_sub_color', $res_ctx->get_shortcode_att('main_sub_color') );
+        $res_ctx->load_settings_raw( 'main_sub_color_h', $res_ctx->get_shortcode_att('main_sub_color_h') );
         $res_ctx->load_settings_raw( 'sep_color', $res_ctx->get_shortcode_att('sep_color') );
 
         // fonts

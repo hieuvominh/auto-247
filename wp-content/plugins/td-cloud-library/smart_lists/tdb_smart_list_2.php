@@ -20,6 +20,11 @@ class tdb_smart_list_2 extends td_smart_list {
 
     protected function render_list_item($item_array, $current_item_id, $current_item_number, $total_items_number) {
 
+        $sm_title_tag = 'h2';
+        if ( isset($this->atts['sm_title_tag']) ) {
+            $sm_title_tag = $this->atts['sm_title_tag'];
+        }
+
         $buffy = '';
 
         //creating each slide
@@ -35,10 +40,10 @@ class tdb_smart_list_2 extends td_smart_list {
             if(!empty($item_array['description'])) {
                 $buffy .= '<div class="tdb-sml-info">';
                     $buffy .= '<div class="tdb-number-and-title">';
-                        $buffy .= '<h2>';
+                        $buffy .= '<' . $sm_title_tag . '>';
                             $buffy .= '<div class="tdb-sml-current-item-nr"><span>' . $current_item_number. '</span></div>';
                             $buffy .= '<span class="tdb-sml-current-item-title">' . $smart_list_2_title . '</span>';
-                        $buffy .= '</h2>';
+                        $buffy .= '</' . $sm_title_tag . '>';
                     $buffy .= '</div>';
 
                     $buffy .= '<span class="tdb-sml-description">' . $item_array['description'] . '</span>';
@@ -63,7 +68,7 @@ class tdb_smart_list_2 extends td_smart_list {
             if (!empty($first_img_info[0])) {
 
                 // class used by magnific popup
-                $smart_list_lightbox = " td-lightbox-enabled";
+                $smart_list_lightbox = 	td_util::get_option('tds_smart_list_modal_image') !== 'hide' ? " td-lightbox-enabled" : '';
 
                 // if a custom link is set use it
                 if (!empty($item_array['first_img_link']) && $first_img_src != $item_array['first_img_link']) {
@@ -71,19 +76,43 @@ class tdb_smart_list_2 extends td_smart_list {
 
                     // remove the magnific popup class for custom links
                     $smart_list_lightbox = "";
-                }
 
-                $buffy .= '<div class="tdb-sml-figure">';
+                    $buffy .= '<div class="tdb-sml-figure">';
                     $buffy .= '<figure class="tdb-slide-smart-list-figure' . $smart_list_lightbox . '">';
-                        $buffy .= '<a class="td-sml-link-to-image" href="' . $first_img_src. '" data-caption="' . esc_attr($first_img_caption, ENT_QUOTES) . '" ' . $first_img_link_target . '>';
-                            $buffy .= '<img src="' . $first_img_info[0] . '" alt="' . $first_img_alt . '"/>';
-                        $buffy .= '</a>';
+                    $buffy .= '<a class="td-sml-link-to-image" href="' . $first_img_src. '" data-caption="' . esc_attr($first_img_caption, ENT_QUOTES) . '" ' . $first_img_link_target . '>';
+                    $buffy .= '<img src="' . $first_img_info[0] . '" alt="' . $first_img_alt . '"/>';
+                    $buffy .= '</a>';
                     $buffy .= '</figure>';
 
                     if( !empty( $first_img_caption ) ) {
                         $buffy .= '<figcaption class="tdb-sml-caption"><div>' . $first_img_caption . '</div></figcaption>';
                     }
-                $buffy .= '</div>';
+                    $buffy .= '</div>';
+                } elseif ( td_util::get_option('tds_smart_list_modal_image') === 'hide') {
+                    $buffy .= '<div class="tdb-sml-figure">';
+                    $buffy .= '<figure class="tdb-slide-smart-list-figure' . $smart_list_lightbox . '">';
+                    $buffy .= '<img src="' . $first_img_info[0] . '" alt="' . $first_img_alt . '"/>';
+                    $buffy .= '</figure>';
+
+                    if( !empty( $first_img_caption ) ) {
+                        $buffy .= '<figcaption class="tdb-sml-caption"><div>' . $first_img_caption . '</div></figcaption>';
+                    }
+                    $buffy .= '</div>';
+                } else {
+                    $buffy .= '<div class="tdb-sml-figure">';
+                    $buffy .= '<figure class="tdb-slide-smart-list-figure' . $smart_list_lightbox . '">';
+                    $buffy .= '<a class="td-sml-link-to-image" href="' . $first_img_src. '" data-caption="' . esc_attr($first_img_caption, ENT_QUOTES) . '" ' . $first_img_link_target . '>';
+                    $buffy .= '<img src="' . $first_img_info[0] . '" alt="' . $first_img_alt . '"/>';
+                    $buffy .= '</a>';
+                    $buffy .= '</figure>';
+
+                    if( !empty( $first_img_caption ) ) {
+                        $buffy .= '<figcaption class="tdb-sml-caption"><div>' . $first_img_caption . '</div></figcaption>';
+                    }
+                    $buffy .= '</div>';
+                }
+
+
             }
 
         $buffy .= '</div>';

@@ -3,7 +3,7 @@
 
 /**
  * Class tdb_state_template hold the template state (the template wp_query)
- * - used to save the template state (comunicate it between different hooks and the templates)
+ * - used to save the template state (communicate it between different hooks and the templates)
  * - also used in the top black bar
  */
 class tdb_state_template {
@@ -71,5 +71,11 @@ class tdb_state_template {
      */
     static function get_template_loop_offset() {
         return self::$tdb_template_loop_offset;
+    }
+
+    static function has_shortcode($shortcode_name) {
+
+        return has_shortcode(self::$wp_query->post->post_content, $shortcode_name);
+
     }
 }

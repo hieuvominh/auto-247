@@ -12,6 +12,11 @@ function td_first_install_setup() {
 		td_options::update('firstInstall', 'themeInstalled' );
 		td_options::update('td_log_status', 'off' );
 
+		//this was added to not affect existing users
+		//by default is off, but we need it on mobile in case the shortcode is used
+		td_options::update('tds_login_sign_in_widget', 'show' );
+
+
 		/*
          * add the theme featured category
          */
@@ -55,24 +60,34 @@ function td_theme_migration() {
                 'digg'          => '',
                 'line'          => '',
                 'viber'         => '',
-				'naver'         => ''
+				'naver'         => '',
+				'flipboard'     => '',
+				'kakao'     => '',
+				'gettr'     => '',
+				'koo'     => '',
+                'copy_url'      => ''
 			));
         }
     }
 
+	//old demos update td_social_drag_and_drop, so we need to run it all the time
 //	if ( ( 'Newspaper' == TD_THEME_NAME && version_compare($td_db_version, '10', '<') ) || ( 'Newsmag' == TD_THEME_NAME && version_compare($td_db_version, '4.9.2', '<') ) || TD_DEPLOY_MODE == 'dev' ) {
 
 		$social_drag_and_drop = td_options::get_array('td_social_drag_and_drop');
 
 		//remove google+ from share
-		if (array_key_exists('googleplus', $social_drag_and_drop)) {
+		if ( array_key_exists('googleplus', $social_drag_and_drop) ) {
 			unset($social_drag_and_drop['googleplus']);
 		}
-
-		//add to social share
-		if ($social_drag_and_drop != '' && array_key_exists('naver', $social_drag_and_drop) != true) {
-			$social_drag_and_drop += array('naver' => '');
-		}
+        //add to social share
+        $new_social_arr = array('naver', 'flipboard', 'copy_url', 'kakao', 'gettr', 'koo');
+        if ( $social_drag_and_drop != '' ) {
+            foreach ( $new_social_arr as $social ) {
+                if ( array_key_exists($social, $social_drag_and_drop) === false ) {
+                    $social_drag_and_drop[$social] = '';
+                }
+            }
+        }
 
 		// remove google+ from social icons
 		$td_social_networks = td_options::get_array('td_social_networks');
@@ -245,3 +260,6 @@ function td_theme_migration() {
     }
 }
 td_theme_migration();
+
+
+

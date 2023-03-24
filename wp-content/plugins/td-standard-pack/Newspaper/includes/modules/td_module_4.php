@@ -10,6 +10,9 @@ class td_module_4 extends td_module {
         $title_length = $this->get_shortcode_att('m4_tl');
         $excerpt_length = $this->get_shortcode_att('m4_el');
         $modified_date = $this->get_shortcode_att('show_modified_date');
+        $time_ago = $this->get_shortcode_att('time_ago');
+        $time_ago_add_txt = $this->get_shortcode_att('time_ago_add_txt');
+        $time_ago_txt_pos = $this->get_shortcode_att('time_ago_txt_pos');
         ?>
 
         <div class="<?php echo $this->get_module_classes();?>">
@@ -22,7 +25,7 @@ class td_module_4 extends td_module {
 
             <div class="td-module-meta-info">
                 <?php echo $this->get_author();?>
-                <?php echo $this->get_date($modified_date);?>
+                <?php echo $this->get_date($modified_date, false, $time_ago, $time_ago_add_txt, $time_ago_txt_pos);?>
                 <?php echo $this->get_comments();?>
             </div>
 

@@ -13,6 +13,22 @@
     vertical-align: middle;
   }
 
+  .tdn-icon-svg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+
+    svg {
+      height: auto;
+
+      &,
+      * {
+        fill: #fff;
+      }
+    }
+  }
+
   .tdn-email-bar {
     display: flex;
   }
@@ -53,9 +69,24 @@
       background-color: @td_black;
     }
 
-    i {
+    .tdn-btn-icon {
       position: relative;
       vertical-align: middle;
+    }
+  }
+
+  .tdn-btn-icon-svg {
+    line-height: 0;
+
+    svg {
+      width: 12px;
+      height: auto;
+
+      &,
+      * {
+        fill: #fff;
+        .transition(all 0.2s ease-in-out);
+      }
     }
   }
 

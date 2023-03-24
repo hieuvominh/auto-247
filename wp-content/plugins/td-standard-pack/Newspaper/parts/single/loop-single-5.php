@@ -25,7 +25,7 @@ if (have_posts()) {
 
                 <div class="td-module-meta-info">
                     <?php echo $td_mod_single->get_author();?>
-                    <?php echo $td_mod_single->get_date(false);?>
+                    <?php echo $td_mod_single->get_date(false, false);?>
                     <?php echo $td_mod_single->get_comments();?>
                     <?php echo $td_mod_single->get_views();?>
                 </div>

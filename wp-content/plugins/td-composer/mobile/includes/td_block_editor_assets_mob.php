@@ -1,6 +1,6 @@
 <?php
 /**
- * Mobile theme wp blocks editor support 
+ * Mobile theme wp blocks editor support
  */
 
 /**
@@ -8,7 +8,9 @@
  */
 add_action( 'enqueue_block_editor_assets', function(){
 	
-	if (TDC_DEPLOY_MODE == 'deploy') {
+	global $pagenow;
+
+	if (TDC_DEPLOY_MODE == 'deploy' && 'widgets.php' !== $pagenow) {
 		wp_enqueue_script(
 			'tdBlocksEditorAssets',
 			TDC_URL . '/mobile/js/js_mob_files_for_admin.min.js',
@@ -17,23 +19,28 @@ add_action( 'enqueue_block_editor_assets', function(){
 			true
 		);
 	} else {
-		wp_enqueue_script(
-			'tdBlocksEditorAssets',
-			TDC_URL . '/mobile/includes/js_dev/tdBlocksEditorAssets.js',
-			array('wp-editor', 'wp-blocks', 'lodash', 'wp-i18n', 'wp-element', 'wp-components', 'wp-rich-text'),
-			TD_COMPOSER,
-			true
-		);
+		
+	    if ( 'widgets.php' !== $pagenow ) {
+		    wp_enqueue_script(
+			    'tdBlocksEditorAssets',
+			    TDC_URL . '/mobile/includes/js_dev/tdBlocksEditorAssets.js',
+			    array( 'wp-editor', 'wp-blocks', 'lodash', 'wp-i18n', 'wp-element', 'wp-components', 'wp-rich-text' ),
+			    TD_COMPOSER,
+			    true
+		    );
+	    }
 	}
 
-	wp_add_inline_script( 'tdBlocksEditorAssets',
-		sprintf( 'var wpTdEditor = %s;', wp_json_encode( array(
-			'possibleStates' => array( 'enabled', 'disabled' ),
-			'defaultStatusMobTheme' => 'enabled',
-			'defaultStatusPageGrid' => 'disabled'
-		) ) ),
-		'before'
-	);
+	if ( 'widgets.php' !== $pagenow ) {
+		wp_add_inline_script( 'tdBlocksEditorAssets',
+			sprintf( 'var wpTdEditor = %s;', wp_json_encode( array(
+				'possibleStates'        => array( 'enabled', 'disabled' ),
+				'defaultStatusMobTheme' => 'enabled',
+				'defaultStatusPageGrid' => 'disabled'
+			) ) ),
+			'before'
+		);
+	}
 });
 
 /**

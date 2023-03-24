@@ -17,9 +17,7 @@ class td_block {
 
 	// by default all the blocks are loop blocks
 	private $is_loop_block = true; // if it's a loop block, we will generate AJAX js, pulldown items and other stuff
-
-
-
+	private $is_products_block = false; // if it's a products block, we will build query using products type
 
     /**
      * the base render function. This is called by all the child classes of this class
@@ -32,13 +30,15 @@ class td_block {
 	    // build the $this->atts
         $this->atts = (array) $atts;
 
+        // block_type
+	    $this->atts['block_type'] = get_class($this);
 
         // bring default values for atts that are not set or that are missing
         // NOTE: atts that are already set in $atts remain the same (big blocks, mega menu and related articles set atts dynamically in the
         // shortcode)
         // NOTE 2: DOES NOT SUPPORT STYLES YET. we have to bring here the style atts also!
         $block_map = td_api_block::get_by_id(get_class($this));
-        if (isset($block_map['params'])) {
+        if ( isset( $block_map['params'] ) ) {
             $mapped_params = $block_map['params'];
             foreach ( $mapped_params as $mapped_param ) {
                 $value = $mapped_param['value'];
@@ -70,7 +70,7 @@ class td_block {
                 }
                 $param_name = $mapped_param['param_name'];
                 //var_dump($this->atts);
-                if (!isset($this->atts[$param_name])) {
+                if ( !isset( $this->atts[$param_name] ) ) {
                     $this->atts[$param_name] = $value;
                 }
             }
@@ -94,6 +94,7 @@ class td_block {
             'el_class' => '',
             'color_preset' => '',
             'ajax_pagination' => '',
+            'ajax_pagination_next_prev_swipe' => '',
             'border_top' => '',
             'css' => '', //custom css - used by VC
             'tdc_css' => ''
@@ -114,31 +115,218 @@ class td_block {
 	    $unique_block_class_style = $this->block_uid . '_rand_style';
 	    $this->atts['tdc_css_class_style'] = $unique_block_class_style;
 
-
-
-
-
 	    $td_pull_down_items = array();
 
-
-
-
 	    // do the query and make the AJAX filter only on loop blocks
-		if ($this->is_loop_block() === true) {
+		if ( $this->is_loop_block() === true ) {
 
+		    // Adapt _current category id to work with global $tdb_state_category
+		    if ( isset( $atts['category_id'] ) ) {
 
-			//by ref do the query
-			$this->td_query = &td_data_source::get_wp_query($this->atts);
+		        switch ( $this->atts['category_id'] ) {
+                    case '_current_cat':
+                        global $tdb_state_category;
+                        $category_wp_query = $tdb_state_category->get_wp_query();
 
+                        if ( isset( $category_wp_query->query['cat'] ) ) {
+                            $category_obj = get_category( $category_wp_query->query['cat'] );
+                        } elseif( isset( $category_wp_query->query_vars['category_name'] ) ) {
+                            $category_obj = get_category_by_slug( $category_wp_query->query_vars['category_name'] );
+                        }
 
+                        if ( ! empty( $category_obj ) ) {
+                            $this->atts['category_id'] = $category_obj->term_id;
+                        }
+                        break;
+                    case '_more_author':
+                    case '_related_cat':
+                    case '_related_tag':
+                    case '_related_tax':
+                        global $tdb_state_single;
+
+                        if ( ! empty( $tdb_state_single ) ) {
+
+                            $single_wp_query = $tdb_state_single->get_wp_query();
+
+                            if ( ! empty ( $single_wp_query ) ) {
+
+                                if ( ! empty ( $single_wp_query->queried_object ) ) {
+
+                                    if ( '_more_author' === $this->atts['category_id'] && ! empty( $single_wp_query->queried_object->post_author )) {
+
+                                        $this->atts['live_filter'] = 'cur_post_same_author';
+                                        $this->atts['live_filter_cur_post_author'] = $single_wp_query->queried_object->post_author;
+
+                                    } else {
+
+                                        if ( '_related_cat' === $this->atts['category_id'] ) {
+                                            $this->atts['live_filter'] = 'cur_post_same_categories';
+                                        } else if ( '_related_tag' === $this->atts['category_id'] ) {
+                                            $this->atts['live_filter'] = 'cur_post_same_tags';
+                                        } else if ( '_related_tax' === $this->atts['category_id'] ) {
+                                            $this->atts['live_filter'] = 'cur_post_same_taxonomies';
+                                        }
+
+                                        $this->atts['live_filter_cur_post_id'] = $single_wp_query->queried_object->ID;
+                                    }
+
+                                } else if ( ! empty( $single_wp_query->post ) && $single_wp_query->post instanceof WP_Post ) {
+
+                                    if ( '_more_author' === $this->atts['category_id'] ) {
+                                        $this->atts['live_filter'] = 'cur_post_same_author';
+                                        $this->atts['live_filter_cur_post_author'] = $single_wp_query->post->post_author;
+
+                                    } else {
+
+                                        if ( '_related_cat' === $this->atts['category_id'] ) {
+                                            $this->atts['live_filter'] = 'cur_post_same_categories';
+                                        } else if ( '_related_tag' === $this->atts['category_id'] ) {
+                                            $this->atts['live_filter'] = 'cur_post_same_tags';
+                                        } else if ( '_related_tax' === $this->atts['category_id'] ) {
+                                            $this->atts['live_filter'] = 'cur_post_same_taxonomies';
+                                        }
+
+                                        $this->atts['live_filter_cur_post_id'] = $single_wp_query->post->ID;
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case '_current_author':
+                        global $tdb_state_author;
+
+                        if ( ! empty( $tdb_state_author ) ) {
+                            $author_wp_query = $tdb_state_author->get_wp_query();
+
+                            if ( ! empty( $author_wp_query ) ) {
+                                $this->atts[ 'live_filter' ] = 'cur_post_same_author';
+
+                                if (!empty( $author_wp_query->query_vars['author'])){
+                                    $this->atts[ 'live_filter_cur_post_author' ] = $author_wp_query->query_vars['author'];
+                                } else if ( !empty( $author_wp_query->queried_object ) ) {
+	                                $this->atts[ 'live_filter_cur_post_author' ] = $author_wp_query->queried_object->ID;
+                                }
+                            }
+                        }
+
+                        break;
+                    case '_current_tag':
+                        global $tdb_state_tag;
+
+                        if ( !empty( $tdb_state_tag ) ) {
+                            $tag_wp_query = $tdb_state_tag->get_wp_query();
+
+                            if ( !empty( $tag_wp_query ) ) {
+
+                                if ( !empty( $tag_wp_query->queried_object_id ) ) {
+	                                $tag_obj = get_tag( $tag_wp_query->queried_object_id );
+                                } elseif ( !empty( $tag_wp_query->queried_object ) ) {
+	                                $tag_obj = get_tag( $tag_wp_query->queried_object->ID );
+                                } elseif ( isset( $tag_wp_query->query['tag'] ) ) {
+	                                $tag_obj = get_term_by( 'slug', $tag_wp_query->query['tag'], 'post_tag' );
+                                }
+
+	                            if ( !empty( $tag_obj ) ) {
+		                            $this->atts['tag_id'] = $tag_obj->term_id;
+	                            }
+
+                            }
+                        }
+
+                        break;
+                    case '_current_date':
+                        global $tdb_state_date;
+
+                        if ( !empty( $tdb_state_date ) ) {
+                            $date_wp_query = $tdb_state_date->get_wp_query();
+
+                            if ( !empty( $date_wp_query ) ) {
+
+                                $current_date_query = array();
+
+	                            $current_date_query['year'] = isset( $date_wp_query->query['year'] ) ? (int) $date_wp_query->query['year'] : '';
+	                            $current_date_query['month'] = isset( $date_wp_query->query['monthnum'] ) ? ltrim( $date_wp_query->query['monthnum'], '0' ) : '';
+	                            $current_date_query['day'] = isset( $date_wp_query->query['day'] ) ? (int) $date_wp_query->query['day'] : '';
+
+	                            $this->atts['date_query'] = $current_date_query;
+
+                            }
+                        }
+
+                        break;
+                    case '_current_search':
+                        global $wp_query, $tdb_state_search;
+
+                        if ( !empty( $tdb_state_search ) ) {
+	                        $search_wp_query = $tdb_state_search->get_wp_query();
+
+	                        if ( !empty( $search_wp_query ) ) {
+
+		                        $search_template_wp_query = $wp_query;
+		                        $wp_query = $search_wp_query;
+
+		                        $this->atts['search_query'] = get_search_query();
+
+		                        $wp_query = $search_template_wp_query;
+
+	                        }
+                        }
+
+                        break;
+                    case '_current_tax':
+	                    global $tdb_state_category;
+
+	                    if ( !empty( $tdb_state_category ) ) {
+		                    $tax_wp_query = $tdb_state_category->get_wp_query();
+
+		                    if ( !empty( $tax_wp_query ) ) {
+
+			                    if ( isset( $tax_wp_query->queried_object->term_id ) ) {
+				                    $this->atts['category_id'] = $tax_wp_query->queried_object->term_id;
+			                    } elseif ( isset( $tax_wp_query->query['tax_query'][0]['terms'] ) ) {
+				                    $this->atts['category_id'] = $tax_wp_query->query['tax_query'][0]['terms'];
+			                    }
+
+		                    }
+	                    }
+
+                        break;
+                }
+
+            }
+
+			// these products blocks work with products ids data type
+			if ( $this->is_products_block() ) {
+				$this->td_query = &td_data_source::get_wp_query( $this->atts, '', 'products' );
+			} else {
+                // exclude current post from blocks
+                if ( is_single() ) {
+                    global $post;
+                    $post_id = "$post->ID"; //string needed for strpos()
+                    // do not run if the post id is already in the list
+                    if ( isset($this->atts['post_ids']) && strpos( $this->atts['post_ids'], $post_id ) === false ) {
+                        if ( $this->atts['post_ids'] == '' ) {
+                            $this->atts['post_ids'] = '-' . $post_id;
+                        } else {
+                            $this->atts['post_ids'] = '-' . $post_id . ',' . $this->atts['post_ids'];
+                        }
+                    }
+                }
+
+                // paged
+                $paged = '';
+				if ( isset( $atts['page'] ) ) {
+					$paged = intval( $atts['page'] );
+                }
+
+				// by ref do the query
+				$this->td_query = &td_data_source::get_wp_query( $this->atts, $paged );
+            }
 
 			// get the pull down items
 			$td_pull_down_items = $this->block_loop_get_pull_down_items();
+
 		}
-
-
-
-
 
         /**
          * Make a new block template instance (NOTE: ON EACH RENDER WE GENERATE A NEW BLOCK TEMPLATE)
@@ -204,9 +392,1199 @@ class td_block {
     }
 
 
+    static function get_common_css() {
+        $raw_css =
+            "<style>
+                /* @style_general_cat_bgf */
+                .tdb-category-grids {
+                  width: 100%;
+                  padding-bottom: 0;
+                }
+                .tdb-category-grids .tdb-block-inner:after,
+                .tdb-category-grids .tdb-block-inner .tdb-cat-grid-post:after {
+                  content: '';
+                  display: table;
+                  clear: both;
+                }
+                @media (max-width: 767px) {
+                  .tdb-category-grids .tdb-block-inner {
+                    margin-left: -20px;
+                    margin-right: -20px;
+                  }
+                }
+                .tdb-category-grids .tdb-cat-grid-post {
+                  position: relative;
+                  float: left;
+                  padding-bottom: 0;
+                }
+                .tdb-category-grids .td-image-container {
+                  position: relative;
+                  flex: 0 0 100%;
+                  width: 100%;
+                  height: 100%;
+                }
+                .tdb-category-grids .td-image-wrap {
+                  position: relative;
+                  display: block;
+                  overflow: hidden;
+                }
+                .tdb-category-grids .td-image-wrap:before {
+                  position: absolute;
+                  bottom: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  -webkit-transition: background-color 0.3s ease;
+                  transition: background-color 0.3s ease;
+                  z-index: 1;
+                }
+                .tdb-category-grids .td-module-thumb {
+                  position: relative;
+                  margin-bottom: 0;
+                }
+                .tdb-category-grids .td-module-thumb:after {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                }
+                .tdb-category-grids .td-module-thumb .td-thumb-css {
+                  -webkit-transition: all 0.3s ease;
+                  transition: all 0.3s ease;
+                }
+                .tdb-category-grids .td-thumb-css {
+                  width: 100%;
+                  height: 100%;
+                  position: absolute;
+                  background-size: cover;
+                  background-position: center center;
+                }
+                .tdb-category-grids .td-module-meta-info {
+                  position: absolute;
+                  left: 0;
+                  margin-bottom: 0;
+                  width: 100%;
+                  pointer-events: none;
+                  z-index: 1;
+                }
+                .tdb-category-grids .td-post-category {
+                  padding: 3px 7px;
+                  background-color: rgba(0, 0, 0, 0.7);
+                  font-family: 'Roboto', sans-serif;
+                  line-height: 13px;
+                  font-weight: 500;
+                  text-transform: uppercase;
+                  pointer-events: auto;
+                  -webkit-transition: background-color 0.2s ease;
+                  transition: background-color 0.2s ease;
+                }
+                .tdb-category-grids .td-module-title a,
+                .tdb-category-grids .td-post-author-name span,
+                .tdb-category-grids .td-module-container:hover .entry-title a,
+                .tdb-category-grids .td-post-author-name a,
+                .tdb-category-grids .td-post-date {
+                  color: #fff;
+                }
+                .tdb-category-grids .td-module-title {
+                  margin: 0;
+                }
+                .tdb-category-grids .td-module-title a {
+                  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+                }
+                .tdb-category-grids .td-editor-date {
+                  display: inline-block;
+                }
+                .tdb-category-grids .td-post-author-name a,
+                .tdb-category-grids .td-post-author-name span,
+                .tdb-category-grids .td-post-date {
+                  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+                }
+                .tdb-category-grids .tdb-cat-grid-post-empty .td-image-wrap {
+                  background-color: #e5e5e5;
+                }
+                .tdb-category-grids .tdb-cat-grid-post-empty .td-image-wrap:before {
+                  display: none;
+                }
+                @media (min-width: 767px) {
+                  .tdb-cat-grid-lightsky .td-image-wrap:after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 160%;
+                    height: 100%;
+                    background: rgba(255, 255, 255, 0.2);
+                    -webkit-transform: scale3d(1.9, 1.4, 1) rotate3d(0, 0, 1, 45deg) translate3d(0, -120%, 0);
+                    transform: scale3d(1.9, 1.4, 1) rotate3d(0, 0, 1, 45deg) translate3d(0, -120%, 0);
+                    -webkit-transition: transform 0.7s ease 0s;
+                    transition: transform 0.7s ease 0s;
+                    z-index: 1;
+                  }
+                  .tdb-cat-grid-lightsky .td-module-container:hover .td-image-wrap:after {
+                    -webkit-transform: scale3d(1.9, 1.4, 1) rotate3d(0, 0, 1, 45deg) translate3d(0, 146%, 0);
+                    transform: scale3d(1.9, 1.4, 1) rotate3d(0, 0, 1, 45deg) translate3d(0, 146%, 0);
+                  }
+                }
+                @media (max-width: 767px) {
+                  div.tdb-cat-grid-scroll .tdb-cat-grid-post {
+                    float: none;
+                  }
+                  div.tdb-cat-grid-scroll .tdb-cat-grid-scroll-holder {
+                    overflow-x: auto;
+                    overflow-y: hidden;
+                    white-space: nowrap;
+                    font-size: 0;
+                    -webkit-overflow-scrolling: touch;
+                  }
+                  div.tdb-cat-grid-scroll .tdb-cat-grid-scroll-holder .tdb-cat-grid-post {
+                    display: inline-block;
+                    vertical-align: top;
+                  }
+                  div.tdb-cat-grid-scroll .td-module-title a {
+                    white-space: normal;
+                  }
+                }
+
+                
+                /* @style_general_bgf */
+                .td-big-grid-flex {
+                    width: 100%;
+                    padding-bottom: 0;
+                }
+                .td-big-grid-flex .td_block_inner:after,
+                .td-big-grid-flex .td_block_inner .td-big-grid-flex-post:after {
+                    content: '';
+                    display: table;
+                    clear: both;
+                }
+                @media (max-width: 767px) {
+                    .td-big-grid-flex .td_block_inner {
+                        margin-left: -20px;
+                        margin-right: -20px;
+                    }
+                }
+                .td-big-grid-flex .td-big-grid-flex-post {
+                    position: relative;
+                    float: left;
+                    padding-bottom: 0;
+                }
+                .td-big-grid-flex .td-image-container {
+                    position: relative;
+                    flex: 0 0 100%;
+                    width: 100%;
+                    height: 100%;
+                }
+                .td-big-grid-flex .td-image-wrap {
+                    position: relative;
+                    display: block;
+                    overflow: hidden;
+                }
+                .td-big-grid-flex .td-image-wrap:before {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    -webkit-transition: background-color 0.3s ease;
+                    transition: background-color 0.3s ease;
+                    z-index: 1;
+                }
+                .td-big-grid-flex .td-module-thumb {
+                    position: relative;
+                    margin-bottom: 0;
+                }
+                .td-big-grid-flex .td-module-thumb:after {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                }
+                .td-big-grid-flex .td-thumb-css {
+                    width: 100%;
+                    height: 100%;
+                    position: absolute;
+                    background-size: cover;
+                    background-position: center center;
+                }
+                .td-big-grid-flex .td-module-thumb .td-thumb-css {
+                    transition: opacity 0.3s, transform 0.3s;
+                    -webkit-transition: opacity 0.3s, transform 0.3s;
+                }
+                .td-big-grid-flex .td-post-category {
+                    transition: background-color 0.2s ease;
+                    -webkit-transition: background-color 0.2s ease;
+                }
+                .td-big-grid-flex .td-module-meta-info {
+                    position: absolute;
+                    left: 0;
+                    margin-bottom: 0;
+                    width: 100%;
+                    pointer-events: none;
+                    z-index: 1;
+                }
+                .td-big-grid-flex .td-post-category {
+                    padding: 3px 7px;
+                    background-color: rgba(0, 0, 0, 0.7);
+                    font-family: 'Roboto', sans-serif;
+                    line-height: 13px;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                    pointer-events: auto;
+                }
+                .td-big-grid-flex .td-module-title a,
+                .td-big-grid-flex .td-post-author-name span,
+                .td-big-grid-flex .td-module-container:hover .entry-title a,
+                .td-big-grid-flex .td-post-author-name a,
+                .td-big-grid-flex .td-post-date {
+                    color: #fff;
+                }
+                .td-big-grid-flex .td-module-title {
+                    margin: 0;
+                }
+                .td-big-grid-flex .td-module-title a {
+                    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+                }
+                .td-big-grid-flex .td-editor-date {
+                    display: inline-block;
+                }
+                .td-big-grid-flex .td-post-author-name a,
+                .td-big-grid-flex .td-post-author-name span,
+                .td-big-grid-flex .td-post-date {
+                    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+                }
+                .td-big-grid-flex .td-big-grid-flex-post-empty .td-image-wrap {
+                    background-color: #e5e5e5;
+                }
+                .td-big-grid-flex .td-big-grid-flex-post-empty .td-image-wrap:before {
+                    display: none;
+                }
+                @media (min-width: 767px) {
+                    .td-big-grid-flex-lightsky .td-image-wrap:after {
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 160%;
+                        height: 100%;
+                        background: rgba(255, 255, 255, 0.2);
+                        transform: scale3d(1.9, 1.4, 1) rotate3d(0, 0, 1, 45deg) translate3d(0, -120%, 0);
+                        -webkit-transform: scale3d(1.9, 1.4, 1) rotate3d(0, 0, 1, 45deg) translate3d(0, -120%, 0);
+                        transition: transform 0.7s ease 0s;
+                        -webkit-transition: transform 0.7s ease 0s;
+                        z-index: 1;
+                    }
+                    .td-big-grid-flex-lightsky .td-module-container:hover .td-image-wrap:after {
+                        transform: scale3d(1.9, 1.4, 1) rotate3d(0, 0, 1, 45deg) translate3d(0, 146%, 0);
+                        -webkit-transform: scale3d(1.9, 1.4, 1) rotate3d(0, 0, 1, 45deg) translate3d(0, 146%, 0);
+                    }
+                }
+                @media (max-width: 767px) {
+                    div.td-big-grid-flex-scroll .td-big-grid-flex-post {
+                        float: none;
+                    }
+                    div.td-big-grid-flex-scroll .td-big-grid-flex-scroll-holder {
+                        overflow-x: auto;
+                        overflow-y: hidden;
+                        white-space: nowrap;
+                        font-size: 0;
+                        -webkit-overflow-scrolling: touch;
+                    }
+                    div.td-big-grid-flex-scroll .td-big-grid-flex-scroll-holder .td-big-grid-flex-post {
+                        display: inline-block;
+                        vertical-align: top;
+                    }
+                    div.td-big-grid-flex-scroll .td-module-title a {
+                        white-space: normal;
+                    }
+                }
+                
+                
+                
+                /* @style_general_video */
+                .td_video_playlist_title {
+                    position: relative;
+                    z-index: 1;
+                    background-color: #222;
+                }
+                .td_video_playlist_title .td_video_title_text {
+                    font-family: 'Open Sans', arial, sans-serif;
+                    font-weight: bold;
+                    font-size: 15px;
+                    color: #ffffff;
+                    margin-left: 17px;
+                    margin-right: 17px;
+                    vertical-align: middle;
+                    line-height: 24px;
+                    padding: 10px 0 10px 0;
+                }
+                @media (max-width: 767px) {
+                    .td_video_playlist_title .td_video_title_text {
+                        text-align: center;
+                    }
+                }
+                .td_wrapper_video_playlist {
+                    z-index: 1;
+                    position: relative;
+                    display: flex;
+                }
+                .td_wrapper_video_playlist .td_video_controls_playlist_wrapper {
+                    background-color: @td_theme_color;
+                    position: relative;
+                }
+                .td_wrapper_video_playlist .td_video_controls_playlist_wrapper:before {
+                    content: '';
+                    background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAGBAMAAADwPukCAAAAElBMVEUAAAAAAAAAAAAAAAAAAAAAAADgKxmiAAAABnRSTlM9KRgMBADiSB2HAAAAFElEQVR4XmNgYBBgUGAwYHBgCAAAA3wA8fpXm6EAAAAASUVORK5CYII=) repeat-x;
+                    width: 100%;
+                    height: 6px;
+                    position: absolute;
+                    bottom: -6px;
+                    z-index: 1;
+                }
+                .td_wrapper_video_playlist .td_video_stop_play_control {
+                    position: relative;
+                    width: 65px;
+                    height: 65px;
+                    outline: 0 !important;
+                }
+                .td_wrapper_video_playlist .td_video_stop_play_control:after {
+                    content: '';
+                    width: 1px;
+                    height: 37px;
+                    background-color: rgba(255, 255 ,255 ,0.2);
+                    position: absolute;
+                    top: 14px;
+                    right: 0;
+                }
+                .td_wrapper_video_playlist .td_youtube_control,
+                .td_wrapper_video_playlist .td_vimeo_control {
+                    position: relative;
+                    top: 12px;
+                    left: 11px;
+                    cursor: pointer;
+                }
+                .td_wrapper_video_playlist .td_video_title_playing {
+                    position: absolute;
+                    top: 13px;
+                    left:80px;
+                    font-family: Verdana, Geneva, sans-serif;
+                    font-size: 13px;
+                    line-height: 19px;
+                    font-weight: bold;
+                    color: #ffffff;
+                    padding-right: 7px;
+                    max-height: 37px;
+                    overflow: hidden;
+                }
+                @media (min-width: 481px) and (max-width: 1018px) {
+                    .td_wrapper_video_playlist .td_video_title_playing {
+                        max-height: 20px;
+                        top: 23px;
+                    }
+                }
+                @media (max-width: 480px) {
+                    .td_wrapper_video_playlist .td_video_title_playing {
+                        max-height: 37px;
+                        top: 13px;
+                    }
+                }
+                .td_wrapper_video_playlist .td_video_time_playing {
+                    position: absolute;
+                    bottom:0;
+                    right:5px;
+                    font-family: 'Open Sans', arial, sans-serif;
+                    font-size: 10px;
+                    font-style: italic;
+                    color: #ffffff;
+                    line-height: 17px;
+                    padding-right: 1px
+                }
+                .td_wrapper_video_playlist .td_video_currently_playing {
+                    background-color: #404040;
+                }
+                .td_wrapper_video_playlist .td_video_currently_playing:after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    border-left: 3px solid #4db2ec !important;
+                    width: 3px;
+                    height: inherit;
+                }
+                .td_wrapper_video_playlist .td_click_video {
+                    height: 60px;
+                    display: block;
+                    width: 100%;
+                    position: relative;
+                }
+                .td_wrapper_video_playlist .td_click_video:hover {
+                    background-color: #333333;
+                    cursor: pointer;
+                }
+                .td_wrapper_video_playlist .td_video_thumb {
+                    position: relative;
+                    top: 10px;
+                    width: 72px;
+                    height: 40px;
+                    overflow: hidden;
+                    margin-left: 16px;
+                }
+                .td_wrapper_video_playlist .td_video_thumb img {
+                    position: relative;
+                    top: -6px;
+                }
+                .td_wrapper_video_playlist .td_video_title_and_time {
+                    position: absolute;
+                    top: 10px;
+                    width: 100%;
+                    padding: 0 30px 0 103px;
+                }
+                .td_wrapper_video_playlist .td_video_title_and_time .td_video_title {
+                    font-family: 'Open Sans', arial, sans-serif;
+                    font-size: 12px;
+                    color: #ffffff;
+                    line-height: 15px;
+                    max-height: 30px;
+                    overflow: hidden;
+                }
+                .td_wrapper_video_playlist .td_video_time {
+                    font-family: 'Open Sans', arial, sans-serif;
+                    font-size: 10px;
+                    font-style: italic;
+                    color: #cacaca;
+                    line-height: 13px;
+                }
+                .td_wrapper_video_playlist .td_wrapper_player {
+                    background-color: #000;
+                    overflow: hidden;
+                }
+                @media (max-width: 1018px) {
+                    .td_wrapper_video_playlist .td_wrapper_player {
+                        flex: auto !important;
+                    }
+                }
+                @media (max-width: 767px) {
+                    .td_wrapper_video_playlist .td_wrapper_player {
+                        margin-bottom: -5px;
+                    }
+                }
+                .td_wrapper_video_playlist .td_wrapper_player iframe {
+                    width: 100%;
+                    height: 100% !important;
+                }
+                .td_wrapper_video_playlist .td_container_video_playlist {
+                    display: flex;
+                    flex-direction: column;
+                    background-color: #222;
+                    vertical-align: top;
+                    overflow: hidden;
+                }
+                .td_wrapper_video_playlist .td_playlist_clickable {
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                }
+                @media (max-width: 1018px) {
+                    .td_video_playlist_column_3 .td_wrapper_video_playlist {
+                        flex-direction: column;
+                    }
+                }
+                .td_video_playlist_column_3 .td_wrapper_player,
+                .td_video_playlist_column_3 .td_container_video_playlist {
+                    height: 409px;
+                }
+                @media (min-width: 1019px) and (max-width: 1140px) {
+                    .td_video_playlist_column_3 .td_wrapper_player,
+                    .td_video_playlist_column_3 .td_container_video_playlist {
+                        height: 365px;
+                    }
+                }
+                .td_video_playlist_column_3 .td_wrapper_player {
+                    display: block;
+                    flex: 1;
+                }
+                @media (min-width: 768px) and (max-width: 1018px) {
+                    .td_video_playlist_column_3 .td_wrapper_player {
+                        width: 100%;
+                        height: 416px;
+                    }
+                }
+                @media (max-width: 767px) {
+                    .td_video_playlist_column_3 .td_wrapper_player {
+                        width: 100%;
+                        height: 260px;
+                    }
+                }
+                .td_video_playlist_column_3 .td_container_video_playlist {
+                    width: 341px;
+                }
+                @media (min-width: 1019px) and (max-width: 1140px) {
+                    .td_video_playlist_column_3 .td_container_video_playlist {
+                        width: 331px;
+                    }
+                }
+                @media (max-width: 1018px) {
+                    .td_video_playlist_column_3 .td_container_video_playlist {
+                        width: 100%;
+                        height: 305px;
+                    }
+                }
+                @media screen and (-webkit-min-device-pixel-ratio:0) and (min-width: 768px) and (max-width: 1018px) {
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile {
+                        margin-right: 10px;
+                    }
+                }
+                @media screen and (-webkit-min-device-pixel-ratio:0) and (max-width: 767px) {
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile {
+                        margin-right: 10px;
+                    }
+                }
+                @media (min-width: 768px) and (max-width: 1018px) {
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile {
+                        overflow-x: hidden;
+                        overflow-y: auto;
+                    }
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar-track {
+                        background-color: #383838;
+                    }
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar {
+                        width: 6px;
+                        background-color: #F5F5F5;
+                    }
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar-thumb {
+                        background-color: #919191;
+                        border-radius: 10px;
+                    }
+                }
+                @media (max-width: 767px) {
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile {
+                        overflow-x: hidden;
+                        overflow-y: auto;
+                    }
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar-track {
+                        background-color: #383838;
+                    }
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar {
+                        width: 6px;
+                        background-color: #F5F5F5;
+                    }
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar-thumb {
+                        background-color: #919191;
+                        border-radius: 10px;
+                    }
+                }
+                @media screen and (-webkit-min-device-pixel-ratio:0) {
+                    .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist {
+                        margin-right: 10px;
+                    }
+                }
+                .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist::-webkit-scrollbar-track {
+                    background-color: #383838;
+                }
+                .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist::-webkit-scrollbar {
+                    width: 6px;
+                    background-color: #F5F5F5;
+                }
+                .td_video_playlist_column_3 .td_playlist_clickable.td_add_scrollbar_to_playlist::-webkit-scrollbar-thumb {
+                    background-color: #919191;
+                    border-radius: 10px;
+                }
+                .td_video_playlist_column_2 .td_wrapper_video_playlist {
+                    flex-direction: column;
+                }
+                .td_video_playlist_column_2 .td_video_title_playing {
+                    max-height: 20px;
+                    top: 23px;
+                }
+                @media (max-width: 480px) {
+                    .td_video_playlist_column_2 .td_video_title_playing {
+                        max-height: 37px;
+                        top: 13px;
+                    }
+                }
+                .td_video_playlist_column_2 .td_wrapper_player {
+                    display: block;
+                    height: 391px;
+                }
+                @media (min-width: 1019px) and (max-width: 1140px) {
+                    .td_video_playlist_column_2 .td_wrapper_player {
+                        height: 360px;
+                    }
+                }
+                @media (min-width: 768px) and (max-width: 1018px) {
+                    .td_video_playlist_column_2 .td_wrapper_player {
+                        height: 272px;
+                    }
+                }
+                @media (max-width: 767px) {
+                    .td_video_playlist_column_2 .td_wrapper_player {
+                        display: block;
+                        height: auto;
+                    }
+                }
+                .td_video_playlist_column_2 .td_container_video_playlist {
+                    height: 305px;
+                }
+                @media (max-width: 480px) {
+                    .td_video_playlist_column_2 .td_container_video_playlist {
+                        height: 245px;
+                    }
+                }
+                @media screen and (-webkit-min-device-pixel-ratio:0) {
+                    .td_video_playlist_column_2 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile,
+                    .td_video_playlist_column_2 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist {
+                        margin-right: 10px;
+                    }
+                }
+                .td_video_playlist_column_2 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar,
+                .td_video_playlist_column_2 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist::-webkit-scrollbar-track {
+                    background-color: #383838;
+                }
+                .td_video_playlist_column_2 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar,
+                .td_video_playlist_column_2 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist::-webkit-scrollbar {
+                    width: 6px;
+                    background-color: #F5F5F5;
+                }
+                .td_video_playlist_column_2 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar-thumb,
+                .td_video_playlist_column_2 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist::-webkit-scrollbar-thumb {
+                    background-color: #919191;
+                    border-radius: 10px;
+                }
+                .td_video_playlist_column_1 .td_wrapper_video_playlist {
+                    flex-direction: column;
+                }
+                .td_video_playlist_column_1 .td_wrapper_player {
+                    display: block;
+                    height: 182px;
+                }
+                @media (min-width: 1019px) and (max-width: 1140px) {
+                    .td_video_playlist_column_1 .td_wrapper_player {
+                        height: 169px;
+                    }
+                }
+                @media (min-width: 768px) and (max-width: 1018px) {
+                    .td_video_playlist_column_1 .td_wrapper_player {
+                        height: 128px;
+                    }
+                }
+                @media (max-width: 767px) {
+                    .td_video_playlist_column_1 .td_wrapper_player {
+                        display: block;
+                        width: 100%;
+                        height: auto;
+                    }
+                }
+                .td_video_playlist_column_1 .td_container_video_playlist {
+                    height: 412px;
+                }
+                @media (max-width: 480px) {
+                    .td_video_playlist_column_1 .td_container_video_playlist {
+                        height: 245px;
+                    }
+                }
+                @media screen and (-webkit-min-device-pixel-ratio:0) {
+                    .td_video_playlist_column_1 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile,
+                    .td_video_playlist_column_1 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist {
+                        margin-right: 10px;
+                    }
+                }
+                .td_video_playlist_column_1 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar,
+                .td_video_playlist_column_1 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist::-webkit-scrollbar-track {
+                    background-color: #383838;
+                }
+                .td_video_playlist_column_1 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar,
+                .td_video_playlist_column_1 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist::-webkit-scrollbar {
+                    width: 6px;
+                    background-color: #F5F5F5;
+                }
+                .td_video_playlist_column_1 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist_for_mobile::-webkit-scrollbar-thumb,
+                .td_video_playlist_column_1 .td_container_video_playlist .td_playlist_clickable.td_add_scrollbar_to_playlist::-webkit-scrollbar-thumb {
+                    background-color: #919191;
+                    border-radius: 10px;
+                }
+                .wp-video-shortcode:focus {
+                    outline: 0 !important;
+                }
+                
+                /* @style_general_sm */
+                .tdc-elements .td-post-sm .tdb-item {
+                  position: relative;
+                }
+                .tdc-elements .td-post-sm .td-spot-id-sm_ad .tdc-placeholder-title:before {
+                  content: 'Smart List Ad' !important;
+                }
+                .tdb_single_smartlist {
+                  margin-bottom: 0;
+                }
+                .tdb_single_smartlist .td-a-ad {
+                  clear: both;
+                  text-align: center;
+                }
+                .tdb_single_smartlist .td-a-ad > div {
+                  margin-top: 0;
+                }
+                .tdb_single_smartlist .td-a-ad img {
+                  margin: 0;
+                  width: 100%;
+                }
+                .tdb_single_smartlist .td-a-ad .adsbygoogle {
+                  margin-top: 0;
+                  position: relative;
+                  left: 50%;
+                  -webkit-transform: translateX(-50%);
+                  transform: translateX(-50%);
+                }
+                .tdb_single_smartlist .td-spot-id-sm_ad .td-adspot-title,
+                .tdb-sml-description {
+                  display: block;
+                }
+                .tdb_single_smartlist .td-spot-id-sm_ad .tdc-placeholder-title:before {
+                  content: 'Smart List Ad';
+                }
+                .tdb-number-and-title {
+                  width: 100%;
+                }
+                .tdb-number-and-title h1,
+                .tdb-number-and-title h2,
+                .tdb-number-and-title h3,
+                .tdb-number-and-title h4,
+                .tdb-number-and-title h5,
+                .tdb-number-and-title h6 {
+                  margin: 0;
+                }
+                .tdb-sml-current-item-nr span {
+                  display: block;
+                  background-color: #222;
+                  font-weight: 700;
+                  text-align: center;
+                  color: #fff;
+                }
+                .tdb-sml-current-item-title {
+                  font-weight: 700;
+                }
+                .tdb-slide-smart-list-figure img {
+                  display: inline-block;
+                  vertical-align: top;
+                }
+                .tdb-sml-caption {
+                  font-family: Verdana, BlinkMacSystemFont, -apple-system, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif;
+                  font-style: italic;
+                  font-size: 11px;
+                  line-height: 17px;
+                  margin-top: 5px;
+                  margin-bottom: 21px;
+                }
+                
+                /* @style_general_review */
+                .td-review {
+                  width: 100%;
+                  margin-bottom: 34px;
+                  font-size: 13px;
+                }
+                .td-review td {
+                  padding: 7px 14px;
+                }
+                .td-review i {
+                  margin-top: 5px;
+                }
+                
+                /* @style_general_author_box */
+                .tdb-author-box .tdb-author-photo,
+                .tdb-author-box .tdb-author-info {
+                  display: table-cell;
+                  vertical-align: top;
+                }
+                .tdb-author-box .tdb-author-photo img {
+                  display: block;
+                }
+                .tdb-author-box .tdb-author-counters span {
+                  display: inline-block;
+                  background-color: #222;
+                  margin: 0 10px 0 0;
+                  padding: 5px 10px 4px;
+                  font-family: 'Roboto', sans-serif;
+                  font-size: 11px;
+                  font-weight: 700;
+                  line-height: 1;
+                  color: #fff;
+                }
+                .tdb-author-box .tdb-author-name,
+                .tdb-author-box .tdb-author-url {
+                  display: block;
+                }
+                .tdb-author-box .tdb-author-name {
+                  margin: 7px 0 8px;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 15px;
+                  line-height: 21px;
+                  font-weight: 700;
+                  color: #222;
+                }
+                .tdb-author-box .tdb-author-name:hover {
+                  color: #4db2ec;
+                }
+                .tdb-author-box .tdb-author-url {
+                  margin-bottom: 6px;
+                  font-size: 11px;
+                  font-style: italic;
+                  line-height: 21px;
+                  color: #444;
+                }
+                .tdb-author-box .tdb-author-url:hover {
+                  color: #4db2ec;
+                }
+                .tdb-author-box .tdb-author-descr {
+                  font-size: 12px;
+                }
+                .tdb-author-box .tdb-author-social {
+                  margin-top: 4px;
+                }
+                .tdb-author-box .tdb-social-item {
+                  position: relative;
+                  display: inline-block;
+                  -webkit-transition: all 0.2s;
+                  transition: all 0.2s;
+                  text-align: center;
+                  -webkit-transform: translateZ(0);
+                  transform: translateZ(0);
+                }
+                .tdb-author-box .tdb-social-item:last-child {
+                  margin-right: 0 !important;
+                }
+                .tdb-author-box .tdb-social-item i {
+                  color: #000;
+                  -webkit-transition: all 0.2s;
+                  transition: all 0.2s;
+                }
+                .tdb-author-box .tdb-social-item:hover i {
+                  color: #000;
+                }
+                
+                /* @style_general_related_post */
+                .tdb-single-related-posts {
+                  display: inline-block;
+                  width: 100%;
+                  padding-bottom: 0;
+                  overflow: visible;
+                }
+                .tdb-single-related-posts .tdb-block-inner:after,
+                .tdb-single-related-posts .tdb-block-inner .td_module_wrap:after {
+                  content: '';
+                  display: table;
+                  clear: both;
+                }
+                .tdb-single-related-posts .td-module-container {
+                  display: flex;
+                  flex-direction: column;
+                  position: relative;
+                }
+                .tdb-single-related-posts .td-module-container:before {
+                  content: '';
+                  position: absolute;
+                  bottom: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 1px;
+                }
+                .tdb-single-related-posts .td-image-wrap {
+                  display: block;
+                  position: relative;
+                  padding-bottom: 70%;
+                }
+                .tdb-single-related-posts .td-image-container {
+                  position: relative;
+                  flex: 0 0 100%;
+                  width: 100%;
+                  height: 100%;
+                }
+                .tdb-single-related-posts .td-module-thumb {
+                  margin-bottom: 0;
+                }
+                .tdb-single-related-posts .td-module-meta-info {
+                  padding: 7px 0 0 0;
+                  margin-bottom: 0;
+                  z-index: 1;
+                  border: 0 solid #eaeaea;
+                }
+                .tdb-single-related-posts .tdb-author-photo {
+                  display: inline-block;
+                }
+                .tdb-single-related-posts .tdb-author-photo,
+                .tdb-single-related-posts .tdb-author-photo img {
+                  vertical-align: middle;
+                }
+                .tdb-single-related-posts .td-post-author-name,
+                .tdb-single-related-posts .td-post-date,
+                .tdb-single-related-posts .td-module-comments {
+                  vertical-align: text-top;
+                }
+                .tdb-single-related-posts .entry-review-stars {
+                  margin-left: 6px;
+                  vertical-align: text-bottom;
+                }
+                .tdb-single-related-posts .td-author-photo {
+                  display: inline-block;
+                  vertical-align: middle;
+                }
+                .tdb-single-related-posts .td-thumb-css {
+                  width: 100%;
+                  height: 100%;
+                  position: absolute;
+                  background-size: cover;
+                  background-position: center center;
+                }
+                .tdb-single-related-posts .td-category-pos-image .td-post-category,
+                .tdb-single-related-posts .td-post-vid-time {
+                  position: absolute;
+                  z-index: 2;
+                  bottom: 0;
+                }
+                .tdb-single-related-posts .td-category-pos-image .td-post-category {
+                  left: 0;
+                }
+                .tdb-single-related-posts .td-post-vid-time {
+                  right: 0;
+                  background-color: #000;
+                  padding: 3px 6px 4px;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 10px;
+                  font-weight: 600;
+                  line-height: 1;
+                  color: #fff;
+                }
+                .tdb-single-related-posts .td-module-title {
+                  font-family: 'Roboto', sans-serif;
+                  font-weight: 500;
+                  font-size: 13px;
+                  line-height: 20px;
+                  margin: 0;
+                }
+                @media (max-width: 767px) {
+                  .tdb-single-related-posts .td-module-title {
+                    font-size: 17px;
+                    line-height: 23px;
+                  }
+                }
+                .tdb-single-related-posts .td-excerpt {
+                  margin: 20px 0 0;
+                  line-height: 21px;
+                }
+                .tdb-single-related-posts .td-read-more,
+                .tdb-single-related-posts .td-next-prev-wrap {
+                  margin: 20px 0 0;
+                }
+                .tdb-single-related-posts div.tdb-block-inner:after {
+                  content: '' !important;
+                  padding: 0;
+                  border: none;
+                }
+                .tdb-single-related-posts .td-next-prev-wrap a {
+                  width: auto;
+                  height: auto;
+                  min-width: 25px;
+                  min-height: 25px;
+                }
+                .single-tdb_templates .tdb-single-related-posts .td-next-prev-wrap a:active {
+                  pointer-events: none;
+                }
+                
+                /* @style_general_post_meta */
+                .tdb-post-meta {
+                  margin-bottom: 16px;
+                  color: #444;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 11px;
+                  font-weight: 400;
+                  clear: none;
+                  vertical-align: middle;
+                  line-height: 1;
+                }
+                .tdb-post-meta span,
+                .tdb-post-meta i,
+                .tdb-post-meta time {
+                  vertical-align: middle;
+                }
+                
+                /* @style_general_module_loop */
+                [class*=\"tdb_module_loop\"] .td-module-container {
+                  display: flex;
+                  flex-direction: column;
+                  position: relative;
+                }
+                [class*=\"tdb_module_loop\"] .td-module-container:before {
+                  content: '';
+                  position: absolute;
+                  bottom: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 1px;
+                }
+                [class*=\"tdb_module_loop\"] .td-image-wrap {
+                  display: block;
+                  position: relative;
+                  padding-bottom: 50%;
+                }
+                [class*=\"tdb_module_loop\"] .td-image-container {
+                  position: relative;
+                  flex: 0 0 auto;
+                  width: 100%;
+                  height: 100%;
+                }
+                [class*=\"tdb_module_loop\"] .td-module-thumb {
+                  margin-bottom: 0;
+                }
+                [class*=\"tdb_module_loop\"] .td-module-meta-info {
+                  width: 100%;
+                  padding: 13px 0 0 0;
+                  margin-bottom: 0;
+                  z-index: 1;
+                  border: 0 solid #eaeaea;
+                }
+                [class*=\"tdb_module_loop\"] .td-thumb-css {
+                  width: 100%;
+                  height: 100%;
+                  position: absolute;
+                  background-size: cover;
+                  background-position: center center;
+                }
+                [class*=\"tdb_module_loop\"] .td-category-pos-image .td-post-category:not(.td-post-extra-category),
+                [class*=\"tdb_module_loop\"] .td-post-vid-time {
+                  position: absolute;
+                  z-index: 2;
+                  bottom: 0;
+                }
+                [class*=\"tdb_module_loop\"] .td-category-pos-image .td-post-category:not(.td-post-extra-category) {
+                  left: 0;
+                }
+                [class*=\"tdb_module_loop\"] .td-post-vid-time {
+                  right: 0;
+                  background-color: #000;
+                  padding: 3px 6px 4px;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 10px;
+                  font-weight: 600;
+                  line-height: 1;
+                  color: #fff;
+                }
+                [class*=\"tdb_module_loop\"] .td-excerpt {
+                  margin: 20px 0 0;
+                  line-height: 21px;
+                }
+                
+                /* @style_general_module_header */
+                .tdb_module_header {
+                  width: 100%;
+                  padding-bottom: 0;
+                }
+                .tdb_module_header .td-module-container {
+                  display: flex;
+                  flex-direction: column;
+                  position: relative;
+                }
+                .tdb_module_header .td-module-container:before {
+                  content: '';
+                  position: absolute;
+                  bottom: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 1px;
+                }
+                .tdb_module_header .td-image-wrap {
+                  display: block;
+                  position: relative;
+                  padding-bottom: 70%;
+                }
+                .tdb_module_header .td-image-container {
+                  position: relative;
+                  width: 100%;
+                  flex: 0 0 auto;
+                }
+                .tdb_module_header .td-module-thumb {
+                  margin-bottom: 0;
+                }
+                .tdb_module_header .td-module-meta-info {
+                  width: 100%;
+                  margin-bottom: 0;
+                  padding: 7px 0 0 0;
+                  z-index: 1;
+                  border: 0 solid #eaeaea;
+                  min-height: 0;
+                }
+                .tdb_module_header .entry-title {
+                  margin: 0;
+                  font-size: 13px;
+                  font-weight: 500;
+                  line-height: 18px;
+                }
+                .tdb_module_header .td-post-author-name,
+                .tdb_module_header .td-post-date,
+                .tdb_module_header .td-module-comments {
+                  vertical-align: text-top;
+                }
+                .tdb_module_header .td-post-author-name,
+                .tdb_module_header .td-post-date {
+                  top: 3px;
+                }
+                .tdb_module_header .td-thumb-css {
+                  width: 100%;
+                  height: 100%;
+                  position: absolute;
+                  background-size: cover;
+                  background-position: center center;
+                }
+                .tdb_module_header .td-category-pos-image .td-post-category:not(.td-post-extra-category),
+                .tdb_module_header .td-post-vid-time {
+                  position: absolute;
+                  z-index: 2;
+                  bottom: 0;
+                }
+                .tdb_module_header .td-category-pos-image .td-post-category:not(.td-post-extra-category) {
+                  left: 0;
+                }
+                .tdb_module_header .td-post-vid-time {
+                  right: 0;
+                  background-color: #000;
+                  padding: 3px 6px 4px;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 10px;
+                  font-weight: 600;
+                  line-height: 1;
+                  color: #fff;
+                }
+                .tdb_module_header .td-excerpt {
+                  margin: 20px 0 0;
+                  line-height: 21px;
+                }
+                .tdb_module_header .td-read-more {
+                  margin: 20px 0 0;
+                }
+                
+                /* @style_general_header_align */
+                .tdb-header-align {
+                  vertical-align: middle;
+                }
+                
+                
+            </style>";
+
+        return $raw_css;
+    }
+
+
 	protected function get_custom_css() {
 		return '';
 	}
+
+	protected function get_inline_css($block_uid = '') {
+        if (method_exists( $this,'get_raw_css')) {
+            return $this->get_raw_css( true );
+        }
+        return '';
+    }
+
+    protected function get_inline_js($block_uid = '') {
+        return '';
+    }
 
 
 	/**
@@ -218,8 +1596,15 @@ class td_block {
 	 */
 	protected function get_block_css() {
 	    $buffy_style = '';
+        $buffy = '';
 
-		$buffy = $this->block_template()->get_css();
+	    if( isset($this->atts['custom_title']) ) {
+	        if( $this->atts['custom_title'] != '' ) {
+                $buffy .= $this->block_template()->get_css();
+            }
+        } elseif('tdb_single_comments' === $this->atts['block_type']) {
+			$buffy .= $this->block_template()->get_css();
+		}
 
 		$css = $this->get_att('css');
 
@@ -233,6 +1618,21 @@ class td_block {
 			$buffy_style .= PHP_EOL . '<style>' . PHP_EOL . '/* custom css */' . PHP_EOL . $custom_css . PHP_EOL . '</style>';
 		}
 
+		if ( td_util::tdc_is_live_editor_iframe() || !empty( tdc_util::get_get_val('tda_action'))) {
+
+			$inline_css = $this->get_inline_css();
+			if ( ! empty( $inline_css ) ) {
+				$inline_css  = td_util::remove_style_tag( $inline_css );
+				$buffy_style .= PHP_EOL . '<style class="tdc-pattern">' . PHP_EOL . '/* inline css */' . PHP_EOL . $inline_css . PHP_EOL . '</style>';
+			}
+
+			$inline_js = $this->get_inline_js();
+			if ( ! empty( $inline_js ) ) {
+				$inline_js   = td_util::remove_script_tag( $inline_js );
+				$buffy_style .= PHP_EOL . '<script type="text/javascript" class="tdc-pattern-js">' . PHP_EOL . '/* inline js */' . PHP_EOL . $inline_js . PHP_EOL . '</script>';
+			}
+		}
+
 
 		$tdcCss = $this->get_att('tdc_css');
 		$clearfixColumns = false;
@@ -240,35 +1640,114 @@ class td_block {
 		$beforeCssOutput = '';
 		$afterCssOutput = '';
 
-		if (!empty($tdcCss)) {
-			$buffy .= $this->generate_css($tdcCss, $clearfixColumns, $cssOutput, $beforeCssOutput, $afterCssOutput );
-		}
+        if ( ! empty( $tdcCss ) ) {
+            $buffy .= $this->generate_css( $tdcCss, $clearfixColumns, $cssOutput, $beforeCssOutput, $afterCssOutput );
+        }
 
-
-		if (!empty($buffy)) {
-			$buffy = PHP_EOL . '<style>' . PHP_EOL . $buffy . PHP_EOL . '</style>';
-			$buffy_style = $buffy . $buffy_style;
-		}
+        if ( ! empty( $buffy ) ) {
+            $buffy       = PHP_EOL . '<style>' . PHP_EOL . $buffy . PHP_EOL . '</style>';
+            $buffy_style = $buffy . $buffy_style;
+        }
 
 		$tdcElementStyleCss = '';
-		if ( !empty($cssOutput) || !empty($beforeCssOutput) || !empty($afterCssOutput) ) {
+        if ( !empty($cssOutput) || !empty($beforeCssOutput) || !empty($afterCssOutput) ) {
 			if ( !empty($beforeCssOutput) ) {
 				$beforeCssOutput = PHP_EOL . '<div class="td-element-style-before"><style>' . $beforeCssOutput . '</style></div>';
 			}
 			$tdcElementStyleCss = PHP_EOL . '<div class="' . $this->get_att( 'tdc_css_class_style' ) . ' td-element-style">' . $beforeCssOutput . '<style>' . $cssOutput . ' ' . $afterCssOutput . '</style></div>';
 		}
 
-		if (!empty($buffy_style)) {
-
-			if (!empty($tdcElementStyleCss)) {
-				return $buffy_style . $tdcElementStyleCss;
-			}
-			return $buffy_style;
-		} else if (!empty($tdcElementStyleCss)) {
-			return $tdcElementStyleCss;
+		$has_style = false;
+		if (!empty($buffy_style) || !empty($tdcElementStyleCss)) {
+		    $has_style = true;
 		}
 
-		return '';
+		$final_style = '';
+
+		if ( $has_style) {
+
+		    global $post;
+
+		    if (td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() || empty($post) ) {
+
+                if (!empty($buffy_style)) {
+                    if (!empty($tdcElementStyleCss)) {
+                        $buffy_style .= $tdcElementStyleCss;
+                    }
+                    $final_style = $buffy_style;
+                } else if (!empty($tdcElementStyleCss)) {
+                    $final_style = $tdcElementStyleCss;
+                }
+
+            } else if (!empty($post)) {
+
+		        if ( is_page() || 'tdb_templates' === get_post_type()) {
+
+		            $ref_id = $post->ID;
+
+		        } else {
+
+                    if (is_single() || is_category()) {
+                        $template_id = td_util::get_template_id();
+
+                        if (empty($template_id)) {
+                            $ref_id = $post->ID;
+                        } else {
+                            $ref_id = $template_id;
+                        }
+                    }
+                }
+
+                if ( class_exists( 'Mobile_Detect' ) ) {
+                    $mobile_detect = new Mobile_Detect();
+                    if ( $mobile_detect->isMobile() ) {
+
+                        $ref_id = get_post_meta( !empty($ref_id) ? $ref_id : null, 'tdc_mobile_template_id', true );
+                        if ( empty( $ref_id ) ) {
+                            $ref_id = $post->ID;
+                        }
+                    }
+                }
+
+                if ( ! empty( $ref_id ) ) {
+
+                    $tda_essential_css = get_post_meta( $ref_id, 'tda_essential_css', true );
+                    if ( !empty( $tda_essential_css ) ) {
+
+                        if ( ! empty( $buffy_style ) ) {
+                            $final_style .= preg_replace( '/<style(.|\n|\r)*?<\/style>/m', '', $buffy_style );
+                        }
+                        if ( ! empty( $tdcElementStyleCss ) ) {
+                            $final_style .= preg_replace( '/<style(.|\n|\r)*?<\/style>/m', '', $tdcElementStyleCss );
+                        }
+
+                    } else {
+
+                        if ( ! empty( $buffy_style ) ) {
+                            if ( ! empty( $tdcElementStyleCss ) ) {
+                                $buffy_style .= $tdcElementStyleCss;
+                            }
+                            $final_style = $buffy_style;
+                        } else if ( ! empty( $tdcElementStyleCss ) ) {
+                            $final_style = $tdcElementStyleCss;
+                        }
+                    }
+
+                } else {
+
+                    if ( ! empty( $buffy_style ) ) {
+                        if ( ! empty( $tdcElementStyleCss ) ) {
+                            $buffy_style .= $tdcElementStyleCss;
+                        }
+                        $final_style = $buffy_style;
+                    } else if ( ! empty( $tdcElementStyleCss ) ) {
+                        $final_style = $tdcElementStyleCss;
+                    }
+                }
+		    }
+		}
+
+		return $final_style;
 	}
 
 
@@ -710,9 +2189,20 @@ class td_block {
 
 					// desktop css
 					if ($mediaCssDesktop !== '') {
+
 						$limit_bottom = td_global::$td_viewport_intervals[ count( td_global::$td_viewport_intervals ) - 1 ]['limitBottom'];
-						$tdcCssProcessed .= PHP_EOL . '/* desktop */ @media(min-width: ' . ( $limit_bottom + 1 ) . 'px) { ' . '.' . $this->get_att('tdc_css_class') . ' { ' . PHP_EOL . $mediaCssDesktop . '} }' . PHP_EOL;
-					}
+
+                        $meta_is_mobile_template = get_post_meta(get_the_ID(), 'tdc_is_mobile_template', true);
+
+                        // we are on mobile template and desktop is landscape tablet
+                        // so, we get limit_bottom the phone viewport
+                        if ( $meta_is_mobile_template !== '' ){
+                            $limit_bottom = td_global::$td_viewport_intervals[ count( td_global::$td_viewport_intervals ) - 3 ]['limitBottom'] ;
+                        }
+
+                        $tdcCssProcessed .= PHP_EOL . '/* desktop */ @media(min-width: ' . ( $limit_bottom + 1 ) . 'px) { ' . '.' . $this->get_att('tdc_css_class') . ' { ' . PHP_EOL . $mediaCssDesktop . '} }' . PHP_EOL;
+
+                    }
 
 					// Temporarily commented
 					//unset($tdcCssArray['all']);
@@ -1111,21 +2601,17 @@ class td_block {
 	 */
 	private function block_loop_get_pull_down_items() {
 
-
-
 		$td_pull_down_items = array();
-
 
 		$td_ajax_filter_type   = $this->get_att('td_ajax_filter_type');
 		$td_filter_default_txt = $this->get_att('td_filter_default_txt');
 		$td_ajax_filter_ids    = $this->get_att('td_ajax_filter_ids');
 
-
 		// td_block_mega_menu has it's own pull down implementation!
-		if (get_class($this) != 'td_block_mega_menu') {
+		if ( get_class($this) != 'td_block_mega_menu' ) {
 			// prepare the array for the td_pull_down_items, we send this array to the block_template
 
-			if (!empty($td_ajax_filter_type)) {
+			if ( !empty( $td_ajax_filter_type ) ) {
 
 				// make the default current pull down item (the first one is the default)
 				$td_pull_down_items[0] = array (
@@ -1133,27 +2619,69 @@ class td_block {
 					'id' => ''
 				);
 
-				switch($td_ajax_filter_type) {
+				switch( $td_ajax_filter_type ) {
+					case 'td_products_category_ids_filter': // by product category
+
+						$td_product_categories = get_terms( array(
+							'taxonomy' => 'product_cat',
+							'include' => $td_ajax_filter_ids,
+							'number' => 100 // limit the number of product cats shown in the drop down
+						));
+
+						// check if there's any id in the list
+						if ( ! empty( $td_ajax_filter_ids ) ) {
+
+							// break the categories string
+							$td_ajax_filter_ids = explode(',', $td_ajax_filter_ids );
+
+							// order the categories - match the order set in the block settings
+							foreach ( $td_ajax_filter_ids as $td_product_category_id ) {
+								$td_product_category_id = trim( $td_product_category_id );
+
+								foreach ( $td_product_categories as $td_product_category ) {
+
+									// retrieve the category
+									if ( $td_product_category_id == $td_product_category->term_id ) {
+										$td_pull_down_items [] = array(
+											'name' => $td_product_category->name,
+											'id' => $td_product_category->term_id,
+										);
+										break;
+									}
+								}
+							}
+
+                        // if no prod categories ids are added
+						} else {
+							foreach ( $td_product_categories as $td_product_category ) {
+								$td_pull_down_items [] = array(
+									'name' => $td_product_category->name,
+									'id' => $td_product_category->term_id,
+								);
+							}
+						}
+						break;
+
 					case 'td_category_ids_filter': // by category
-						$td_categories = get_categories(array(
+						$td_categories = get_categories( array(
 							'include' => $td_ajax_filter_ids,
 							'exclude' => '1',
 							'number' => 100 //limit the number of categories shown in the drop down
 						));
 
 						// check if there's any id in the list
-						if (!empty($td_ajax_filter_ids)) {
+						if ( !empty( $td_ajax_filter_ids ) ) {
 							// break the categories string
 							$td_ajax_filter_ids = explode(',', $td_ajax_filter_ids);
 
 							// order the categories - match the order set in the block settings
-							foreach ($td_ajax_filter_ids as $td_category_id) {
-								$td_category_id = trim($td_category_id);
+							foreach ( $td_ajax_filter_ids as $td_category_id ) {
+								$td_category_id = trim( $td_category_id );
 
-								foreach ($td_categories as $td_category) {
+								foreach ( $td_categories as $td_category ) {
 
 									// retrieve the category
-									if ($td_category_id == $td_category->cat_ID) {
+									if ( $td_category_id == $td_category->cat_ID ) {
 										$td_pull_down_items [] = array(
 											'name' => $td_category->name,
 											'id' => $td_category->cat_ID,
@@ -1165,10 +2693,24 @@ class td_block {
 
 							// if no category ids are added
 						} else {
-							foreach ($td_categories as $td_category) {
+							foreach ( $td_categories as $td_category ) {
 								$td_pull_down_items [] = array(
 									'name' => $td_category->name,
 									'id' => $td_category->cat_ID,
+								);
+							}
+						}
+						break;
+
+					case 'td_taxonomy_ids_filter': // by taxonomy
+
+						if ( !empty( $td_ajax_filter_ids ) ) {
+							$tax_ids = explode(',', $td_ajax_filter_ids );
+							foreach ( $tax_ids as $tax_id ) {
+								$tax = get_term( $tax_id );
+								$td_pull_down_items [] = array(
+									'name' => $tax->name,
+									'id' => $tax_id,
 								);
 							}
 						}
@@ -1211,6 +2753,7 @@ class td_block {
 				}
 			}
 		}
+
 		return $td_pull_down_items;
 	}
 
@@ -1218,7 +2761,7 @@ class td_block {
 
 
     /**
-     * this function adds the live filters atts when $atts['live_filter'] is set. The attributs are imidiatly available to all
+     * this function adds the live filters atts when $atts['live_filter'] is set. The attributs are imediatly available to all
      * after the render method is called
      *   - $atts['live_filter_cur_post_id'] - the current post id
      *   - $atts['live_filter_cur_post_author'] - the current post author
@@ -1261,43 +2804,70 @@ class td_block {
 
 
 	/**
-	 * retrivs the block pagination
+	 * the block pagination
+	 *
+	 * @param string $prev_icon
+	 * @param string $prev_icon_class
+	 * @param string $nex_icon
+	 * @param string $next_icon_class
+	 *
 	 * @return string
 	 */
-    function get_block_pagination($prev_icon = '', $nex_icon = '') {
+    function get_block_pagination( $prev_icon = '', $nex_icon = '', $prev_icon_class = '',  $next_icon_class = '' ) {
 
 	    $offset = 0;
 
-	    if (isset($this->atts['offset'])) {
+	    if ( isset( $this->atts['offset'] ) ) {
 		    $offset = (int)$this->atts['offset'];
 	    }
 
+        $prev_icon_data = '';
+        if( $prev_icon_class != '' && ( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) ) {
+            $prev_icon_data = 'data-td-svg-icon="' . $prev_icon_class . '"';
+        }
+
+        $next_icon_data = '';
+        if( $prev_icon_class != '' && ( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) ) {
+            $next_icon_data = 'data-td-svg-icon="' . $next_icon_class . '"';
+        }
+
 	    $buffy = '';
 
-
 	    $ajax_pagination = $this->get_att('ajax_pagination');
+
 	    $limit = (int)$this->get_att('limit');
+	    $found_posts = $this->is_products_block() ? (int)$this->td_query['total'] : ( $this->is_loop_block() ? (int)$this->td_query->found_posts : 0 );
 
-
-        switch ($ajax_pagination) {
+        switch ( $ajax_pagination ) {
 
             case 'next_prev':
                     if ( $prev_icon == '' ) {
-                        $prev_icon = 'td-icon-font td-icon-menu-left';
+                        $prev_icon = '<i class="td-next-prev-icon td-icon-font td-icon-menu-left"></i>';
+                    } else {
+                        if( base64_encode( base64_decode( $prev_icon ) ) == $prev_icon ) {
+                            $prev_icon = '<span class="td-next-prev-icon td-next-prev-icon-svg " ' . $prev_icon_data . '>' . base64_decode( $prev_icon ) . '</span>';
+                        } else {
+                            $prev_icon = '<i class="td-next-prev-icon ' . $prev_icon . '"></i>';
+                        }
                     }
                     if ( $nex_icon == '' ) {
-                        $nex_icon = 'td-icon-font td-icon-menu-right';
+                        $nex_icon = '<i class="td-next-prev-icon td-icon-font td-icon-menu-right"></i>';
+                    } else {
+                        if( base64_encode( base64_decode( $nex_icon ) ) == $nex_icon ) {
+                            $nex_icon = '<span class="td-next-prev-icon td-next-prev-icon-svg " ' . $next_icon_data . '>' . base64_decode( $nex_icon ) . '</span>';
+                        } else {
+                            $nex_icon = '<i class="td-next-prev-icon ' . $nex_icon . '"></i>';
+                        }
                     }
 
                     $buffy .= '<div class="td-next-prev-wrap">';
-                    $buffy .= '<a href="#" class="td-ajax-prev-page ajax-page-disabled" id="prev-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '"><i class="' . $prev_icon . '"></i></a>';
+                    $buffy .= '<a href="#" class="td-ajax-prev-page ajax-page-disabled" aria-label="prev-page" id="prev-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '">' . $prev_icon . '</a>';
 
-					//if ($this->td_query->found_posts <= $limit) {
-					if ($this->td_query->found_posts - $offset <= $limit) {
-                        //hide next page because we don't have enough results
-                        $buffy .= '<a href="#"  class="td-ajax-next-page ajax-page-disabled" id="next-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '"><i class="' . $nex_icon . '"></i></a>';
+                    if ( $found_posts - $offset <= $limit ) {
+                        // hide next page because we don't have enough results
+                        $buffy .= '<a href="#"  class="td-ajax-next-page ajax-page-disabled" aria-label="next-page-disabled" id="next-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '">' . $nex_icon . '</a>';
                     } else {
-                        $buffy .= '<a href="#"  class="td-ajax-next-page" id="next-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '"><i class="' . $nex_icon . '"></i></a>';
+                        $buffy .= '<a href="#"  class="td-ajax-next-page" aria-label="next-page" id="next-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '">' . $nex_icon . '</a>';
                     }
 
                     $buffy .= '</div>';
@@ -1308,10 +2878,9 @@ class td_block {
                     $nex_icon = 'td-icon-font td-icon-menu-down';
                 }
 
-	            //if ($this->td_query->found_posts > $limit) {
-	            if ($this->td_query->found_posts - $offset > $limit) {
+	            if ( $found_posts - $offset > $limit ) {
 		            $buffy .= '<div class="td-load-more-wrap">';
-                    $buffy .= '<a href="#" class="td_ajax_load_more td_ajax_load_more_js" id="next-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '">' . __td('Load more', TD_THEME_NAME);
+                    $buffy .= '<a href="#" class="td_ajax_load_more td_ajax_load_more_js"  aria-label="load_more" id="next-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '">' . __td('Load more', TD_THEME_NAME);
 		            $buffy .= '<i class="' . $nex_icon . '"></i>';
 		            $buffy .= '</a>';
 		            $buffy .= '</div>';
@@ -1320,14 +2889,13 @@ class td_block {
 
             case 'infinite':
 				// show the infinite pagination only if we have more posts
-		        if ($this->td_query->found_posts - $offset > $limit) {
+		        if ( $found_posts - $offset > $limit ) {
 		            $buffy .= '<div class="td_ajax_infinite" id="next-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '">';
 		            $buffy .= ' ';
 		            $buffy .= '</div>';
 
-
 		            $buffy .= '<div class="td-load-more-wrap td-load-more-infinite-wrap" id="infinite-lm-' . $this->block_uid . '">';
-                    $buffy .= '<a href="#" class="td_ajax_load_more td_ajax_load_more_js" id="next-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '">' . __td('Load more', TD_THEME_NAME);
+                    $buffy .= '<a href="#" class="td_ajax_load_more td_ajax_load_more_js" aria-label="load_more" id="next-page-' . $this->block_uid . '" data-td_block_id="' . $this->block_uid . '">' . __td('Load more', TD_THEME_NAME);
 		            $buffy .= '<i class="td-icon-font td-icon-menu-down"></i>';
 		            $buffy .= '</a>';
 		            $buffy .= '</div>';
@@ -1387,6 +2955,17 @@ class td_block {
 
 	    $block_item = 'block_' . $this->block_uid;
 
+	    $offset = 0;
+
+	    if ( isset( $this->atts['offset'] ) ) {
+		    $offset = (int)$this->atts['offset'];
+	    }
+
+	    $limit = (int)$this->get_att('limit');
+	    $found_posts = $this->is_products_block() ? (int)$this->td_query['total'] : (int)$this->td_query->found_posts;
+	    $post_count = $this->is_products_block() ? (int)$this->td_query['per_page'] : (int)$this->td_query->post_count;
+	    $max_num_pages = $this->is_products_block() ? (int)$this->td_query['total_pages'] : (int)$this->td_query->max_num_pages;
+
 	    $buffy = '<script>';
 		    $atts = $this->atts;
 		    $buffy .= 'var ' . $block_item . ' = new tdBlock();' . "\n";
@@ -1395,9 +2974,9 @@ class td_block {
 		    $buffy .= $block_item . '.td_column_number = "' . $atts['td_column_number'] . '";' . "\n";
 		    $buffy .= $block_item . '.block_type = "' . get_class($this) . '";' . "\n";
 
-		    //wordpress wp query parms
-		    $buffy .= $block_item . '.post_count = "' . $this->td_query->post_count . '";' . "\n";
-		    $buffy .= $block_item . '.found_posts = "' . $this->td_query->found_posts . '";' . "\n";
+		    // wordpress wp query params
+		    $buffy .= $block_item . '.post_count = "' . $post_count . '";' . "\n";
+		    $buffy .= $block_item . '.found_posts = "' . $found_posts . '";' . "\n";
 
 		    $buffy .= $block_item . '.header_color = "' . $atts['header_color'] . '";' . "\n"; // the header_color is needed for the animated loader
 		    $buffy .= $block_item . '.ajax_pagination_infinite_stop = "' . $atts['ajax_pagination_infinite_stop'] . '";' . "\n";
@@ -1405,16 +2984,17 @@ class td_block {
 
 		    // The max_num_pages is computed so it considers the offset and the limit atts settings
 		    // There were necessary these changes because on the user interface there are js scripts that use the max_num_pages js variable to show/hide some ui components
-		    if (!empty($this->atts['offset'])) {
+		    if ( $offset > 0 ) {
 
-			    if ($this->atts['limit'] != 0) {
-				    $buffy .= $block_item . '.max_num_pages = "' . ceil( ( $this->td_query->found_posts - $this->atts['offset'] ) / $this->atts['limit'] ) . '";' . "\n";
+			    if ( $limit != 0 ) {
+				    $buffy .= $block_item . '.max_num_pages = "' . ceil( ( $found_posts - $offset ) / $limit ) . '";' . "\n";
 
-			    } else if (get_option('posts_per_page') != 0) {
-				    $buffy .= $block_item . '.max_num_pages = "' . ceil( ( $this->td_query->found_posts - $this->atts['offset'] ) / get_option('posts_per_page') ) . '";' . "\n";
+			    } else if ( get_option('posts_per_page') != 0 ) {
+				    $buffy .= $block_item . '.max_num_pages = "' . ceil( ( $found_posts - $offset ) / get_option('posts_per_page') ) . '";' . "\n";
 			    }
+
 		    } else {
-			    $buffy .= $block_item . '.max_num_pages = "' . $this->td_query->max_num_pages . '";' . "\n";
+			    $buffy .= $block_item . '.max_num_pages = "' . $max_num_pages . '";' . "\n";
 		    }
 
 		    $buffy .= 'tdBlocksArray.push(' . $block_item . ');' . "\n";
@@ -1425,45 +3005,35 @@ class td_block {
 
 
         $td_column_number = $this->get_att('td_column_number');
-        if (empty($td_column_number)) {
+        if ( empty( $td_column_number ) ) {
             $td_column_number = td_global::vc_get_column_number(); // get the column width of the block so we can sent it to the server. If the shortcode already has a user defined column number, we use that
         }
 
 
-
-
-
-
-
         // ajax subcategories preloader
         // !!!! preloading "all" filter content should happen regardless of the setting
-        if (
-            !empty($this->td_block_template_data['td_pull_down_items'])
-            and !empty($this->atts['td_ajax_preloading'])
-        ) {
-
+        if ( !empty($this->td_block_template_data['td_pull_down_items']) and !empty($this->atts['td_ajax_preloading']) ) {
 
 	        /*  -------------------------------------------------------------------------------------
 	            add 'ALL' item to the cache
 	        */
             // pagination - we need to compute the pagination for each cache entry
             $td_hide_next = false;
-            if (!empty($this->atts['offset']) && !empty($this->atts['limit']) && ($this->atts['limit'] != 0)) {
-                if (1 >= ceil(($this->td_query->found_posts - $this->atts['offset']) / $this->atts['limit'])) {
+            if ( ! empty( $offset ) && ! empty( $limit ) && ( $limit != 0 ) ) {
+                if ( 1 >= ceil(( $found_posts - $offset ) / $limit ) ) {
                     $td_hide_next = true; //hide link on last page
                 }
-            } else if (1 >= $this->td_query->max_num_pages) {
+            } else if ( 1 >= $this->td_query->max_num_pages ) {
                 $td_hide_next = true; //hide link on last page
             }
 
             // this will be send to JS bellow
-            $buffyArray = array (
+            $buffyArray = array(
                 'td_data' => $this->inner($this->td_query->posts, $td_column_number),
                 'td_block_id' => $this->block_uid,
                 'td_hide_prev' => true,  // this is the first page
                 'td_hide_next' => $td_hide_next
             );
-
 
 
 	        /*  -------------------------------------------------------------------------------------
@@ -1579,7 +3149,7 @@ class td_block {
 
 
 
-		if ( 'tdb_single_post_share' === get_class($this) ) {
+		if ( 'tdb_single_post_share' === get_class($this) || 'td_block_social_share' === get_class($this)) {
 			ob_start();
 			?>
 			<script>
@@ -1667,6 +3237,27 @@ class td_block {
 
                 var tdComposerBlockItem = new tdcComposerBlocksApi.item();
 				tdComposerBlockItem.blockUid = '<?php printf( '%1$s', $this->block_uid ) ?>';
+
+                tdComposerBlockItem.callbackAdd = function (blockUid) {
+                    if ( 'undefined' !== typeof window.tdReadingProgressBar ) {
+                        let $progressBar = jQuery('.tdb_single_reading_progress[data-td-block-uid="' + blockUid + '"]');
+
+
+                        if( $progressBar.length ) {
+                            let barPosition = $progressBar.data('bar-position');
+
+                            let $readingProgressBarItem = new tdReadingProgressBar.item();
+                            $readingProgressBarItem.blockUid = blockUid;
+                            $readingProgressBarItem.barPosition = barPosition;
+                            tdReadingProgressBar.addItem($readingProgressBarItem);
+
+                            if( barPosition === 'top' || barPosition === 'bottom' ) {
+                                tdReadingProgressBar.createFixedBar($readingProgressBarItem, 0, 30);
+                            }
+                        }
+                    }
+                };
+
 				tdComposerBlockItem.callbackDelete = function(blockUid) {
 
 					if ( 'undefined' !== typeof window.tdPullDown ) {
@@ -1689,6 +3280,26 @@ class td_block {
 						tdHomepageFull.deleteItem( blockUid );
 					}
 
+                    if ( 'undefined' !== typeof window.tdPopupModal ) {
+                        // delete the modal if it exists
+                        tdPopupModal.deleteItem( blockUid );
+                    }
+
+                    if ( 'undefined' !== typeof window.tdReadingProgressBar ) {
+                        // delete the progress bar if it exists
+                        tdReadingProgressBar.deleteItem( blockUid );
+                    }
+
+                    if ( 'undefined' !== typeof window.tdbLocationFinder ) {
+                        // delete the location finder block if it exists
+                        tdbLocationFinder.deleteItem( blockUid );
+                    }
+
+                    if ( 'undefined' !== typeof window.tdbLocationDisplay ) {
+                        // delete the location display block if it exists
+                        tdbLocationDisplay.deleteItem( blockUid );
+                    }
+
                     if ( 'undefined' !== typeof window.tdbMenu ) {
                         tdbMenu.deleteItem( blockUid );
                     }
@@ -1702,6 +3313,7 @@ class td_block {
 
 					tdcDebug.log('td_block.php js_tdc_get_composer_block  -  callbackDelete(' + blockUid + ') - td_block base callback runned');
 				};
+
 				tdcComposerBlocksApi.addItem(tdComposerBlockItem);
 			})();
 		</script>
@@ -1748,6 +3360,7 @@ class td_block {
 	    $el_class = $this->get_att('el_class');
 	    $color_preset = $this->get_att('color_preset');
 		$ajax_pagination = $this->get_att('ajax_pagination');
+		$ajax_pagination_next_prev_swipe= $this->get_att('ajax_pagination_next_prev_swipe');
 	    $border_top = $this->get_att('border_top');
 	    $css = $this->get_att('css');
 	    $tdc_css = $this->get_att('tdc_css');
@@ -1787,8 +3400,6 @@ class td_block {
 
 
 
-
-
 	    //add the classes that we receive via shortcode. @17 aug 2016 - this att may be used internally - by ra
         if (!empty($class)) {
             $class_array = explode(' ', $class);
@@ -1819,7 +3430,11 @@ class td_block {
 	     * - the class has a force css transform for lazy devices
 	     */
 	    if (!empty($ajax_pagination)) {
-		    $block_classes[]= 'td_with_ajax_pagination';
+		    $block_classes[] = 'td_with_ajax_pagination';
+
+            if( $ajax_pagination == 'next_prev' && $ajax_pagination_next_prev_swipe != '' ) {
+                $block_classes[] = 'td_with_ajax_pagination_next_prev_swipe';
+            }
 	    }
 
 
@@ -1852,7 +3467,8 @@ class td_block {
 	    /**
 	     * Add 'tdc-no-posts' class that show info msg for blocks without any modules. Its style is in tagDiv composer
 	     */
-	    if ( $this->is_loop_block() && empty( $this->td_query->posts ) ) {
+	    $found_posts = $this->is_products_block() ? (int)$this->td_query['total'] : ( $this->is_loop_block() ? (int)$this->td_query->found_posts : 0 );
+	    if ( ( $this->is_loop_block() || $this->is_products_block() ) && $found_posts === 0 ) {
 		    $block_classes[] = 'tdc-no-posts';
 	    }
 
@@ -1914,50 +3530,82 @@ class td_block {
      * between ajax requests
      * @updated in 25.1.2018 to use all the mapped attributes + the received atts from render()
      * @param $att_name
+     * @param $default_value
      * @return mixed
      */
-	protected function get_att($att_name) {
-
-
-
-
+	protected function get_att($att_name, $default_value = '') {
 
         // the td_block->render() was not called
-		if (empty($this->atts)) {
+		if ( empty( $this->atts ) ) {
 			td_util::error(__FILE__, get_class($this) . '->get_att(' . $att_name . ') Internal error: The atts are not set yet(AKA: the render method of the block was not called yet and the system tried to read an att)');
 			die;
 		}
 
 		// the att does not exist
-		if (!isset($this->atts[$att_name])) {
-            td_util::error(__FILE__, 'Internal error: The system tried to use an att that does not exists! class_name: ' . get_class($this) . '  Att name: "' . $att_name . '" The list with available shorcode_att is computed at run time by each shortcode');
-            die;
+		if ( !isset( $this->atts[$att_name] ) ) {
+            td_util::error(
+                __FILE__,
+                'Internal error: The system tried to use an att that does not exists! class_name: ' . get_class($this) . '  Att name: "' . $att_name . '" The list with available shorcode_att is computed at run time by each shortcode',
+	            $this->atts
+            );
+
+            //die;
+            return $default_value;
         }
 
-		return $this->atts[$att_name];
+		//we need to decode the square bracket case
+        $attr_value = $this->atts[$att_name];
+        if ( is_string( $attr_value ) && strpos($attr_value, 'td_encval') === 0 ) {
+            $attr_value = str_replace('td_encval', '', $attr_value);
+            $attr_value = base64_decode( $attr_value );
+        }
+
+		return $attr_value;
 	}
 
 
 	/**
      * Reads a shortcode_att. AS of 25.1.2018 some shortcodes have a shortcode_atts property where they read the atts from the map
 	 * @param $att_name
+	 * @param $default_value
 	 *
 	 * @return mixed
 	 */
-	protected function get_shortcode_att( $att_name ) {
+	protected function get_shortcode_att( $att_name, $default_value = '') {
 		if ( empty($this->shortcode_atts ) ) {
 			td_util::error(__FILE__, get_class($this) . '->get_shortcode_att(' . $att_name . ') Internal error: The atts are not set yet(AKA: the render method was not called yet and the system tried to read a shorcode_att)');
 			die;
 		}
 
 		if ( ! isset($this->shortcode_atts[ $att_name ] ) ) {
-			var_dump( $this->shortcode_atts );
+			//var_dump( $this->shortcode_atts );
 			td_util::error(__FILE__, 'Internal error: The system tried to use a shorcode_att that does not exists! class_name: ' . get_class($this) . '  Att name: "' . $att_name . '" The list with available shorcode_att is computed at run time by each shortcode');
-			die;
+
+			//die;
+            return $default_value;
 		}
 
-		return $this->shortcode_atts[ $att_name ];
+        //we need to decode the square bracket case
+        $attr_value = $this->shortcode_atts[ $att_name ];
+        if ( strpos($attr_value, 'td_encval') === 0 ) {
+            $attr_value = str_replace('td_encval', '', $attr_value);
+            $attr_value = base64_decode( $attr_value );
+        }
+
+        return $attr_value;
 	}
+
+
+    protected function get_icon_att( $att_name ) {
+        $icon_class = $this->get_att($att_name);
+        $svg_list = td_global::$svg_theme_font_list;
+
+        if( array_key_exists( $icon_class, $svg_list ) ) {
+            return $svg_list[$icon_class];
+        }
+
+        return $icon_class;
+    }
 
 
 	/**
@@ -1987,7 +3635,7 @@ class td_block {
 
 
 	/**
- 	 * Disable loop block features. If this is disable, the block does not use a loop and it dosn't need to run a query.
+ 	 * Disable loop block features. If this is disable, the block does not use a loop and it doesn't need to run a query.
  	 *  - no query
 	 *  - no pulldown items lis (ajax filters)
 	 *  - no ajax JS ex: NO new tdBlock()
@@ -1996,9 +3644,19 @@ class td_block {
 		$this->is_loop_block = false;
 	}
 
-
 	private function is_loop_block() {
 		return $this->is_loop_block;
+	}
+
+	/**
+	 *  - set products query
+	 */
+	protected function set_products_block() {
+		$this->is_products_block = true;
+	}
+
+	private function is_products_block() {
+		return $this->is_products_block;
 	}
 
 

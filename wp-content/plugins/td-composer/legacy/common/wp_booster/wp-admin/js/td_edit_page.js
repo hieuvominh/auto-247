@@ -1,10 +1,10 @@
 /**
  * used in wp-admin -> edit page, not on posts
- * this class hides and shows the metaboxes acording to the selected template
+ * this class hides and shows the metaboxes according to the selected template
  * @type {{init: Function, show_template_settings: Function, change_content: Function}}
  */
 
-/* global jQuery:{} */
+/* global jQuery:{}, window, document */
 
 var td_edit_page = {
 
@@ -142,16 +142,71 @@ var td_edit_page = {
             td_homepage_loop_metabox.addClass('td-hide-metabox');
 
             if( td_edit_page.is_block_editor ){
-                td_edit_page.page_template_select = jQuery('.editor-page-attributes__template select');
-            } else {
+
+                let $button_toggle = jQuery('.edit-post-post-template__toggle');
+
+                setTimeout( function() {
+
+                    const isSidebarOpened = wp.data.select('core/edit-post').isEditorPanelOpened('template');
+                    if ( !isSidebarOpened ) {
+                        wp.data.dispatch('core/edit-post').toggleEditorPanelOpened('template');
+                    }
+
+                    // WordPress > 6.0
+                    if ( $button_toggle.length ) {
+                        td_edit_page.show_template_settings();
+                    }
+
+                }, 500 );
+
+                // WordPress > 6.0
+                if ( $button_toggle.length ) {
+
+                    $button_toggle.on('click', function() {
+                        setTimeout( function() {
+
+                            var $control = jQuery('.popover-slot .components-select-control__input option[value="page-pagebuilder-latest.php"]') ;
+                            if ( $control.length ) {
+                                td_edit_page.page_template_select = $control.parent();
+
+                                td_edit_page.page_template_select.change(function () {
+                                    td_edit_page.show_template_settings();
+                                });
+                                td_edit_page.show_template_settings();
+                            }
+
+                        }, 500 );
+                    });
+
+                } else {  // WordPress <= 6.0
+
+                    setTimeout( function() {
+
+                        var $control = jQuery('.components-select-control__input option[value="page-pagebuilder-latest.php"]');
+                        if ( $control.length ) {
+                            td_edit_page.page_template_select = $control.parent();
+
+                            td_edit_page.page_template_select.change(function () {
+                                td_edit_page.show_template_settings();
+                            });
+
+                            td_edit_page.show_template_settings();
+                        }
+
+                    }, 500 );
+
+                }
+
+
+
+            } else { // used on Classic Editor
                 td_edit_page.page_template_select = jQuery('#page_template');
-            }
-
-            td_edit_page.show_template_settings();
-
-            td_edit_page.page_template_select.change(function () {
                 td_edit_page.show_template_settings();
-            });
+
+                td_edit_page.page_template_select.change(function () {
+                    td_edit_page.show_template_settings();
+                });
+            }
 
             //disable sidebar settings - if any vc_row is present in the page content
             setInterval(function () {
@@ -163,7 +218,7 @@ var td_edit_page = {
                 }
 
                 var ver4EditorContent = jQuery('#content').text().match(/\[.*vc_row.*\]/m);
-                var ver5EditorContent = jQuery('.editor-block-list__layout').find('.mce-content-body p').text().match(/\[.*vc_row.*\]/m);
+                var ver5EditorContent = jQuery('.block-editor-block-list__layout').find('.mce-content-body p').text().match(/\[.*vc_row.*\]/m);
 
                 if ( ver4EditorContent !== null || ver5EditorContent !== null ) {
                     td_page_metabox.addClass('td-disable-settings');
@@ -182,11 +237,17 @@ var td_edit_page = {
         }
 
         //text and image after template drop down
-        td_edit_page.change_content();
-
-        var cur_template = td_edit_page.page_template_select.find('option:selected').text(),
+        // td_edit_page.change_content();
+        var cur_template = '',
             td_page_metabox = td_edit_page.td_page_metabox,
             td_homepage_loop_metabox = td_edit_page.td_homepage_loop_metabox;
+
+        if ( td_edit_page.page_template_select === '' ) {
+            cur_template = jQuery('.edit-post-post-template__toggle').text();
+        } else {
+            cur_template = td_edit_page.page_template_select.find('option:selected').text();
+        }
+
 
         // the "show only unique articles" box is always visible
         // "postbox" class is removed for hidden elements to reduce the flickering occurred while dragging a metabox to change it's position
@@ -198,7 +259,7 @@ var td_edit_page = {
                 //display homepage loop settings
                 td_homepage_loop_metabox.addClass('postbox');
                 td_homepage_loop_metabox.removeClass('td-hide-metabox');
-                td_edit_page.change_content('<span class="td-wpa-info"><strong>Tip:</strong> Homepage made from a pagebuilder section and a loop below. <ul><li>The loop supports an optional sidebar and advanced filtering options. </li> <li>You can find all the options of this template if you scroll down.</li></ul></span>');
+                // td_edit_page.change_content('<span class="td-wpa-info"><strong>Tip:</strong> Homepage made from a pagebuilder section and a loop below. <ul><li>The loop supports an optional sidebar and advanced filtering options. </li> <li>You can find all the options of this template if you scroll down.</li></ul></span>');
                 break;
 
             case 'Pagebuilder + page title':
@@ -208,7 +269,7 @@ var td_edit_page = {
                 //display default page settings
                 td_page_metabox.addClass('postbox');
                 td_page_metabox.removeClass('td-hide-metabox');
-                td_edit_page.change_content('<span class="td-wpa-info"><strong>Tip:</strong> Useful when you want to create a page that has a standard title using the page builder. <ul><li>This template will remove the sidebar if page builder is used.</li> <li>Use the Widgetised Sidebar block to add a sidebar.</li></ul>');
+                // td_edit_page.change_content('<span class="td-wpa-info"><strong>Tip:</strong> Useful when you want to create a page that has a standard title using the page builder. <ul><li>This template will remove the sidebar if page builder is used.</li> <li>Use the Widgetised Sidebar block to add a sidebar.</li></ul>');
                 break;
 
             default: //default template
@@ -218,7 +279,7 @@ var td_edit_page = {
                 //display default page settings
                 td_page_metabox.addClass('postbox');
                 td_page_metabox.removeClass('td-hide-metabox');
-                td_edit_page.change_content('<span class="td-wpa-info"><strong>Tip:</strong> Default template, perfect for <em>page builder</em> or content pages. <ul><li>If the page builder is used, the page will be without a title.</li> <li>If it\'s a content page the template will generate a title</li></ul></span>');
+                // td_edit_page.change_content('<span class="td-wpa-info"><strong>Tip:</strong> Default template, perfect for <em>page builder</em> or content pages. <ul><li>If the page builder is used, the page will be without a title.</li> <li>If it\'s a content page the template will generate a title</li></ul></span>');
                 break;
         }
     },
@@ -239,8 +300,9 @@ var td_edit_page = {
                 //create the container
                 after_element = document.createElement("div");
                 after_element.setAttribute("id", "td_after_template_container_id");
+                after_element.setAttribute("class", "inside");
                 //insert the element in DOM, after template pull down
-                document.getElementById(page_template_select_id).parentNode.insertBefore(after_element, document.getElementById(page_template_select_id).nextSibling);
+                document.getElementById(page_template_select_id).parentNode.parentNode.insertBefore(after_element, document.getElementById(page_template_select_id).parentNode.nextSibling);
             }
         }
     },

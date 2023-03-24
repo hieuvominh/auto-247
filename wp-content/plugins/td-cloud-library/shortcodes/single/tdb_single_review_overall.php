@@ -8,13 +8,98 @@ class tdb_single_review_overall extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+				/* @style_general_review_overall */
+				.tdb_single_review_overall i {
+                  width: auto;
+                  min-width: 20px;
+                  font-size: 15px;
+                }
+                .tdb_single_review_overall .td-review {
+                  margin-bottom: 0;
+                }
+                .tdb_single_review_overall .td-review-score {
+                  padding: 7px 14px 35px 14px;
+                }
+                .tdb_single_review_overall .td-review-overall {
+                  padding-bottom: 0;
+                }
+                @media (max-width: 767px) {
+                  .tdb_single_review_overall .td-review-footer {
+                    border: 0;
+                  }
+                  .tdb_single_review_overall .td-review-footer:after {
+                    display: none;
+                  }
+                }
+                .td-review .td-review-percent-sign {
+                  font-size: 15px;
+                  line-height: 1;
+                }
+                .td-review-final-score {
+                  line-height: 80px;
+                  font-size: 48px;
+                  margin-bottom: 5px;
+                }
+                .td-review-score {
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-weight: bold;
+                  text-align: center;
+                  padding: 0;
+                  vertical-align: bottom;
+                  width: 150px;
+                }
+                @media (max-width: 767px) {
+                  .td-review-footer {
+                    border-left: 1px solid #ededed;
+                    position: relative;
+                    display: block;
+                  }
+                  .td-review-footer:after {
+                    content: '';
+                    width: 1px;
+                    background-color: #ededed;
+                    position: absolute;
+                    right: -1px;
+                    top: 0;
+                    height: 100%;
+                  }
+                  .td-review-score {
+                    display: block;
+                    width: 100%;
+                    padding: 0;
+                    border-left: 0;
+                    border-right: 0;
+                  }
+                }
+                .td-review-overall {
+                  padding: 0 0 28px 0;
+                  line-height: 14px;
+                }
+                .td-review-overall span {
+                  font-size: 11px;
+                }
+                .td-review-final-star {
+                  margin-bottom: 5px;
+                }
+				
+				
 				/* @title_color */
                 .$unique_block_class .td-review-final-title {
                     color: @title_color;
@@ -84,6 +169,9 @@ class tdb_single_review_overall extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_review', 1 );
+        $res_ctx->load_settings_raw( 'style_general_review_overall', 1 );
 
         // title color
         $res_ctx->load_settings_raw( 'title_color', $res_ctx->get_shortcode_att('title_color') );
@@ -179,7 +267,7 @@ class tdb_single_review_overall extends td_block {
             $buffy .= '<tr class="td-review-footer ' . $post_review_data['review_meta'] . '">';
             $buffy .= '<td class="td-review-score">';
             $buffy .= '<div class="td-review-overall">';
-            $buffy .= '<div class="td-review-final-score">' . $this->calculate_total($post_review_data) . ($post_review_data['review_meta'] == 'rate_percent' ? ' %' : '') . '</div>';
+            $buffy .= '<div class="td-review-final-score">' . $this->calculate_total($post_review_data) . ($post_review_data['review_meta'] == 'rate_percent' ? '<span class="td-review-percent-sign">%</span>' : '') . '</div>';
             $buffy .= '<div class="td-review-final-star">' . $this->render_stars($post_review_data) . '</div>';
             $buffy .= '<span class="td-review-final-title">' . $title . '</span>';
             $buffy .= '</div>';

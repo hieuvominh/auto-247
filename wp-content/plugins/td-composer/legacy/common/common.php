@@ -12,6 +12,8 @@ td_api_autoload::add('td_weather', TDC_PATH . '/legacy/common/wp_booster/td_weat
 td_api_autoload::add('td_pinterest', TDC_PATH . '/legacy/common/wp_booster/td_pinterest.php');
 td_api_autoload::add('td_exchange', TDC_PATH . '/legacy/common/wp_booster/td_exchange.php');
 td_api_autoload::add('td_instagram', TDC_PATH . '/legacy/common/wp_booster/td_instagram.php');
+td_api_autoload::add('td_covid19', TDC_PATH . '/legacy/common/wp_booster/td_covid19.php');
+td_api_autoload::add('td_flickr', TDC_PATH . '/legacy/common/wp_booster/td_flickr.php');
 
 
 /* ----------------------------------------------------------------------------
@@ -371,4 +373,13 @@ function td_get_template_style( $template = null, &$style = '', &$content_width 
 			}
 		}
 	}
+}
+
+
+/**
+ * add a cookie exception for darkmode in the case of WP Super Cache plugin
+ */
+add_action('init', 'add_wpsc_cookie_darkmode');
+function add_wpsc_cookie_darkmode() {
+    do_action( 'wpsc_add_cookie', 'td_dark_mode' );
 }

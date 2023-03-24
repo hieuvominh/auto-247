@@ -78,8 +78,25 @@ $postContent = str_replace( array( "\r\n", "\n", "\r" ), array( "\r\n'+'" ), $po
 //<link rel="stylesheet" href="http://basehold.it/22">
 
 // Add shortcodes name to be displayed into sidebar panel
+$tdbTemplateType = tdc_util::get_get_val('tdbTemplateType');
+
 $shortcodes = array();
-foreach (tdc_mapper::get_mapped_shortcodes() as $mapped_shortcode ) {
+$tdc_mapped_shortcodes = tdc_mapper::get_mapped_shortcodes();
+foreach ( $tdc_mapped_shortcodes as &$mapped_shortcode ) {
+    if ( in_array( $tdbTemplateType, ['cpt', 'cpt_tax'] ) && isset( $mapped_shortcode['tdc_category'] ) ) {
+	    switch ( $mapped_shortcode[ 'tdc_category' ] ) {
+	        case 'Single post':
+                if ( !in_array( $mapped_shortcode['base'], ['tdb_single_categories' , 'tdb_single_tags'] ) ) {
+                    $mapped_shortcode['name'] = str_replace( 'Single Post', 'CPT', $mapped_shortcode['name'] );
+                }
+                break;
+
+            case 'Category page':
+                $mapped_shortcode['name'] = str_replace( 'Category', 'Taxonomy', $mapped_shortcode['name'] );
+                $mapped_shortcode['name'] = str_replace( 'Subcategories', 'Subtaxonomies', $mapped_shortcode['name'] );
+                break;
+	    }
+    }
 	$shortcodes[ $mapped_shortcode[ 'base' ] ] = $mapped_shortcode[ 'name' ];
 }
 
@@ -114,29 +131,33 @@ function get_post_url( $post_id ) {
 
 
 $tdc_mobile_header_id = '';
-$tdbTemplateType = tdc_util::get_get_val('tdbTemplateType');
+$tdc_header_template_content = '';
+
+$is_mobile = false;
+$is_mobile_template = get_post_meta( $post->ID, 'tdc_is_mobile_template', true);
+if ( ! empty($is_mobile_template) && '1' === $is_mobile_template ) {
+    $is_mobile = true;
+}
 
 if ( 'header' === $tdbTemplateType && 'publish' === get_post_status( $post ) ) {
 
     $tdc_header_template_id = $post->ID;
-    $tdc_header_template_content = '';//$post->post_content;
     $tdc_header_template_content = get_post_field('post_content', $tdc_header_template_id );
 
 } else {
 
     $tdc_header_template_id = get_post_meta( $post->ID, 'tdc_header_template_id', true );
-    $tdc_header_template_content = '';
 
     if ( empty( $tdc_header_template_id ) ) {
 
         // Use the global header template if it's set
-        $tdc_header_template_id = '';
-        $global_header_template_id = td_api_header_style::get_header_template_id();
+        $tdc_header_template_id    = '';
+        $global_header_template_id = td_api_header_style::get_header_template_id( $is_mobile );
 
         if ( ! empty( $global_header_template_id ) && td_global::is_tdb_template( $global_header_template_id, true ) ) {
 
             $global_header_template_id = td_global::tdb_get_template_id( $global_header_template_id );
-            $tdc_mobile_header_id = get_post_meta( $global_header_template_id, 'header_mobile_menu_id', true );
+            $tdc_mobile_header_id      = get_post_meta( $global_header_template_id, 'header_mobile_menu_id', true );
         }
 
     } else if ( 'no_header' !== $tdc_header_template_id ) {
@@ -145,19 +166,19 @@ if ( 'header' === $tdbTemplateType && 'publish' === get_post_status( $post ) ) {
 
         if ( 'publish' === $post_status ) {
 
-            $tdc_header_template_content = get_post_field('post_content', $tdc_header_template_id );
-            $tdc_mobile_header_id = get_post_meta( $tdc_header_template_id, 'header_mobile_menu_id', true );
+            $tdc_header_template_content = get_post_field( 'post_content', $tdc_header_template_id );
+            $tdc_mobile_header_id        = get_post_meta( $tdc_header_template_id, 'header_mobile_menu_id', true );
 
         } else {
 
             // Use the global header template if it's set
-            $tdc_header_template_id = '';
-            $global_header_template_id = td_api_header_style::get_header_template_id();
+            $tdc_header_template_id    = '';
+            $global_header_template_id = td_api_header_style::get_header_template_id( $is_mobile );
 
             if ( ! empty( $global_header_template_id ) && td_global::is_tdb_template( $global_header_template_id, true ) ) {
 
                 $global_header_template_id = td_global::tdb_get_template_id( $global_header_template_id );
-                $tdc_mobile_header_id = get_post_meta( $global_header_template_id, 'header_mobile_menu_id', true );
+                $tdc_mobile_header_id      = get_post_meta( $global_header_template_id, 'header_mobile_menu_id', true );
             }
         }
     }
@@ -196,6 +217,7 @@ if ( 'footer' === $tdbTemplateType && 'publish' === get_post_status( $post ) ) {
     }
 }
 
+
 $tdb_p_infinite_load_status = td_util::get_option('tdb_p_autoload_status');
 $tdb_p_infinite_type = td_util::get_option('tdb_p_autoload_type');
 $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
@@ -233,13 +255,15 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
             headerTemplateContent: '<?php echo $tdc_header_template_content ?>',
 
             footerTemplateId: '<?php echo $tdc_footer_template_id ?>',
-            footerTemplateContent: '<?php echo $tdc_footer_template_content ?>',
+            footerTemplateContent: '<?php echo base64_encode( $tdc_footer_template_content ) ?>',
 
             mobileMenuId: '<?php echo $tdc_mobile_header_id ?>',
 
             tdbPInfiniteLoadStatus: '<?php echo $tdb_p_infinite_load_status ?>',
             tdbPInfiniteType: '<?php echo $tdb_p_infinite_type ?>',
-            tdbPInfiniteCount: '<?php echo $tdb_p_infinite_count ?>'
+            tdbPInfiniteCount: '<?php echo $tdb_p_infinite_count ?>',
+
+            isMobileTemplate: '<?php echo $is_mobile ? '1' : '0' ?>'
        };
 
 		// Set the local storage to show inline the iframe wrapper and the sidebar
@@ -252,6 +276,12 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 	?>
 
 	<!-- the composer sidebar -->
+
+    <div id="tdc-property-info">
+        <div class="tdc-property-info-arrow"></div>
+
+        <div class="tdc-property-info-inner"></div>
+    </div>
 
 	<div class="tdc-sidebar-open" title="Show sidebar">
 		<span class="tdc-icon-sidebar-open"></span>
@@ -273,10 +303,19 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
             if ( $tdbLoadDataFromId !== false ) {
                 switch ( $tdbTemplateType ) {
                     case 'single':
+                    case 'woo_product':
+                    case 'woo_shop_base':
+                    case 'cpt':
                         $preview_url = get_permalink( $tdbLoadDataFromId );
                         break;
 
+                    case 'woo_archive':
+	                    $term = get_term( intval( $tdbLoadDataFromId ) );
+                        $preview_url = get_term_link( $term->term_id, $term->taxonomy );
+                        break;
+
                     case 'category':
+                    case 'cpt_tax':
                         $preview_url = get_category_link( $tdbLoadDataFromId );
                         break;
 
@@ -286,6 +325,10 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 
                     case 'search':
                         $preview_url = get_search_link( $tdbLoadDataFromId );
+                        break;
+
+                    case 'woo_search_archive':
+                        $preview_url = add_query_arg( 'post_type', 'product', get_search_link( $tdbLoadDataFromId ) );
                         break;
 
                     case 'date':
@@ -305,6 +348,8 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
                 $preview_url = get_permalink($post->ID);
             }
             ?>
+
+            <?php if (TD_THEME_NAME !== 'Newsmag' && defined( 'TD_CLOUD_LIBRARY' ) ) { ?>
             <a class="tdc-sidebar-w-button tdb-load-template tdc-header-link tdc-load-cloud" href="#" title="Add an element from the cloud library">
                 <span class="tdc-sidebar-icon tdc-icon-cloud"></span>
                 <span class="tdc-header-label tdc-text-cloud">Cloud</span>
@@ -313,15 +358,25 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
                 <span class="tdc-sidebar-icon tdc-icon-header"></span>
                 <span class="tdc-header-label tdc-text-header">Manager</span>
             </a>
-
+            <?php } ?>
             <a class="tdc-header-link tdc-close-page" href="#" title="Close the composer and switch to backend">
                 <span class="tdc-sidebar-icon tdc-icon-close"></span>
                 <span class="tdc-header-label tdc-text-close">Close</span>
             </a>
 
-            <a class="tdc-header-link tdc-save-page" href="#" title="Save the page content CTRL + S">
+            <a class="tdc-header-link <?php echo ( 'Newspaper' === TD_THEME_NAME && defined( 'TD_CLOUD_LIBRARY' ) ) ? 'tdc-header-link-dropdown' : ''; ?> tdc-save-page" href="#" title="Save the page content CTRL + S">
                 <span class="tdc-sidebar-icon tdc-icon-save"></span>
                 <span class="tdc-header-label tdc-text-save">Save</span>
+
+                <?php if( 'Newspaper' === TD_THEME_NAME && defined( 'TD_CLOUD_LIBRARY' ) ) { ?>
+                    <span class="tdc-header-link-sub-menu" title="">
+                        <span class="tdc-header-link-sub-menu-item tdc-save-page">Save all</span>
+                        <span class="tdc-header-link-sub-menu-sep"></span>
+                        <span class="tdc-header-link-sub-menu-item tdc-save-header">Save header</span>
+                        <span class="tdc-header-link-sub-menu-item tdc-save-footer">Save footer</span>
+                        <span class="tdc-header-link-sub-menu-item tdc-save-content">Save content</span>
+                    </span>
+                <?php } ?>
             </a>
             <a class="tdc-header-link tdc-view-page" href="<?php echo $preview_url ?>" target="_blank" title="View the page. Save the content before it">
                 <span class="tdc-sidebar-icon tdc-icon-view"></span>
@@ -340,6 +395,31 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 			<div class="tdc-sidebar-w-button tdc-add-element" title="Add new element in the viewport">Add Element</div>
 
             <style>
+                .tdc-empty-sidebar .tdc-intro {
+                    margin-bottom: 0;
+                }
+                .tdc-empty-sidebar .tdc-start-tips p {
+                    font-size:11px;
+                    line-height: 18px;
+                    margin: 10px 0;
+                }
+                .tdc-empty-sidebar .tdc-start-tips img {
+                    width: 50px;
+                    margin: 30px auto 10px;
+                }
+                .tdc-empty-sidebar .tdc-start-tips span {
+                    font-size:17px;
+                    line-height: 23px;
+                }
+                .tdc-empty-sidebar .tdc-sidebar-w-button.tdc-add-element {
+                    margin-top: 15px;
+                }
+                .tdc-start-tips:not(.tdc-intro) p {
+                    display: none;
+                }
+                .tdc-empty-sidebar .tdb-load-template {
+                    margin-top: 15px;
+                }
                 .tdb-template-meta {
                     position: absolute;
                     top: -3px;
@@ -387,7 +467,33 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
                 <span class="tdb-template-meta-cat"><?php echo $current_post_type ?></span>
                 <span class="tdb-template-meta-arrow tdc-breadcrumb-arrow"></span>
                 <span id="tdb-template-name"><?php echo $post_title; ?></span>
-                <a href="#" title="Edit page/template name" id="tdb-template-name-edit">Edit</a>
+                <a href="#" title="Edit page/template name" id="tdb-template-name-edit">Edit Title</a>
+                <?php
+
+                if ('Newspaper' === TD_THEME_NAME  && td_global::is_tdb_registered()) {
+
+	                $data_mobile_template_id  = '';
+	                $data_mobile_template_url = '';
+	                $is_mobile_template       = get_post_meta( $post->ID, 'tdc_is_mobile_template', true );
+	                $post_type_name           = ( 'page' === $current_post_type ? 'Page' : 'Template' );
+
+	                if ( empty( $is_mobile_template ) && 'header' !== $current_post_type ) {
+		                $tdc_mobile_template_id = get_post_meta( $post->ID, 'tdc_mobile_template_id', true );
+		                $mobile_button          = 'Create Mobile ' . $post_type_name;
+
+		                if ( ! empty( $tdc_mobile_template_id ) && get_post( $tdc_mobile_template_id ) instanceof WP_Post && 'publish' === get_post_status( $tdc_mobile_template_id ) ) {
+			                $data_mobile_template_id  = ' data-mobile-template-id="' . $tdc_mobile_template_id . '" ';
+			                $data_mobile_template_url = ' data-mobile-template-url="' . admin_url( 'post.php?post_id=' . $tdc_mobile_template_id . '&td_action=tdc&tdbTemplateType=' . $current_post_type ) . '" ';
+			                $mobile_button            = 'Edit Mobile ' . $post_type_name;
+		                }
+		                ?>
+                        <a href="#" title="<?php echo $mobile_button ?>"
+                           id="tdb-template-mobile" <?php echo $data_mobile_template_id . $data_mobile_template_url ?>><?php echo $mobile_button ?></a>
+		                <?php
+	                }
+                }
+                ?>
+
             </div>
 
             <?php do_action('tdc_welcome_panel_text')?>
@@ -421,9 +527,12 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 				</div>
 				<div class="tdc-current-element-head" title="This is the type (shortcode) of the current selected element">
 				</div>
-                <?php  if (TD_DEPLOY_MODE == 'dev') { ?>
-                    <div class="tdc-param-name-switch" title="Show param names next to block attributes."><div class="tdc-param-name-switch-ball"></div></div>
-                <?php } ?>
+                <div class="tdc-param-switch-wrap">
+                    <?php  if (TD_DEPLOY_MODE == 'dev') { ?>
+                        <div class="tdc-param-switch tdc-param-name-switch" title="Show param names next to block attributes."><div class="tdc-param-switch-ball"></div></div>
+                    <?php } ?>
+                    <div class="tdc-param-switch tdc-param-info-switch <?php if( !get_option('td_param_info_show') || get_option('td_param_info_show') == 'enabled' ) { echo 'tdc-param-switch-active'; } ?>" title="Show Parameters Video Tooltips"><div class="tdc-param-switch-ball"></div></div>
+                </div>
 				<div class="tdc-current-element-siblings">
 				</div>
 				<div class="tdc-tabs-wrapper">
@@ -466,29 +575,53 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 		</div>
 
 		<div id="tdc-restore-content">
+
             <?php
+            ob_start();
+            ?>
 
-            $tdc_history = get_post_meta( $post->ID, 'tdc_history', true );
+            <script>
+                (function() {
+                    window.addEventListener('load', function() {
+                        jQuery.when(tdcStore.get(tdcRecycle.snapshotPath + '-' + <?php echo $post->ID ?> )).done(function (request) {
+                            if ('undefined' !== typeof request.readyState && 'done' === request.readyState && 'undefined' !== typeof request.result) {
+                                var tdc_history = request.result.content;
 
-            if ( ! empty( $tdc_history ) ) {
-                //var_dump( json_decode( base64_decode( $tdc_history ), true ) );
-                $restore_points = json_decode( base64_decode( $tdc_history ), true );
+                                if ('undefined' !== typeof tdc_history) {
+                                    tdc_history = JSON.parse(tdc_history);
 
-                if ( count( $restore_points )) {
-                    $restore_points = array_reverse( $restore_points );
-                    ob_start();
-                    foreach( $restore_points as $restore_point ) {
-                        echo '<div class="tdc-snapshot">';
-                        echo '<div style="width:150px;float:left" data-timestamp="' . $restore_point['timestamp'] . '">' . date('j/n/Y g:i:s A', $restore_point['timestamp'] / 1000 ) . '</div>';
-                        echo '<div style="width:350px;float:left">Before Restore point</div>';
-                        echo '<div class="tdc-snapshot-shortcode" style="display:none">' . $restore_point['shortcode'] . '</div>';
-                        echo '<div class="tdc-snapshot-header" style="display:none">' . $restore_point['headerTemplateData'] . '</div>';
-                        echo '</div>';
-                    }
-                    echo ob_get_clean();
-                }
-            }
+                                    if (Array.isArray(tdc_history)) {
+                                        var buffer = '';
 
+                                        tdc_history.sort(function (a, b) {
+                                            return b['timestamp'] - a['timestamp'];
+                                        });
+
+                                        tdc_history.forEach(function (restore_point) {
+                                            buffer += '<div class="tdc-snapshot">';
+                                            buffer += '<div style="width:150px;float:left" data-timestamp="' + restore_point['timestamp'] + '">' + restore_point['timestamp'] + '</div>';
+                                            buffer += '<div style="width:350px;float:left">Before Restore point</div>';
+                                            buffer += '<div class="tdc-snapshot-shortcode" style="display:none">' + restore_point['shortcode'] + '</div>';
+                                            buffer += '<div class="tdc-snapshot-header" style="display:none">' + restore_point['headerTemplateData'] + '</div>';
+                                            buffer += '</div>';
+                                        });
+
+                                        jQuery('#tdc-restore-content').html(buffer);
+                                        tdcRecycle.init();
+                                    }
+                                } else {
+                                    tdcRecycle.init();
+                                }
+                            } else {
+                                tdcRecycle.init();
+                            }
+                        });
+                    });
+                })();
+            </script>
+
+            <?php
+            echo ob_get_clean();
             ?>
 		</div>
 
@@ -509,6 +642,7 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 					$big_grids_mapped_shortcodes = array();
                     $header_mapped_shortcodes = array();
 					$extended_mapped_shortcodes = array();
+                    $custom_forms_mapped_shortcodes = array();
 					$external_mapped_shortcodes = array();
 					$multipurpose_mapped_shortcodes = array();
 					$single_post_mapped_shortcodes = array();
@@ -525,12 +659,21 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 //							'content' => base64_encode(json_encode('[vc_row full_width="stretch_row"][vc_column width="1/4"][vc_row_inner][vc_column_inner width="1/2"][td_block_2][/vc_column_inner][vc_column_inner width="1/2"][td_block_1][/vc_column_inner][/vc_row_inner][/vc_column][vc_column width="1/4"][/vc_column][vc_column width="1/4"][/vc_column][vc_column width="1/4"][/vc_column][/vc_row]')),
 //						),
 					);
+					$td_woo_single_shortcodes = array();
+					$td_woo_archive_shortcodes = array();
+					$td_woo_search_archive_shortcodes = array();
+					$td_woo_common_shortcodes = array();
+
+					$cpt_mapped_shortcodes = [];
+					$cpt_tax_mapped_shortcodes = [];
 
 					$template_shortcodes = apply_filters( 'tdc_template_shortcodes', $template_shortcodes );
+					$td_woo_single_shortcodes = apply_filters( 'td_woo_single_shortcodes', $td_woo_single_shortcodes );
+					$td_woo_archive_shortcodes = apply_filters( 'td_woo_archive_shortcodes', $td_woo_archive_shortcodes );
+					$td_woo_search_archive_shortcodes = apply_filters( 'td_woo_search_archive_shortcodes', $td_woo_search_archive_shortcodes );
+					$td_woo_common_shortcodes = apply_filters( 'td_woo_common_shortcodes', $td_woo_common_shortcodes );
 
-					$mapped_shortcodes = tdc_mapper::get_mapped_shortcodes();
-
-					foreach ($mapped_shortcodes as &$mapped_shortcode ) {
+					foreach ($tdc_mapped_shortcodes as &$mapped_shortcode ) {
 
 						$shortcode_base = $mapped_shortcode['base'];
 
@@ -560,11 +703,31 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 								case 'Extended':
 									$extended_mapped_shortcodes[] = $mapped_shortcode;
 									break;
+								case 'Custom forms':
+                                    $custom_forms_mapped_shortcodes[] = $mapped_shortcode;
+									break;
 								case 'Single post':
-									$single_post_mapped_shortcodes[] = $mapped_shortcode;
+                                    if ( $shortcode_base == 'tdb_single_acf_field' && !class_exists( 'ACF' ) ) {
+                                        break;
+                                    }
+
+								    if ( !in_array($shortcode_base, ['tdb_single_ctags']) ) {
+									    $single_post_mapped_shortcodes[] = $mapped_shortcode;
+                                    }
+
+									// this adds share shortcode for woo single product templates
+									if ( 'tdb_single_post_share' === $shortcode_base && 'woo_product' === $tdbTemplateType ) {
+										$td_woo_single_shortcodes[] = $mapped_shortcode;
+									}
+
+									if (!in_array($mapped_shortcode['base'], ['tdb_single_categories' , 'tdb_single_tags', 'tdb_single_review_overview', 'tdb_single_review_overall', 'tdb_single_review_summary'])) {
+                                        $cpt_mapped_shortcodes[] = $mapped_shortcode;
+                                    }
+
 									break;
                                 case 'Category page':
                                     $category_page_mapped_shortcodes[] = $mapped_shortcode;
+	                                $cpt_tax_mapped_shortcodes[] = $mapped_shortcode;
                                     break;
                                 case 'Tag page':
                                     $tag_page_mapped_shortcodes[] = $mapped_shortcode;
@@ -581,6 +744,18 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
                                 case 'Common page elements':
                                     $common_page_el_mapped_shortcodes[] = $mapped_shortcode;
                                     break;
+                                case 'WooCommerce Single':
+	                                $td_woo_single_shortcodes[] = $mapped_shortcode;
+                                    break;
+                                case 'WooCommerce Search Archive':
+	                                $td_woo_search_archive_shortcodes[] = $mapped_shortcode;
+                                    break;
+                                case 'WooCommerce Archive':
+	                                $td_woo_archive_shortcodes[] = $mapped_shortcode;
+                                    break;
+								case 'WooCommerce Common':
+									$td_woo_common_shortcodes[] = $mapped_shortcode;
+									break;
 								case 'Multipurpose':
 									$multipurpose_mapped_shortcodes[] = $mapped_shortcode;
 									break;
@@ -596,9 +771,9 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 					}
 
 					usort( $extended_mapped_shortcodes, 'tdc_sort_name');
+					usort( $custom_forms_mapped_shortcodes, 'tdc_sort_name');
 					usort( $external_mapped_shortcodes, 'tdc_sort_name');
 					usort( $multipurpose_mapped_shortcodes, 'tdc_sort_name');
-
 
 					// Row
 					$data_shortcode_settings = get_data_shortcode_settings(  $top_mapped_shortcodes['vc_row'] );
@@ -611,8 +786,7 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 					// Inner Row
 					$data_shortcode_settings = get_data_shortcode_settings(  $top_mapped_shortcodes['vc_row_inner'] );
 
-					echo
-						'<div class="tdc-sidebar-element tdc-element-inner-row-temp" data-shortcode-name="' . $top_mapped_shortcodes['vc_row_inner']['base'] . '" ' . $data_shortcode_settings . '>' .
+					echo '<div class="tdc-sidebar-element tdc-element-inner-row-temp" data-shortcode-name="' . $top_mapped_shortcodes['vc_row_inner']['base'] . '" ' . $data_shortcode_settings . '>' .
 							'<div class="tdc-element-ico tdc-ico-' . $top_mapped_shortcodes['vc_row_inner']['base'] . '"></div>' .
 							'<div class="tdc-element-id">' . $top_mapped_shortcodes['vc_row_inner']['name'] . '</div>' .
 					    '</div>';
@@ -620,8 +794,7 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 					// Empty space
 					$data_shortcode_settings = get_data_shortcode_settings(  $top_mapped_shortcodes['vc_empty_space'] );
 
-					echo
-						'<div class="tdc-sidebar-element tdc-element" data-shortcode-name="' . $top_mapped_shortcodes['vc_empty_space']['base'] . '" ' . $data_shortcode_settings . '>' .
+					echo '<div class="tdc-sidebar-element tdc-element" data-shortcode-name="' . $top_mapped_shortcodes['vc_empty_space']['base'] . '" ' . $data_shortcode_settings . '>' .
 							'<div class="tdc-element-ico tdc-ico-' . $top_mapped_shortcodes['vc_empty_space']['base'] . '"></div>' .
 							'<div class="tdc-element-id">' . $top_mapped_shortcodes['vc_empty_space']['name'] . '</div>' .
 						'</div>';
@@ -667,6 +840,12 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 						// Here will be displayed the extended shortcodes
 						foreach ( $single_post_mapped_shortcodes as $mapped_shortcode ) {
 
+						    if ( in_array( $mapped_shortcode['base'], array( 'tdb_single_related', 'tdb_single_related_author', 'tdb_single_user_review_replies_list', 'tdb_single_user_review_reply_form', 'tdb_single_user_review_ratings'))) {
+						        continue;
+                            }
+
+
+
 							$data_row_start_values = '';
 
 							if ( isset( $mapped_shortcode['tdc_in_row'] ) && true === $mapped_shortcode['tdc_in_row'] ) {
@@ -690,6 +869,51 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 						}
 					}
 
+                    if ( ! empty( $cpt_mapped_shortcodes ) && 'cpt' === $tdbTemplateType ) {
+
+                        // Separator
+						echo '<div class="tdc-sidebar-separator">CPT shortcodes</div>';
+
+						// Here will be displayed the extended shortcodes
+						foreach ( $cpt_mapped_shortcodes as $mapped_shortcode ) {
+
+						    if ( in_array( $mapped_shortcode['base'], array( 'tdb_single_related', 'tdb_single_related_author'))) {
+						        continue;
+                            }
+
+                            if(
+                                get_post_type($tdbLoadDataFromId) != 'tdc-review' &&
+                                (
+                                    $mapped_shortcode['base'] === 'tdb_single_user_review_replies_list' ||
+                                    $mapped_shortcode['base'] === 'tdb_single_user_review_reply_form' ||
+                                    $mapped_shortcode['base'] === 'tdb_single_user_review_ratings'
+                                )
+                            )
+                                continue;
+
+							$data_row_start_values = '';
+
+							if ( isset( $mapped_shortcode['tdc_in_row'] ) && true === $mapped_shortcode['tdc_in_row'] ) {
+								$tdc_class = 'tdc-element-with-row tdc-row-temp';
+								if ( isset( $mapped_shortcode['tdc_row_start_values'] ) ) {
+									$data_row_start_values = ' data-row-start-values="' . $mapped_shortcode['tdc_row_start_values'] . '" ';
+								}
+							} else {
+								$tdc_class = 'tdc-element';
+							}
+
+							$data_shortcode_settings = get_data_shortcode_settings( $mapped_shortcode );
+
+							$buffer =
+								'<div class="tdc-sidebar-element ' . $tdc_class . '" data-shortcode-name="' . $mapped_shortcode['base'] . '" ' . $data_shortcode_settings . '>' .
+								'<div class="tdc-element-ico tdc-ico-' . $mapped_shortcode['base'] . '"></div>' .
+								'<div class="tdc-element-id">' . $mapped_shortcode['name'] . '</div>' .
+								'</div>';
+
+							echo $buffer;
+						}
+                    }
+
                     if ( ! empty( $category_page_mapped_shortcodes ) && 'category' === $tdbTemplateType ) {
 
                         // Separator
@@ -698,21 +922,21 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
                         // Here will be displayed the extended shortcodes
                         foreach ( $category_page_mapped_shortcodes as $mapped_shortcode ) {
 
-//                            if ( in_array( $mapped_shortcode['base'], array(
-//                                    'tdb_category_grid_1',
-//                                    'tdb_category_grid_2',
-//                                    'tdb_category_grid_3',
-//                                    'tdb_category_grid_4',
-//                                    'tdb_category_grid_5',
-//                                    'tdb_category_grid_6',
-//                                    'tdb_category_grid_7',
-//                                    'tdb_category_grid_8',
-//                                    'tdb_category_grid_9',
-//                                    'tdb_category_grid_10',
-//                                ))
-//                            ) {
-//                                continue;
-//                            }
+                            if ( in_array( $mapped_shortcode['base'], array(
+                                    'tdb_category_grid_1',
+                                    'tdb_category_grid_2',
+                                    'tdb_category_grid_3',
+                                    'tdb_category_grid_4',
+                                    'tdb_category_grid_5',
+                                    'tdb_category_grid_6',
+                                    'tdb_category_grid_7',
+                                    'tdb_category_grid_8',
+                                    'tdb_category_grid_9',
+                                    'tdb_category_grid_10',
+                                ))
+                            ) {
+                                continue;
+                            }
 
                             $data_row_start_values = '';
 
@@ -744,6 +968,53 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 
                         // Here will be displayed the extended shortcodes
                         foreach ( $tag_page_mapped_shortcodes as $mapped_shortcode ) {
+
+                            $data_row_start_values = '';
+
+                            if ( isset( $mapped_shortcode['tdc_in_row'] ) && true === $mapped_shortcode['tdc_in_row'] ) {
+                                $tdc_class = 'tdc-element-with-row tdc-row-temp';
+                                if ( isset( $mapped_shortcode['tdc_row_start_values'] ) ) {
+                                    $data_row_start_values = ' data-row-start-values="' . $mapped_shortcode['tdc_row_start_values'] . '" ';
+                                }
+                            } else {
+                                $tdc_class = 'tdc-element';
+                            }
+
+                            $data_shortcode_settings = get_data_shortcode_settings( $mapped_shortcode );
+
+                            $buffer =
+                                '<div class="tdc-sidebar-element ' . $tdc_class . '" data-shortcode-name="' . $mapped_shortcode['base'] . '" ' . $data_shortcode_settings . '>' .
+                                '<div class="tdc-element-ico tdc-ico-' . $mapped_shortcode['base'] . '"></div>' .
+                                '<div class="tdc-element-id">' . $mapped_shortcode['name'] . '</div>' .
+                                '</div>';
+
+                            echo $buffer;
+                        }
+                    }
+
+                    if ( ! empty( $cpt_tax_mapped_shortcodes ) && 'cpt_tax' === $tdbTemplateType ) {
+
+                        // Separator
+                        echo '<div class="tdc-sidebar-separator">Custom Taxonomy shortcodes</div>';
+
+                        // Here will be displayed the extended shortcodes
+                        foreach ( $cpt_tax_mapped_shortcodes as $mapped_shortcode ) {
+
+                            if ( in_array( $mapped_shortcode['base'], array(
+                                    'tdb_category_grid_1',
+                                    'tdb_category_grid_2',
+                                    'tdb_category_grid_3',
+                                    'tdb_category_grid_4',
+                                    'tdb_category_grid_5',
+                                    'tdb_category_grid_6',
+                                    'tdb_category_grid_7',
+                                    'tdb_category_grid_8',
+                                    'tdb_category_grid_9',
+                                    'tdb_category_grid_10',
+                                ))
+                            ) {
+                                continue;
+                            }
 
                             $data_row_start_values = '';
 
@@ -869,13 +1140,54 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
                         // Here will be displayed the common page shortcodes
                         foreach ( $common_page_el_mapped_shortcodes as $mapped_shortcode ) {
 
-                            if ( 'single' === $tdbTemplateType && ( $mapped_shortcode['base'] === 'tdb_loop' || $mapped_shortcode['base'] === 'tdb_loop_2' ) )
+                            if (
+                                    'single' === $tdbTemplateType &&
+                                    ( $mapped_shortcode['base'] === 'tdb_loop' ||
+                                        $mapped_shortcode['base'] === 'tdb_loop_2' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters_loop' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters_loop_sorting_options' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters_list' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters'
+                                    )
+                            )
                                 continue;
 
-							if ( 'attachment' === $tdbTemplateType && ( $mapped_shortcode['base'] === 'tdb_loop' || $mapped_shortcode['base'] === 'tdb_loop_2' ) )
+							if (
+                                    'attachment' === $tdbTemplateType &&
+                                    ( $mapped_shortcode['base'] === 'tdb_loop' ||
+                                        $mapped_shortcode['base'] === 'tdb_loop_2' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters_loop' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters_loop_sorting_options' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters_list' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters'
+                                    )
+                            )
 								continue;
 
-                            if ( '404' === $tdbTemplateType && ( $mapped_shortcode['base'] === 'tdb_title' || $mapped_shortcode['base'] === 'tdb_loop' || $mapped_shortcode['base'] === 'tdb_loop_2' ) )
+                            if (
+                                    '404' === $tdbTemplateType &&
+                                    ( $mapped_shortcode['base'] === 'tdb_title' ||
+                                        $mapped_shortcode['base'] === 'tdb_loop' ||
+                                        $mapped_shortcode['base'] === 'tdb_loop_2' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters_loop' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters_loop_sorting_options' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters_list' ||
+                                        $mapped_shortcode['base'] === 'tdb_filters'
+                                    )
+                            )
+                                continue;
+
+                            if( (
+                                    'header' === $tdbTemplateType ||
+                                    'footer' === $tdbTemplateType ||
+                                    '404' === $tdbTemplateType ||
+                                    'date' === $tdbTemplateType ||
+                                    'search' === $tdbTemplateType ||
+                                    'woo_product' === $tdbTemplateType ||
+                                    'woo_archive' === $tdbTemplateType ||
+                                    'woo_search_archive' === $tdbTemplateType ||
+                                    'woo_shop_base' === $tdbTemplateType
+                                ) && $mapped_shortcode['base'] === 'tdb_single_custom_field' )
                                 continue;
 
                             $data_row_start_values = '';
@@ -901,6 +1213,135 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
                         }
                     }
 
+                    if ( ! empty( $td_woo_single_shortcodes ) && ! empty( $tdbTemplateType ) && 'woo_product' === $tdbTemplateType ) {
+
+	                    // Separator
+	                    echo '<div class="tdc-sidebar-separator">WooCommerce shortcodes</div>';
+
+	                    // Here will be displayed the WooCommerce Single Product template type shortcodes
+	                    foreach ( $td_woo_single_shortcodes as $mapped_shortcode ) {
+
+		                    $data_row_start_values = '';
+
+		                    if ( isset( $mapped_shortcode['tdc_in_row'] ) && true === $mapped_shortcode['tdc_in_row'] ) {
+			                    $tdc_class = 'tdc-element-with-row tdc-row-temp';
+			                    if ( isset( $mapped_shortcode['tdc_row_start_values'] ) ) {
+				                    $data_row_start_values = ' data-row-start-values="' . $mapped_shortcode['tdc_row_start_values'] . '" ';
+			                    }
+		                    } else {
+			                    $tdc_class = 'tdc-element';
+		                    }
+
+		                    $data_shortcode_settings = get_data_shortcode_settings( $mapped_shortcode );
+
+		                    $buffer =
+			                    '<div class="tdc-sidebar-element ' . $tdc_class . '" data-shortcode-name="' . $mapped_shortcode['base'] . '" ' . $data_shortcode_settings . '>' .
+			                    '<div class="tdc-element-ico tdc-ico-' . $mapped_shortcode['base'] . '"></div>' .
+			                    '<div class="tdc-element-id">' . $mapped_shortcode['name'] . '</div>' .
+			                    '</div>';
+
+		                    echo $buffer;
+	                    }
+
+                    }
+
+                    if ( ! empty( $td_woo_archive_shortcodes ) && ! empty( $tdbTemplateType ) && 'woo_archive' === $tdbTemplateType ) {
+
+	                    // Separator
+	                    echo '<div class="tdc-sidebar-separator">WooCommerce shortcodes</div>';
+
+	                    // Here will be displayed the WooCommerce Products Archives template type shortcodes
+	                    foreach ( $td_woo_archive_shortcodes as $mapped_shortcode ) {
+
+		                    $data_row_start_values = '';
+
+		                    if ( isset( $mapped_shortcode['tdc_in_row'] ) && true === $mapped_shortcode['tdc_in_row'] ) {
+			                    $tdc_class = 'tdc-element-with-row tdc-row-temp';
+			                    if ( isset( $mapped_shortcode['tdc_row_start_values'] ) ) {
+				                    $data_row_start_values = ' data-row-start-values="' . $mapped_shortcode['tdc_row_start_values'] . '" ';
+			                    }
+		                    } else {
+			                    $tdc_class = 'tdc-element';
+		                    }
+
+		                    $data_shortcode_settings = get_data_shortcode_settings( $mapped_shortcode );
+
+		                    $buffer =
+			                    '<div class="tdc-sidebar-element ' . $tdc_class . '" data-shortcode-name="' . $mapped_shortcode['base'] . '" ' . $data_shortcode_settings . '>' .
+			                    '<div class="tdc-element-ico tdc-ico-' . $mapped_shortcode['base'] . '"></div>' .
+			                    '<div class="tdc-element-id">' . $mapped_shortcode['name'] . '</div>' .
+			                    '</div>';
+
+		                    echo $buffer;
+	                    }
+
+                    }
+
+                    if ( ! empty( $td_woo_search_archive_shortcodes ) && ! empty( $tdbTemplateType ) && 'woo_search_archive' === $tdbTemplateType ) {
+
+	                    // Separator
+	                    echo '<div class="tdc-sidebar-separator">WooCommerce shortcodes</div>';
+
+	                    // Here will be displayed the WooCommerce Products Archives template type shortcodes
+	                    foreach ( $td_woo_search_archive_shortcodes as $mapped_shortcode ) {
+
+		                    $data_row_start_values = '';
+
+		                    if ( isset( $mapped_shortcode['tdc_in_row'] ) && true === $mapped_shortcode['tdc_in_row'] ) {
+			                    $tdc_class = 'tdc-element-with-row tdc-row-temp';
+			                    if ( isset( $mapped_shortcode['tdc_row_start_values'] ) ) {
+				                    $data_row_start_values = ' data-row-start-values="' . $mapped_shortcode['tdc_row_start_values'] . '" ';
+			                    }
+		                    } else {
+			                    $tdc_class = 'tdc-element';
+		                    }
+
+		                    $data_shortcode_settings = get_data_shortcode_settings( $mapped_shortcode );
+
+		                    $buffer =
+			                    '<div class="tdc-sidebar-element ' . $tdc_class . '" data-shortcode-name="' . $mapped_shortcode['base'] . '" ' . $data_shortcode_settings . '>' .
+			                    '<div class="tdc-element-ico tdc-ico-' . $mapped_shortcode['base'] . '"></div>' .
+			                    '<div class="tdc-element-id">' . $mapped_shortcode['name'] . '</div>' .
+			                    '</div>';
+
+		                    echo $buffer;
+	                    }
+
+                    }
+
+                    if ( ! empty( $td_woo_common_shortcodes ) && ! empty( $tdbTemplateType ) && in_array( $tdbTemplateType, array( 'woo_product', 'woo_archive', 'woo_search_archive', 'woo_shop_base' ) ) ) {
+
+	                    // Separator
+	                    echo '<div class="tdc-sidebar-separator">WooCommerce Common shortcodes</div>';
+
+	                    // Here will be displayed the WooCommerce common type shortcodes
+	                    foreach ( $td_woo_common_shortcodes as $mapped_shortcode ) {
+
+		                    //if ( !in_array( $tdbTemplateType, array( 'woo_product', 'woo_archive', 'woo_search_archive', 'woo_shop_base' ) ) )
+			                    //continue;
+
+		                    $data_row_start_values = '';
+
+		                    if ( isset( $mapped_shortcode['tdc_in_row'] ) && true === $mapped_shortcode['tdc_in_row'] ) {
+			                    $tdc_class = 'tdc-element-with-row tdc-row-temp';
+			                    if ( isset( $mapped_shortcode['tdc_row_start_values'] ) ) {
+				                    $data_row_start_values = ' data-row-start-values="' . $mapped_shortcode['tdc_row_start_values'] . '" ';
+			                    }
+		                    } else {
+			                    $tdc_class = 'tdc-element';
+		                    }
+
+		                    $data_shortcode_settings = get_data_shortcode_settings( $mapped_shortcode );
+
+		                    $buffer = '<div class="tdc-sidebar-element ' . $tdc_class . '" data-shortcode-name="' . $mapped_shortcode['base'] . '" ' . $data_shortcode_settings . '>' .
+			                    '<div class="tdc-element-ico tdc-ico-' . $mapped_shortcode['base'] . '"></div>' .
+			                    '<div class="tdc-element-id">' . $mapped_shortcode['name'] . '</div>' .
+			                    '</div>';
+
+		                    echo $buffer;
+	                    }
+
+                    }
 
                     if ( ! empty( $block_mapped_shortcodes ) ) {
 
@@ -963,9 +1404,6 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 						}
 					}
 
-
-
-
 					if ( ! empty( $extended_mapped_shortcodes ) ) {
 
 						// Separator
@@ -997,6 +1435,36 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 						}
 					}
 
+					if ( ! empty( $custom_forms_mapped_shortcodes ) ) {
+
+						// Separator
+						echo '<div class="tdc-sidebar-separator">Custom forms shortcodes</div>';
+
+						// Here will be displayed the extended shortcodes
+						foreach ( $custom_forms_mapped_shortcodes as $mapped_shortcode ) {
+
+							$data_row_start_values = '';
+
+							if ( isset( $mapped_shortcode['tdc_in_row'] ) && true === $mapped_shortcode['tdc_in_row'] ) {
+								$tdc_class = 'tdc-element-with-row tdc-row-temp';
+								if ( isset( $mapped_shortcode['tdc_row_start_values'] ) ) {
+									$data_row_start_values = ' data-row-start-values="' . $mapped_shortcode['tdc_row_start_values'] . '" ';
+								}
+							} else {
+								$tdc_class = 'tdc-element';
+							}
+
+							$data_shortcode_settings = get_data_shortcode_settings( $mapped_shortcode );
+
+							$buffer =
+								'<div class="tdc-sidebar-element ' . $tdc_class . '" data-shortcode-name="' . $mapped_shortcode['base'] . '" ' . $data_shortcode_settings . '>' .
+								'<div class="tdc-element-ico tdc-ico-' . $mapped_shortcode['base'] . '"></div>' .
+								'<div class="tdc-element-id">' . $mapped_shortcode['name'] . '</div>' .
+								'</div>';
+
+							echo $buffer;
+						}
+					}
 
 					if ( ! empty( $external_mapped_shortcodes ) ) {
 
@@ -1005,8 +1473,34 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 
 						if ( 'page' === $tdbTemplateType ) {
                             foreach ( $common_page_el_mapped_shortcodes as $common_page_el_mapped_shortcode ) {
-                                if ( $common_page_el_mapped_shortcode['base'] === 'tdb_loop' || $common_page_el_mapped_shortcode['base'] === 'tdb_loop_2' || $common_page_el_mapped_shortcode['base'] === 'tdb_breadcrumbs' || $common_page_el_mapped_shortcode['base'] === 'tdb_title' ) {
+                                if (
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_loop' ||
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_loop_2' ||
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_filters_loop' ||
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_filters_loop_sorting_options' ||
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_filters_list' ||
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_filters' ||
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_breadcrumbs' ||
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_title' ||
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_woo_menu_cart' ||
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_single_post_share' ||
+                                        $common_page_el_mapped_shortcode['base'] === 'tdb_single_custom_field'
+                                ) {
                                     $external_mapped_shortcodes[] = $common_page_el_mapped_shortcode;
+                                }
+                            }
+
+                            foreach ( $single_post_mapped_shortcodes as $single_post_mapped_shortcode ) {
+                                if (
+                                        $single_post_mapped_shortcode['base'] === 'tdb_single_user_reviews_form' ||
+                                        $single_post_mapped_shortcode['base'] === 'tdb_single_user_reviews_overall' ||
+                                        $single_post_mapped_shortcode['base'] === 'tdb_single_user_reviews_list' ||
+                                        $single_post_mapped_shortcode['base'] === 'tdb_single_user_review_replies_list' ||
+                                        $single_post_mapped_shortcode['base'] === 'tdb_single_user_review_reply_form' ||
+                                        $single_post_mapped_shortcode['base'] === 'tdb_single_user_review_ratings' ||
+                                        $single_post_mapped_shortcode['base'] === 'tdb_single_location_display'
+                                ) {
+                                    $external_mapped_shortcodes[] = $single_post_mapped_shortcode;
                                 }
                             }
                         }
@@ -1033,7 +1527,6 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 							echo $buffer;
 						}
 					}
-
 
 					if ( ! empty( $multipurpose_mapped_shortcodes ) ) {
 
@@ -1062,7 +1555,6 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 							echo $buffer;
 						}
 					}
-
 
 					if ( ! empty( $template_shortcodes ) ) {
 
@@ -1159,6 +1651,8 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 		<div id="tdc-font-list">
 		</div>
 
+        <div id="tdc-editor-css" style="z-index: 2; height: 100%; width: 100%;"></div>
+
 		<?php
 
 		// Extensions add content
@@ -1200,9 +1694,8 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 
 	</div>
 
-
 	<div id="tdc-menu-settings">
-		<header>
+		<header class="tdb-wm-header-drag">
 			<div class="title"></div>
 			<div class="tdc-iframe-close-button"></div>
 		</header>
@@ -1214,7 +1707,7 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 	</div>
 
 	<div id="tdc-wpeditor">
-		<header>
+		<header class="tdb-wm-header-drag">
 			<div id="title">WP Editor</div>
 			<div class="tdc-iframe-close-button"></div>
 		</header>
@@ -1222,7 +1715,7 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 	</div>
 
 	<div id="tdc-page-settings">
-		<header>
+		<header class="tdb-wm-header-drag">
 			<div class="title"></div>
 			<div class="tdc-iframe-close-button"></div>
 		</header>
@@ -1233,31 +1726,63 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
 		</footer>
 	</div>
 
+	<div id="tdc-ace-editor" style="display: none;">
+		<header class="tdb-wm-header-drag">
+			<div class="title">HTML Code Editor</div>
+			<div class="close"></div>
+		</header>
+		<div class="content"></div>
+		<footer>
+            <div class="tdw-resize"></div>
+		</footer>
+	</div>
+
     <div id="tdc-zone">
-        <header>
-            <div class="title">Website Manager</div>
-            <div class="tdc-iframe-close-button"></div>
-        </header>
         <div class="content">
-            <div class="tdc-template-wrap">
-                <div class="tdc-template-title tdc-template-supertitle"><span>Header</span></div>
-                <div class="tdc-template-title tdc-header-template-title">Choose header template</div>
+            <div class="tdc-wm-box tdc-template-wrap" data-manage="header">
+                <div class="tdc-wm-box-title tdc-wm-box-supertitle"><span>Header templates</span></div>
+                <div class="tdc-wm-box-descr">Choose header template</div>
+
                 <div class="tdc-template-select tdc-header-template-select">
-                    <select class="tdc-template-list tdc-header-template-list">
-                        <option value="">Global Template</option>
-                        <option value="no_header">No Header</option>
-                    </select>
+                    <div class="tdc-template-current tdc-header-template-current"></div>
+                    <div class="tdc-template-list tdc-header-template-list" style="height: auto !important;">
+                        <div class="tdc-template-el" data-value=""><div class="tdc-template-el-title tdc-template-header-name">Global Template</div></div>
+                        <div class="tdc-template-el" data-value="no_header"><div class="tdc-template-el-title tdc-template-header-name">No Header</div></div>
+
+                        <?php
+
+                        if ( tdc_state::get_start_composer_for_mobile() ) {
+
+                            ?>
+                            <div class="tdc-convert-wrap tdc-templates-header-desktop">
+                                <p>Select a Header from your templates to create a blank or with content Mobile Header</p>
+                                <div class="tdc-convert-list-wrap">
+                                    <div class="tdc-convert-list-button tdc-templates-header-desktop-button">Convert template<svg xmlns="http://www.w3.org/2000/svg" width="5" height="5" viewBox="0 0 5 5"><path d="M5,3H3V5H2V3H0V2H2V0H3V2H5V3Z" fill="#fff"/></svg></div>
+                                    <div class="tdc-convert-list tdc-templates-header-desktop-list"></div>
+                                </div>
+                            </div>
+                            <?php
+                        }
+
+                        ?>
+
+                        <div class="tdc-templates-header">
+                            <div class="tdc-templates-header-item"><span>Cloud Templates</span></div>
+                            <div class="tdc-templates-header-item"><span>Global</span></div>
+                        </div>
+                    </div>
                     <div class="tdc-template-cloud tdc-header-template-cloud">Import header</div>
                 </div>
+
                 <div class="tdc-header-template-zones">
                     <div class="tdc-header-zone">
                         <div class="tdc-zone-group">
                             <div class="tdc-zone tdc-zone-active" data-type="tdc_header_desktop">
-                                <div class="tdc-template-title">Main menu</div>
+                                <div class="tdc-zone-title">Main menu</div>
                                 <div class="tdc-zone-icon tdc-zone-icon-mainm"></div>
                             </div>
                             <div class="tdc-zone tdc-zone-sticky-inactive" data-type="tdc_header_desktop_sticky">
-                                <div class="tdc-template-title">Main menu sticky</div>
+                                <div class="tdc-zone-title">Main menu sticky</div>
                                 <div class="tdc-zone-icon tdc-zone-icon-mainms"></div>
                                 <div class="tdc-zone-sticky-info">
                                     <div class="tdc-zone-sticky-switch">
@@ -1269,11 +1794,11 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
                         </div>
                         <div class="tdc-zone-group">
                             <div class="tdc-zone" data-type="tdc_header_mobile">
-                                <div class="tdc-template-title">Mobile menu</div>
+                                <div class="tdc-zone-title">Mobile menu</div>
                                 <div class="tdc-zone-icon tdc-zone-icon-mobm"></div>
                             </div>
                             <div class="tdc-zone tdc-zone-sticky-inactive" data-type="tdc_header_mobile_sticky">
-                                <div class="tdc-template-title">Mobile menu sticky</div>
+                                <div class="tdc-zone-title">Mobile menu sticky</div>
                                 <div class="tdc-zone-icon tdc-zone-icon-mobms"></div>
                                 <div class="tdc-zone-sticky-info">
                                     <div class="tdc-zone-sticky-switch">
@@ -1287,14 +1812,38 @@ $tdb_p_infinite_count = td_util::get_option('tdb_p_autoload_count');
                 </div>
             </div>
 
-            <div class="tdc-template-wrap">
-                <div class="tdc-template-title tdc-template-supertitle"><span>Footer</span></div>
-                <div class="tdc-template-title tdc-footer-template-title">Choose footer template</div>
+            <div class="tdc-wm-box tdc-template-wrap" data-manage="footer">
+                <div class="tdc-wm-box-title tdc-wm-box-supertitle"><span>Footer templates</span></div>
+                <div class="tdc-wm-box-descr">Choose footer template</div>
+
                 <div class="tdc-template-select tdc-footer-template-select">
-                    <select class="tdc-template-list tdc-footer-template-list">
-                        <option value="">Global Template</option>
-                        <option value="no_footer">No Footer</option>
-                    </select>
+                    <div class="tdc-template-current tdc-footer-template-current"></div>
+                    <div class="tdc-template-list tdc-footer-template-list" style="height: auto !important;">
+                        <div class="tdc-template-el" data-value=""><div class="tdc-template-el-title tdc-template-footer-name">Global Template</div></div>
+                        <div class="tdc-template-el" data-value="no_footer"><div class="tdc-template-el-title tdc-template-footer-name">No Footer</div></div>
+
+                        <?php
+
+                        if ( tdc_state::get_start_composer_for_mobile() ) {
+
+                            ?>
+                            <div class="tdc-convert-wrap tdc-templates-footer-desktop">
+                                <p>Select a Footer from your templates to create a blank or with content Mobile Footer</p>
+                                <div class="tdc-convert-list-wrap">
+                                    <div class="tdc-convert-list-button tdc-templates-footer-desktop-button">Convert template<svg xmlns="http://www.w3.org/2000/svg" width="5" height="5" viewBox="0 0 5 5"><path d="M5,3H3V5H2V3H0V2H2V0H3V2H5V3Z" fill="#fff"/></svg></div>
+                                    <div class="tdc-convert-list tdc-templates-footer-desktop-list"></div>
+                                </div>
+                            </div>
+                            <?php
+                        }
+
+                        ?>
+
+                        <div class="tdc-templates-header">
+                            <div class="tdc-templates-header-item"><span>Cloud Templates</span></div>
+                            <div class="tdc-templates-header-item"><span>Global</span></div>
+                        </div>
+                    </div>
                     <div class="tdc-template-cloud tdc-footer-template-cloud">Import footer</div>
                 </div>
             </div>

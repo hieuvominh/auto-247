@@ -4,6 +4,8 @@
 
 
 @import "tooltip.less";
+@import "components/notifications";
+@import "components/tables";
 
 //load the panel files
 @import "panel/theme-panel-general.less";
@@ -23,6 +25,8 @@
 @import "wp_panels/demos.less";
 @import "wp_panels/system_status.less";
 @import "wp_panels/activation.less";
+@import "wp_panels/license.less";
+@import "wp_panels/welcome.less";
 
 //page options
 @import "page_options/td-metabox.less";
@@ -172,6 +176,10 @@
     input,
     select {
       height: 28px;
+    }
+
+    .checkbox {
+      height: 16px;
     }
 
     label {
@@ -393,6 +401,14 @@
     .box-shadow(0 0 20px rgba(0, 0, 0, 0.2));
     overflow: hidden;
     padding: 0;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
 
     &:before {
       content: '';
@@ -430,6 +446,8 @@
 
   // content
   #TB_ajaxContent {
+    display: flex;
+    flex-direction: column;
     padding: 36px 15px 40px !important;
     height: auto !important;
     width: auto !important;
@@ -444,6 +462,18 @@
 
     // input in modal
     .td-confirm-info {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      a {
+        color: inherit;
+
+        &:hover {
+          text-decoration: none;
+        }
+      }
+
       input {
         background-color: transparent;
         border-width: 0 0 1px 0;
@@ -471,6 +501,80 @@
 
       select {
         margin-top: 10px;
+      }
+
+      .tdb-form-check {
+        margin-top: 15px;
+        line-height: 1;
+
+        input[type='radio'],
+        input[type='checkbox'] {
+          display: none;
+
+          + label {
+            display: inline-block;
+            margin-bottom: 0;
+            cursor: pointer;
+
+            .tdb-check {
+              position: relative;
+              display: inline-block;
+              width: 16px;
+              height: 16px;
+              background-color: #fff;
+              cursor: pointer;
+              vertical-align: middle;
+              border-radius: 3px;
+              transition: all .3s ease-in-out;
+              box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+
+              &:after {
+                content: '\e9db';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                margin: auto;
+                font-family: 'newspaper';
+                font-size: 9px;
+                line-height: 1;
+                color: #fff;
+                opacity: 0;
+                transition: all .3s ease;
+                pointer-events: none;
+              }
+            }
+
+            .tdb-check-title {
+              position: relative;
+              padding-left: 6px;
+              user-select: none;
+              -webkit-user-select: none;
+              font-size: 11px;
+            }
+          }
+
+          &:checked {
+            + label {
+              .tdb-check {
+                background-color: #1a9a75;
+
+                &:after {
+                  opacity: 1;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    .td-backup-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      input {
+        margin-top: 0;
       }
     }
   }
@@ -563,5 +667,178 @@
   .td-confirm-info{
     height: 288px !important;
     overflow-y: scroll;
+  }
+}
+// green button on update page/themes page when you click to update the theme
+.newspaper_page_td_theme_updates,
+.themes-php {
+  .td-thickbox {
+    .td-confirm-yes {
+      background-color: #61ad66 !important;
+      color: #fff;
+
+      &:hover {
+        background-color: #538f57  !important;
+      }
+    }
+  }
+}
+
+// backup panel settings - diff panel
+.td-theme-settings-diff {
+  display: block;
+  margin-top: 4px;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.td-theme-settings-diff-info {
+  position: absolute;
+  width: 805px;
+  max-height: 150px;
+  background-color: #fff;
+  border: 1px solid #e6e6e6;
+  overflow-y: auto;
+  .box-shadow(0px 0px 20px 1px rgba(0, 0, 0, 0.15));
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .td-diff-wrap {
+    display: flex;
+    border-bottom: 1px solid #e6e6e6;
+
+    > div {
+      padding: 6px 12px;
+      border-right: 1px solid #efefef;
+      word-break: break-all;
+    }
+  }
+
+  .td-diff-head-wrap {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .td-diff-wrap:not(.td-diff-head-wrap) {
+    font-size: 11px;
+  }
+
+  .td-diff-title {
+    width: 30%;
+  }
+
+  .td-diff-val1,
+  .td-diff-val2 {
+    width: 35%;
+  }
+}
+
+
+// key check
+.td-check-key {
+  margin-right: 0;
+
+  .td-white-box {
+    margin: 0;
+    padding-top: 40px;
+  }
+
+  .td-check-notif {
+    background-color: rgba(255, 56, 56, 0.12);
+    margin-bottom: 25px;
+    padding: 18px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #ff3838;
+  }
+
+  .button {
+    margin-top: 15px;
+  }
+}
+
+
+
+
+
+#tdb-check-key {
+  font-size: 14px;
+
+  @-webkit-keyframes fullspin {
+    0% {
+      -webkit-transform: rotate(0);
+      transform: rotate(0)
+    }
+    100% {
+      -webkit-transform: rotate(360deg);
+      transform: rotate(360deg)
+    }
+  }
+  @keyframes fullspin {
+    0% {
+      -webkit-transform: rotate(0);
+      transform: rotate(0)
+    }
+    100% {
+      -webkit-transform: rotate(360deg);
+      transform: rotate(360deg)
+    }
+  }
+}
+
+.tdb-checking-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  max-width: 1055px;
+
+  &:before {
+    content: '';
+    display: none;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-left: -20px;
+    width: 36px;
+    height: 36px;
+    border: 3px solid #888;
+    border-left-color: transparent;
+    border-right-color: transparent;
+    border-radius: 50%;
+    -webkit-animation: fullspin 1s infinite ease-out;
+    animation: fullspin 1s infinite ease-out;
+    z-index: 2;
+  }
+
+  &:after {
+    display: none;
+    margin-top: 13px;
+    font-size: 11px;
+    text-align: center;
+    color: #747f8b;
+  }
+}
+
+
+.tdb-checking-demo {
+  &:after {
+    content: 'Checking for new demos';
+  }
+}
+.tdb-checking-update {
+  &:after {
+    content: 'Checking for the latest updates';
+  }
+}
+
+.tdb-checking-loading {
+  min-height: 100px;
+
+  &:before,
+  &:after {
+    display: block;
   }
 }

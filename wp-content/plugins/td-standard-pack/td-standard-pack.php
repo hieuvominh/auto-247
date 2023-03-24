@@ -4,12 +4,12 @@ Plugin Name: tagDiv Standard Pack
 Plugin URI: http://tagdiv.com
 Description: tagDiv Standard Pack Support
 Author: tagDiv
-Version: 1.0 BETA | built on 04.03.2020 7:55
+Version: 1.7 | built on 15.02.2023 13:25
 Author URI: http://tagdiv.com
 */
 
 //hash
-define('TD_STANDARD_PACK', 'd0cdd949f741c065e9b26cee76cd5ac2');
+define('TD_STANDARD_PACK', '9ce2c1ff12ade0672995751ed7cb59b1');
 
 // don't run anything else in the plugin, if the tagDiv Composer plugin is not active
 if ( ! defined('TD_COMPOSER' ) ) {
@@ -38,6 +38,15 @@ define('TSP_PATH', dirname( __FILE__ ));
 require_once('tdsp_version_check.php');
 
 add_action('td_wp_booster_legacy', function() {
+    define('TDSP_THEME_URL', TDSP_URL . '/' . TD_THEME_NAME);
+    define('TDSP_THEME_PATH', TSP_PATH . '/' . TD_THEME_NAME);
+
+    define('TDSP_COMMON_URL', TDSP_URL . '/common');
+    define('TDSP_COMMON_PATH', TSP_PATH . '/common');
+    require_once(TD_THEME_NAME . '/functions.php');
+}, 9); // priority set to 9 so it can run before composer
+
+add_action('tdm_functions', function() {
     define('TDSP_THEME_URL', TDSP_URL . '/' . TD_THEME_NAME);
     define('TDSP_THEME_PATH', TSP_PATH . '/' . TD_THEME_NAME);
 

@@ -3,8 +3,11 @@
 
 /**
  * Class tdb_state_single
+ * @property tdb_method post_id
+ * @property tdb_method post_author_id
  * @property tdb_method post_breadcrumbs
  * @property tdb_method post_categories
+ * @property tdb_method post_taxonomies
  * @property tdb_method post_title
  * @property tdb_method post_subtitle
  * @property tdb_method post_date
@@ -20,19 +23,23 @@
  * @property tdb_method post_source
  * @property tdb_method post_via
  * @property tdb_method post_tags
+ * @property tdb_method post_ctags
  * @property tdb_method post_next_prev
  * @property tdb_method post_related
  * @property tdb_method post_comments
  * @property tdb_method post_smart_list
  * @property tdb_method post_review
+ * @property tdb_method post_reading_time
+ * @property tdb_method post_custom_field
+ * @property tdb_method post_location_display
+ * @property tdb_method post_user_reviews_list
+ * @property tdb_method post_user_reviews_overall
+ * @property tdb_method post_user_reviews_replies
+ * @property tdb_method post_user_review_ratings
+ * @property tdb_method post_table_of_contents
  * @property tdb_method post_item_scope
  * @property tdb_method post_item_scope_meta
  * @property tdb_method menu
- *
- *
- *
- *
- *
  *
  */
 class tdb_state_single extends tdb_state_base {
@@ -40,6 +47,7 @@ class tdb_state_single extends tdb_state_base {
     private $post_theme_settings_meta = array ();
     private $post_video_meta = array ();
     private $post_audio_meta = array ();
+    private $post_user_review = array ();
 
 
     /**
@@ -51,12 +59,36 @@ class tdb_state_single extends tdb_state_base {
         $this->post_theme_settings_meta = get_post_meta( $this->get_wp_query()->post->ID, 'td_post_theme_settings', true );
         $this->post_video_meta = get_post_meta( $this->get_wp_query()->post->ID, 'td_post_video', true );
         $this->post_audio_meta = get_post_meta( $this->get_wp_query()->post->ID, 'td_post_audio', true );
-
+        $this->post_user_review = get_post_meta( $this->get_wp_query()->post->ID, 'tdc-post-linked-posts', true );
     }
 
 
 
     public function __construct() {
+
+
+        // post id
+        $this->post_id = function () {
+
+            if ( !$this->has_wp_query() || !( $this->get_wp_query() instanceof WP_Query ) ) {
+                return 0;
+            }
+
+            return $this->get_wp_query()->post->ID;
+
+        };
+
+
+        // post id
+        $this->post_author_id = function () {
+
+            if ( !$this->has_wp_query() || !( $this->get_wp_query() instanceof WP_Query ) ) {
+                return 0;
+            }
+
+            return $this->get_wp_query()->post->post_author;
+
+        };
 
 
         // post title
@@ -182,7 +214,9 @@ class tdb_state_single extends tdb_state_base {
 
                 //render the video if the post has a video in the featured video section of the post
                 if ( !empty( $td_post_video ) ) {
-                    $featured_image_array['video'] = td_video_support::render_video( $td_post_video );
+                    $controls = $atts['controls'];
+                    $autoplay = $atts['autoplay'];
+                    $featured_image_array['video'] = td_video_support::render_video( $td_post_video, $controls, $autoplay );
 
                     if ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) {
 	                    $dummy_data_array['featured_image_info']['src'] = $no_thumb_video_placeholder;
@@ -250,7 +284,9 @@ class tdb_state_single extends tdb_state_base {
         $this->post_bg_featured_image = function ($tdb_image_size = 'full') {
 
             $dummy_data_array = array(
-                'featured_image_src' =>  TDB_URL . '/assets/images/td_meta_replacement.png'
+                'featured_image_src' =>  TDB_URL . '/assets/images/td_meta_replacement.png',
+                'alt' => '',
+                'caption' => ''
             );
 
             if ( !$this->has_wp_query() ) {
@@ -258,7 +294,9 @@ class tdb_state_single extends tdb_state_base {
             }
 
             $data_array = array(
-                'featured_image_src' => ''
+                'featured_image_src' => '',
+                'alt' => '',
+                'caption' => ''
             );
 
             $post              = $this->get_wp_query()->post;
@@ -271,8 +309,14 @@ class tdb_state_single extends tdb_state_base {
                 }
             }
 
+            //get alt and caption from attachment
+            $featured_image_info = td_util::attachment_get_full_info( $post_thumb_id );
+
             if ( !is_null( $post_thumb_id ) ) {
-                $data_array['featured_image_src'] = wp_get_attachment_image_src( $post_thumb_id, $tdb_image_size )[0];
+                $img_src = wp_get_attachment_image_src( $post_thumb_id, $tdb_image_size );
+                $data_array['featured_image_src'] = $img_src !== false ? $img_src[0] : '';
+                $data_array['alt'] = $featured_image_info['alt'];
+                $data_array['caption'] = $featured_image_info['caption'];
             } else {
                 if ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) {
                     return $dummy_data_array;
@@ -310,11 +354,14 @@ class tdb_state_single extends tdb_state_base {
                 return $dummy_data_array;
             }
 
+            $current_user = wp_get_current_user();
+            $current_user_id = $current_user->ID;
+            $is_current_user_admin = current_user_can('administrator') || current_user_can('editor');
+
             $post_content_array = array(
                 'post_content' => '',
                 'post_pagination' => ''
             );
-
 
             /*
              * top ad
@@ -328,6 +375,26 @@ class tdb_state_single extends tdb_state_base {
             $top_ad_title = '';
             if ( isset( $atts['ad_top_title'] ) and $atts['ad_top_title'] != '' ) {
                 $top_ad_title = $atts['ad_top_title'];
+            }
+
+            $top_ad_hide_for_admins_bool = false;
+            $top_ad_hide_for_subscribed_bool = false;
+            $top_ad_hide = isset( $atts['ad_top_disable'] ) ? $atts['ad_top_disable'] : '';
+            $top_ad_hide_plan_id = isset( $atts['ad_top_hide_plan_id'] ) ? $atts['ad_top_hide_plan_id'] : '';
+
+            if( defined( 'TD_SUBSCRIPTION' ) && method_exists( 'tds_util', 'is_user_subscribed_to_plan' ) && $top_ad_hide_plan_id != '' ) {
+                $top_ad_hide_plan_id = explode(',', $top_ad_hide_plan_id);
+
+                foreach ( $top_ad_hide_plan_id as $plan_id ) {
+                    if( tds_util::is_user_subscribed_to_plan( $current_user_id, $plan_id ) ) {
+                        $top_ad_hide_for_subscribed_bool = true;
+                        break;
+                    }
+                }
+            }
+
+            if( !$top_ad_hide_for_subscribed_bool && $is_current_user_admin && $top_ad_hide != '' ) {
+                $top_ad_hide_for_admins_bool = true;
             }
 
 
@@ -365,6 +432,27 @@ class tdb_state_single extends tdb_state_base {
                     $inline_ads[$i]['title'] = $atts['ad_inline_title' . $curr_inline_ad_nr];
                 }
 
+                // ad disable
+                $inline_ads[$i]['hide_for_admins'] = false;
+                $inline_ads[$i]['hide_for_subscribed'] = false;
+                $inline_ad_hide = isset( $atts['ad_inline_disable' . $curr_inline_ad_nr] ) ? $atts['ad_inline_disable' . $curr_inline_ad_nr] : '';
+                $inline_ad_hide_plan_id = isset( $atts['ad_inline_hide_plan_id' . $curr_inline_ad_nr] ) ? $atts['ad_inline_hide_plan_id' . $curr_inline_ad_nr] : '';
+
+                if( defined( 'TD_SUBSCRIPTION' ) && method_exists( 'tds_util', 'is_user_subscribed_to_plan' ) && $inline_ad_hide_plan_id != '' ) {
+                    $inline_ad_hide_plan_id = explode(',', $inline_ad_hide_plan_id);
+
+                    foreach ( $inline_ad_hide_plan_id as $plan_id ) {
+                        if( tds_util::is_user_subscribed_to_plan( $current_user_id, $plan_id ) ) {
+                            $inline_ads[$i]['hide_for_subscribed'] = true;
+                            break;
+                        }
+                    }
+                }
+
+                if( !$inline_ads[$i]['hide_for_subscribed'] && $is_current_user_admin && $inline_ad_hide != '' ) {
+                    $inline_ads[$i]['hide_for_admins'] = true;
+                }
+
                 $inline_ads[$i]['show_at_bottom'] = true;
             }
 
@@ -383,7 +471,30 @@ class tdb_state_single extends tdb_state_base {
                 $bottom_ad_title = $atts['ad_bottom_title'];
             }
 
+            $bottom_ad_hide_for_admins_bool = false;
+            $bottom_ad_hide_for_subscribed_bool = false;
+            $bottom_ad_hide = isset( $atts['ad_bottom_disable'] ) ? $atts['ad_bottom_disable'] : '';
+            $bottom_ad_hide_plan_id = isset( $atts['ad_bottom_hide_plan_id'] ) ? $atts['ad_bottom_hide_plan_id'] : '';
+
+            if( defined( 'TD_SUBSCRIPTION' ) && method_exists( 'tds_util', 'is_user_subscribed_to_plan' ) && $bottom_ad_hide_plan_id != '' ) {
+                $bottom_ad_hide_plan_id = explode(',', $bottom_ad_hide_plan_id);
+
+                foreach ( $bottom_ad_hide_plan_id as $plan_id ) {
+                    if( tds_util::is_user_subscribed_to_plan( $current_user_id, $plan_id ) ) {
+                        $bottom_ad_hide_for_subscribed_bool = true;
+                        break;
+                    }
+                }
+            }
+
+            if( !$bottom_ad_hide_for_subscribed_bool && $is_current_user_admin && $bottom_ad_hide != '' ) {
+                $bottom_ad_hide_for_admins_bool = true;
+            }
+
 	        $content = '';
+
+            // is content locked flag
+	        $is_content_locked = class_exists( 'tds_email_locker', false ) && tds_email_locker::instance()->is_content_locked();
 
             global $wp_query;
             $template_wp_query = $wp_query;
@@ -395,84 +506,129 @@ class tdb_state_single extends tdb_state_base {
 			        the_post();
 
 			        // td composer removes wp's automatic paragraphs from post content so we need to add it again here to keep the post format
-			        add_filter( 'the_content', 'wpautop' );
+			        if ( !$is_content_locked ) { // not needed if the content is locked
+				        add_filter( 'the_content', 'wpautop' );
+			        }
 
 			        $content = get_the_content( $read_more_text );
 			        $content = apply_filters( 'the_content', $content );
 			        $content = str_replace( ']]>', ']]&gt;', $content );
 
-			        // show the inline ad at the last paragraph ( replacing the bottom ad )
-			        // whenever there are not as many paragraphs mentioned in After Paragraph field ..and the article bottom ad is not active
-			        //$show_inline_ad_at_bottom = false;
-
-			        $content_buffer = ''; // we replace the content with this buffer at the end
-			        $content_parts  = preg_split('/(<blockquote.*\/blockquote>)/Us', $content, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-
-			        $p_open_tag_count = 0; // count how many <p> tags we have added to the buffer
-
-			        foreach ( $content_parts as $content_part_index => $content_part_value ) {
-				        if ( !empty( $content_part_value ) ) {
-
-					        //skip <blockquote> parts - look for <p> in the other parts
-					        if ( preg_match('/(<blockquote.*>)/U', $content_part_value) !== 1 ) {
-						        $section_parts = preg_split('/(<p.*>)/U', $content_part_value, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
-
-						        foreach ( $section_parts as $section_part_index => $section_part_value ) {
-							        if ( !empty( $section_part_value ) ) {
-								        // Show the ad ONLY IF THE CURRENT PART IS A <p> opening tag and before the <p> -> so we will have <p>content</p>  ~ad~ <p>content</p>
-								        // and prevent cases like <p> ~ad~ content</p>
-								        if ( preg_match('/(<p.*>)/U', $section_part_value ) === 1 ) {
-								            foreach ( $inline_ads as $inline_ad => &$inline_ad_params ) {
-                                                if ( $inline_ad_params['paragraph'] === $p_open_tag_count ) {
-                                                    $inline_ad_params['show_at_bottom'] = false;
-                                                    $content_buffer .= $this->build_post_content_ad_spot( $inline_ad_params['content'], 'inline_ad' . $inline_ad, $inline_ad_params['title'], $inline_ad_params['align'] );
-                                                }
-                                            }
-
-									        $p_open_tag_count ++;
-								        }
-								        //add section to buffer
-								        $content_buffer .= $section_part_value;
-							        }
-						        }
-
-					        } else {
-						        //add <blockquote> to buffer
-						        $content_buffer .= $content_part_value;
-					        }
-				        }
-			        }
-			        $content = $content_buffer;
-
-			        // add the top ad
-			        $content_top_ad = $this->build_post_content_ad_spot( $top_ad, 'top_ad', $top_ad_title, '' );
-			        $content = $content_top_ad . $content;
-
-			        // add the bottom ad
-			        $content_bottom_ad = $this->build_post_content_ad_spot( $bottom_ad, 'bottom_ad', $bottom_ad_title, '' );
-
-			        if ( !empty( $content_bottom_ad ) ) {
-				        $content = $content . $content_bottom_ad;
+			        // if content is fully locked skip processing ads and just set the content
+			        if ( $is_content_locked ) {
+				        $post_content_array['post_content'] = $content;
+				        $post_content_array['post_pagination'] = '';
 			        } else {
-                        foreach ( $inline_ads as $inline_ad => $inline_ad_params ) {
-                            if ( $inline_ad_params['show_at_bottom'] === true ) {
-                                $content = $content . $this->build_post_content_ad_spot( $inline_ad_params['content'], 'inline_ad' . $inline_ad, $inline_ad_params['title'], $inline_ad_params['align'] );
+
+                        // show the inline ad at the last paragraph ( replacing the bottom ad )
+                        // whenever there are not as many paragraphs mentioned in After Paragraph field ..and the article bottom ad is not active
+                        //$show_inline_ad_at_bottom = false;
+
+                        $content_buffer = ''; // we replace the content with this buffer at the end
+                        $content_parts  = preg_split('/(<blockquote.*\/blockquote>)/Us', $content, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+
+                        $p_open_tag_count = 0; // count how many <p> tags we have added to the buffer
+
+                        foreach ( $content_parts as $content_part_index => $content_part_value ) {
+                            if ( !empty( $content_part_value ) ) {
+
+                                //skip <blockquote> parts - look for <p> in the other parts
+                                if ( preg_match('/(<blockquote.*>)/U', $content_part_value) !== 1 ) {
+                                    $section_parts = preg_split('/(<p.*>)/U', $content_part_value, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
+
+                                    foreach ( $section_parts as $section_part_index => $section_part_value ) {
+                                        if ( !empty( $section_part_value ) ) {
+                                            // Show the ad ONLY IF THE CURRENT PART IS A <p> opening tag and before the <p> -> so we will have <p>content</p>  ~ad~ <p>content</p>
+                                            // and prevent cases like <p> ~ad~ content</p>
+                                            if ( preg_match('/(<p.*>)/U', $section_part_value ) === 1 ) {
+                                                foreach ( $inline_ads as $inline_ad => &$inline_ad_params ) {
+                                                    if ( $inline_ad_params['paragraph'] === $p_open_tag_count ) {
+                                                        $inline_ad_params['show_at_bottom'] = false;
+                                                        $content_buffer .= $this->build_post_content_ad_spot( $inline_ad_params['content'], 'inline_ad' . $inline_ad, $inline_ad_params['title'], $inline_ad_params['align'], $inline_ad_params['hide_for_admins'], $inline_ad_params['hide_for_subscribed'] );
+                                                    }
+                                                }
+
+                                                $p_open_tag_count ++;
+                                            }
+                                            //add section to buffer
+                                            $content_buffer .= $section_part_value;
+                                        }
+                                    }
+
+                                } else {
+                                    //add <blockquote> to buffer
+                                    $content_buffer .= $content_part_value;
+                                }
                             }
                         }
-			        }
+                        $content = $content_buffer;
 
-			        $post_content_array['post_content'] = $content;
-			        $post_content_array['post_pagination'] = wp_link_pages(
-				        array(
-					        'before'           => '<div class="page-nav page-nav-post td-pb-padding-side">',
-					        'after'            => '</div>',
-					        'link_before'      => '<div>',
-					        'link_after'       => '</div>',
-					        'echo'             => false,
-					        'nextpagelink'     => '<i class="td-icon-menu-right"></i>',
-					        'previouspagelink' => '<i class="td-icon-menu-left"></i>'
-				        )
-			        );
+                        // add the top ad
+                        $content_top_ad = $this->build_post_content_ad_spot( $top_ad, 'top_ad', $top_ad_title, '', $top_ad_hide_for_admins_bool, $top_ad_hide_for_subscribed_bool );
+                        $content = $content_top_ad . $content;
+
+                        // add the bottom ad
+                        $content_bottom_ad = $this->build_post_content_ad_spot( $bottom_ad, 'bottom_ad', $bottom_ad_title, '', $bottom_ad_hide_for_admins_bool, $bottom_ad_hide_for_subscribed_bool );
+
+
+                    //the code has been commented to stop loading inline ads if there are not enough paragraphs and bottom ads are not set
+                   /*     if ( !empty( $content_bottom_ad ) ) {*/
+                            $content = $content . $content_bottom_ad;
+                   /*     } else {
+                            foreach ( $inline_ads as $inline_ad => $inline_ad_params ) {
+                                if ( $inline_ad_params['show_at_bottom'] === true ) {
+                                    $content = $content . $this->build_post_content_ad_spot( $inline_ad_params['content'], 'inline_ad' . $inline_ad, $inline_ad_params['title'], $inline_ad_params['align'], $inline_ad_params['disable'] );
+                                }
+                            }
+                        }*/
+
+                        // add ids for the table of contents
+                        if( tdb_state_template::has_shortcode('tdb_single_toc') ) {
+                            $headings = tdb_toc::extractHeadings($content);
+
+                            if( !empty( $headings ) ) {
+                                foreach ( $headings as $heading ) {
+                                    $heading_slug = $heading['slug'];
+                                    $full_heading = $heading['full_heading'];
+                                    $heading_tag = $heading['tag'];
+
+                                    $search[] = $full_heading;
+
+                                    if( strpos($full_heading, 'id="') === false ) {
+                                        $replace[] = str_replace(
+                                            '<' . $heading_tag,
+                                            '<' . $heading_tag . ' ' . ' id="' . $heading_slug . '"',
+                                            $full_heading
+                                        );
+                                    } else {
+                                        $replace[] = preg_replace(
+                                            '/id="([^"]+)"/',
+                                            'id="' . $heading_slug . '"',
+                                            $full_heading
+                                        );
+                                    }
+                                }
+
+                                if( !empty($search) && !empty($replace) && count($search) == count($replace) ) {
+                                    $content = str_replace($search, $replace, $content);
+                                }
+                            }
+                        }
+
+
+                        $post_content_array['post_content'] = $content;
+                        $post_content_array['post_pagination'] = wp_link_pages(
+                            array(
+                                'before'           => '<div class="page-nav page-nav-post td-pb-padding-side">',
+                                'after'            => '</div>',
+                                'link_before'      => '<div>',
+                                'link_after'       => '</div>',
+                                'echo'             => false,
+                                'nextpagelink'     => '<i class="td-icon-menu-right"></i>',
+                                'previouspagelink' => '<i class="td-icon-menu-left"></i>'
+                            )
+                        );
+			        }
 
 		        }
 
@@ -499,11 +655,11 @@ class tdb_state_single extends tdb_state_base {
 
             $p_cat_custom_title = ( $atts['parent_cat_custom_title'] != '' ) ? $atts['parent_cat_custom_title'] : 'Parent Category';
             $p_cat_custom_title_att = ( $atts['parent_cat_custom_title_att'] != '' ) ? $atts['parent_cat_custom_title_att'] :  'parent category title';
-            $p_cat_custom_title_link = ( $atts['parent_cat_custom_link'] != '' ) ? $atts['parent_cat_custom_link'] :  '#';
+            $p_cat_custom_title_link = ( $atts['parent_cat_custom_link'] != '' ) ? $atts['parent_cat_custom_link'] : '#';
 
             $c_cat_custom_title = ( $atts['child_cat_custom_title'] != '' ) ? $atts['child_cat_custom_title'] : 'Primary/Child Category';
             $c_cat_custom_title_att = ( $atts['child_cat_custom_title_att'] != '' ) ? $atts['child_cat_custom_title_att'] :  'primary/child category title';
-            $c_cat_custom_title_link = ( $atts['child_cat_custom_link'] != '' ) ? $atts['child_cat_custom_link'] :  '#';
+            $c_cat_custom_title_link = ( $atts['child_cat_custom_link'] != '' ) ? $atts['child_cat_custom_link'] : '#';
 
             if ( $show_parent ) {
                 $dummy_data_array[] = array(
@@ -542,7 +698,45 @@ class tdb_state_single extends tdb_state_base {
             $primary_category_id = $this->get_primary_category_id();
             $primary_category_obj = get_category( $primary_category_id );
 
-            if ( !empty( $primary_category_obj ) ) {
+            $breadcrumbs_array = array();
+
+            if ( !empty( $atts['installed_taxonomies'] ) ) {
+
+                $array_selected_taxonomies = array();
+                $expl_taxonomies = explode(',', $atts['installed_taxonomies'] );
+
+                foreach ( $expl_taxonomies as $taxonomy ) {
+                    if ( trim( $taxonomy ) != '' ) {
+                        $array_selected_taxonomies[] = trim( $taxonomy );
+                    }
+                }
+
+                foreach ( $array_selected_taxonomies as $tax ) {
+                    $term_obj_list = get_the_terms( $post->ID, $tax );
+
+                    if ( is_array( $term_obj_list ) ) {
+
+	                    // sort terms hierarchically
+	                    $sorted_terms = array();
+	                    self::sort_terms_hierarchically( $term_obj_list, $sorted_terms );
+
+                        foreach ( $sorted_terms as $term ) {
+
+                            $breadcrumbs_array[] = array (
+                                'title_attribute' => 'attribute',
+                                'url' => esc_url( get_term_link( $term ) ),
+                                'display_name' => $term->name
+                            );
+
+	                        self::add_term_children( $breadcrumbs_array, $term, 'post_breadcrumbs' );
+
+                        }
+
+                    }
+
+                }
+
+            } elseif ( !empty( $primary_category_obj ) ) {
                 if ( !empty( $primary_category_obj->name ) ) {
                     $category_1_name = $primary_category_obj->name;
                 } else {
@@ -562,7 +756,6 @@ class tdb_state_single extends tdb_state_base {
                 }
             }
 
-            $breadcrumbs_array = array();
             $post_title = $post->post_title;
 
             if ( !empty( $category_1_name ) ) {
@@ -593,7 +786,7 @@ class tdb_state_single extends tdb_state_base {
                 );
             }
 
-            //article title (only if is set to show it)
+            // article title (only if is set to show it)
             if ( $show_article ) {
                 $breadcrumbs_article_title_excerpt =
                     $atts['title_excerpt'] != '' ? td_util::excerpt( $post_title, $atts['title_excerpt'] ) : td_util::excerpt( $post_title, 13 );
@@ -606,13 +799,14 @@ class tdb_state_single extends tdb_state_base {
             }
 
             return $breadcrumbs_array;
+
         };
 
 
         // post author box
         $this->post_author_box = function ( $atts ) {
 
-            $photo_size = (  isset( $atts['photo_size'] ) and $atts['photo_size'] != '' ) ? $atts['photo_size'] : '96';
+            $photo_size = '500';
 
             if ( !$this->has_wp_query() ) {
 
@@ -647,8 +841,8 @@ class tdb_state_single extends tdb_state_base {
             $post_author_box_data_array = array();
 
             $post_author_box_data_array['author_url']    = get_author_posts_url( $author_id );
-            $post_author_box_data_array['author_avatar'] = get_avatar( get_the_author_meta( 'email', $author_id ), $photo_size );
             $post_author_box_data_array['author_name']   = get_the_author_meta( 'display_name', $author_id );
+            $post_author_box_data_array['author_avatar'] = get_avatar( get_the_author_meta( 'email', $author_id ), $photo_size, '', $post_author_box_data_array['author_name'] );
             $post_author_box_data_array['user_url']      = get_the_author_meta( 'user_url', $author_id );
             $post_author_box_data_array['description']   = get_the_author_meta( 'description', $author_id );
 
@@ -661,11 +855,11 @@ class tdb_state_single extends tdb_state_base {
 
                     //the theme can use the twitter id instead of the full url. This avoids problems with yoast plugin
                     if ( $td_social_id == 'twitter' ) {
-                        if( filter_var( $author_meta, FILTER_VALIDATE_URL ) ){
-
+                        if ( filter_var( $author_meta, FILTER_VALIDATE_URL ) ) {
+	                        $author_meta = filter_var( $author_meta, FILTER_VALIDATE_URL );
                         } else {
                             $author_meta = str_replace('@', '', $author_meta );
-                            $author_meta = 'http://twitter.com/' . $author_meta;
+                            $author_meta = 'https://twitter.com/' . $author_meta;
                         }
                     }
 
@@ -711,42 +905,113 @@ class tdb_state_single extends tdb_state_base {
             $post = $this->get_wp_query()->post;
             $categories_array = array();
 
-            $post_categories = get_the_category( $post->ID );
+            $post_categories = get_the_terms( $post->ID, 'category' );
+
+            if ( isset($atts['cat_order']) and $atts['cat_order'] === '' && false !== $post_categories && !is_wp_error( $post_categories ) ) {
+                $sorted_categories = array();
+                self::sort_terms_hierarchically( $post_categories, $sorted_categories );
+
+                if ( !empty( $sorted_categories ) ) {
+                    foreach ( $sorted_categories as $category ) {
+                        $post_categories[] = $category;
+
+                        self::add_term_children( $post_categories, $category, 'post_categories' );
+                    }
+                }
+            }
 
             if ( !empty( $post_categories ) ) {
                 foreach ( $post_categories as $post_category ) {
-                    //if ( $post_category->name != TD_FEATURED_CAT ) { //ignore the featured category name
-                        //get the parent of this cat
-                        $td_parent_cat_obj = get_category( $post_category->category_parent );
-
-                        //if we have a parent and the default category display is disabled show it first
-                        if (
-                            ! empty( $td_parent_cat_obj->name )
-                            and isset( $atts['cat_order'] )
-                            and $atts['cat_order'] != 'alphabetically'
-                        ) {
-                            $category_meta__color_parent        = td_util::get_category_option( $td_parent_cat_obj->cat_ID, 'tdc_color' );
-                            $category_meta__hide_on_post_parent = td_util::get_category_option( $td_parent_cat_obj->cat_ID, 'tdc_hide_on_post' );
-                            $categories_array[ $td_parent_cat_obj->name ] = array(
-                                'color'        => $category_meta__color_parent,
-                                'link'         => get_category_link( $td_parent_cat_obj->cat_ID ),
-                                'hide_on_post' => $category_meta__hide_on_post_parent
-                            );
-                        }
-
-                        //show the category, only if we didn't already showed the parent
-                        $category_meta__color        = td_util::get_category_option( $post_category->cat_ID, 'tdc_color' );
-                        $category_meta__hide_on_post = td_util::get_category_option( $post_category->cat_ID, 'tdc_hide_on_post' );
-                        $categories_array[ $post_category->name ]  = array(
-                            'color'        => $category_meta__color,
-                            'link'         => get_category_link( $post_category->cat_ID ),
-                            'hide_on_post' => $category_meta__hide_on_post
-                        );
-                    //}
+                    // process cat meta && add to categories_array
+                    $category_meta__color        = td_util::get_category_option( $post_category->term_id, 'tdc_color' );
+                    $category_meta__hide_on_post = td_util::get_category_option( $post_category->term_id, 'tdc_hide_on_post' );
+                    $categories_array[ $post_category->name ]  = array(
+                        'color'        => $category_meta__color,
+                        'link'         => get_category_link( $post_category->term_id ),
+                        'hide_on_post' => $category_meta__hide_on_post
+                    );
                 }
             }
 
             return $categories_array;
+        };
+
+
+        // post taxonomies
+        $this->post_taxonomies = function ( $atts ) {
+
+            $dummy_data_array =  array(
+                'Taxonomy I' => array(
+                    'color'        => '#a444bd',
+                    'link'         => '#',
+                    'hide_on_post' => '',
+                ),
+                'Taxonomy II' => array(
+                    'color'        => '#3fbcd5',
+                    'link'         => '#',
+                    'hide_on_post' => '',
+                ),
+                'Taxonomy III' => array(
+                    'color'        => '#e33a77',
+                    'link'         => '#',
+                    'hide_on_post' => '',
+                ),
+            );
+            if ( !$this->has_wp_query() ) {
+                return $dummy_data_array;
+            }
+
+            $post = $this->get_wp_query()->post;
+            $terms_array = null;
+
+            if ( !empty( $atts['taxonomy'] ) ) {
+	            $post_terms = get_the_terms( $post->ID, $atts['taxonomy'] );
+
+	            if ( false !== $post_terms && !is_wp_error( $post_terms ) ) {
+
+		            // sort terms hierarchically
+		            $sorted_terms = array();
+		            self::sort_terms_hierarchically( $post_terms, $sorted_terms );
+
+		            if ( !empty( $sorted_terms ) ) {
+
+			            $terms_array = [];
+			            foreach ( $sorted_terms as $term ) {
+
+				            // get term color
+				            if ( $term->taxonomy === 'category' ) {
+
+					            // get the category color from theme panel
+					            $term_meta_color = td_util::get_category_option( $term->term_id, 'tdc_color' );
+
+				            } else {
+					            $term_meta_color = get_term_meta( $term->term_id, 'tdb_filter_color', true );
+				            }
+
+                            // sanitize hex color
+				            $sanitized_hex_color = sanitize_hex_color( $term_meta_color );
+
+				            $terms_array[$term->name] = array (
+					            'link' => esc_url( get_term_link( $term->term_id ) ),
+					            'hide_on_post' => false,
+					            'color' => !empty( $sanitized_hex_color ) ? $sanitized_hex_color : ''
+				            );
+
+				            self::add_term_children( $terms_array, $term, 'post_taxonomies' );
+
+			            }
+
+		            }
+
+	            } else {
+                    if ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) {
+                        return $dummy_data_array;
+                    }
+                }
+
+            }
+
+            return $terms_array;
         };
 
 
@@ -766,22 +1031,25 @@ class tdb_state_single extends tdb_state_base {
             $post_date_array = array();
             $post = $this->get_wp_query()->post;
 
-//            $post_date_array['date'] = date( DATE_W3C, get_the_time( 'U', $post->ID ) );
+            //$post_date_array['date'] = date( DATE_W3C, get_the_time( 'U', $post->ID ) );
 
-            //$post_date_array['date'] not used anymore as meta @see tdb_single_date.php
-            global $wp_version;
-            if (version_compare($wp_version, '5.3', '<')) {
-                $post_date_array['date'] = date(DATE_W3C, get_the_time('U', $post->ID));
-            } else { //get_post_datetime() is used from WP 5.3
-                $td_article_date_unix = get_post_datetime( $post, 'date', 'gmt' );
-                if ( $td_article_date_unix !== false ) {
-                    $post_date_array['date'] = $td_article_date_unix->format(DATE_W3C);
-                }
-            }
+	        global $wp_version;
+
+	        // old WP
+	        if ( version_compare( $wp_version, '5.3', '<' ) ) {
+		        $post_date_array['date'] = date(DATE_W3C, get_the_time( 'U', $post->ID ) );
+	        } else { // get_post_datetime() is used from WP 5.3
+		        $td_article_datetime = get_post_datetime( $post, 'date', 'gmt' );
+		        if ( $td_article_datetime !== false ) {
+			        $post_date_array['date'] = $td_article_datetime->format( DATE_W3C );
+		        } else {
+			        $post_date_array['date'] = '0000-00-00 00:00:00';
+		        }
+	        }
 
             $post_date_array['time'] = get_the_time( get_option( 'date_format' ), $post->ID );
 
-            $post_time_u  = get_the_time('U', $post->ID );
+            $post_time_u = get_the_time('U', $post->ID );
             $diff = (int) abs( $current_time - $post_time_u );
 
             $post_date_array['human_time_diff'] = '';
@@ -795,33 +1063,53 @@ class tdb_state_single extends tdb_state_base {
 
 
         // post modified date
-        $this->post_modified = function () {
+        $this->post_modified = function ( $atts ) {
+
+            $current_time = current_time( 'timestamp' );
 
             if ( !$this->has_wp_query() ) {
                 return array(
                     'date'            => date( DATE_W3C, time() ),
                     'modified_date' => date( get_option( 'date_format' ), time() ),
+                    'human_time_diff' => human_time_diff( strtotime(date( DATE_W3C, strtotime("-1 week") ) ), $current_time ),
                 );
             }
 
             $post_modified_date_data = array();
             $post = $this->get_wp_query()->post;
 
-//            $post_modified_date_data['date'] = date( DATE_W3C, get_the_time( 'U', $post->ID ) );
+            //$post_modified_date_data['date'] = date( DATE_W3C, get_the_time( 'U', $post->ID ) );
 
-            //$post_date_array['date'] not used anymore as meta @see tdb_single_modified_date.php
             global $wp_version;
+            //old WP
             if (version_compare($wp_version, '5.3', '<')) {
                 $post_modified_date_data['date'] = date( DATE_W3C, get_the_time( 'U', $post->ID ) );
             } else { //get_post_datetime() is used from WP 5.3
-                $td_article_modified_date_unix = get_post_datetime( $post, 'modified', 'gmt' );
-                if ( $td_article_modified_date_unix !== false ) {
-                    $post_modified_date_data['date'] = $td_article_modified_date_unix->format(DATE_W3C);
+                $td_article_modified_datetime = get_post_datetime( $post, 'modified', 'gmt' );
+                if ( $td_article_modified_datetime !== false ) {
+                    $post_modified_date_data['date'] = $td_article_modified_datetime->format(DATE_W3C);
                 }
             }
 
             $post_modified_date_data['modified_date'] = get_the_modified_date(get_option('date_format'), $post->ID);
 
+            $post_time_u  = get_the_modified_date('U', $post->ID );
+
+            $diff = (int) abs( $current_time - $post_time_u );
+
+            $post_modified_date_data['human_time_diff'] = '';
+
+            if ( $diff < WEEK_IN_SECONDS ) {
+                $post_modified_date_data['human_time_diff'] = human_time_diff( $post_time_u, $current_time );
+            } else {
+                if ( isset( $atts['hide_date'] ) ) {
+                    $post_modified_date_data['human_time_diff'] =  'hide';
+
+                    if ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) {
+                        $post_modified_date_data['human_time_diff'] = $post_modified_date_data['modified_date'];
+                    }
+                }
+            }
 
             return $post_modified_date_data;
         };
@@ -843,7 +1131,7 @@ class tdb_state_single extends tdb_state_base {
 
             $post_author_array['author_name'] = get_the_author_meta( 'display_name', $post->post_author );
             $post_author_array['author_url']  = get_author_posts_url( $post->post_author );
-            $post_author_array['author_avatar']  = get_avatar( get_the_author_meta( 'email', $post->post_author ), '96' );
+            $post_author_array['author_avatar']  = get_avatar( get_the_author_meta( 'email', $post->post_author ), '96', '', $post_author_array['author_name'] );
 
             return $post_author_array;
         };
@@ -860,10 +1148,14 @@ class tdb_state_single extends tdb_state_base {
             }
 
             $post_comm_array = array();
+
+	        global $post;
             $post = $this->get_wp_query()->post;
 
-            $post_comm_array['comments_link']    = get_comments_link( $post->ID );
-            $post_comm_array['comments_number']  = get_comments_number( $post->ID );
+            $post_comm_array['comments_link'] = get_comments_link( $post->ID );
+
+	        $comments_number_dsq = td_util::get_dsq_comments_number($post);
+            $post_comm_array['comments_number'] = $comments_number_dsq ?: get_comments_number( $post->ID );
 
             return $post_comm_array;
         };
@@ -898,8 +1190,8 @@ class tdb_state_single extends tdb_state_base {
 
         // post social sharing
         $this->post_socials = function ( $atts ) {
-            if ( !$this->has_wp_query() ) {
 
+            if ( !$this->has_wp_query() ) {
                 return array(
                     'post_permalink' => '#',
                     'is_amp'         => false,
@@ -934,6 +1226,11 @@ class tdb_state_single extends tdb_state_base {
             $post_socials_array['post_permalink'] = esc_url( get_permalink( $post->ID ) );
             $post_socials_array['is_amp']         = td_util::is_amp();
 
+            $social_rel = '';
+            if ( '' !== $atts['social_rel'] ) {
+                $social_rel = ' rel="' . $atts['social_rel'] . '" ';
+            }
+
             $share_text_show = false;
             if ( $atts['like_share_text'] !== 'yes' ) {
                 $share_text_show = true;
@@ -945,11 +1242,13 @@ class tdb_state_single extends tdb_state_base {
                 $post_socials_array['services']        = array_slice( $enabled_services, 0, 5);
                 $post_socials_array['style']           = 'style1';
                 $post_socials_array['share_text_show'] = false;
+                $post_socials_array['social_rel']      = '';
                 $post_socials_array['el_class']        = '';
             } else {
                 $post_socials_array['services']        = $enabled_services;
                 $post_socials_array['style']           = $atts['like_share_style'];
                 $post_socials_array['share_text_show'] = $share_text_show;
+                $post_socials_array['social_rel']      = $social_rel;
                 $post_socials_array['el_class']        = '';
             }
 
@@ -1069,14 +1368,65 @@ class tdb_state_single extends tdb_state_base {
         };
 
 
-        // post next/prev posts pagination
-        $this->post_next_prev = function () {
+        // post tags
+        $this->post_ctags = function ($atts) {
 
+            $dummy_data_array = array(
+                'art'       => array(
+                    'url' => '#'
+                ),
+                'test'      => array(
+                    'url' => '#'
+                ),
+                'wordpress' => array(
+                    'url' => '#'
+                ),
+            );
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_data_array;
+            }
+
+            $post_tags_array = null;
+
+            if ( !empty($atts['taxonomy'])) {
+	            $post = $this->get_wp_query()->post;
+
+	            $td_post_tags = wp_get_post_terms( $post->ID, $atts['taxonomy'] );
+
+	            if ( ! empty( $td_post_tags ) && !is_wp_error($td_post_tags)) {
+	                foreach ( $td_post_tags as $tag ) {
+			            $post_tags_array[ $tag->name ] = array(
+				            'url' => get_tag_link( $tag->term_id )
+			            );
+		            }
+	            } else {
+		            if ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) {
+			            return $dummy_data_array;
+		            }
+	            }
+            }
+
+            return $post_tags_array;
+        };
+
+
+        // post next/prev posts pagination
+        $this->post_next_prev = function ( $atts ) {
+
+            //$image_size = 'medium';
+            if (isset($atts['image_size']) && $atts['image_size'] != '') {
+                $image_size = $atts['image_size'];
+            } else {
+                $image_size = 'td_696x0';
+            }
             $dummy_data_array = array(
                 'prev_post_url'   => '#',
                 'prev_post_title' => 'Prev Post Title',
+                'prev_post_image_url' => TDB_URL . '/assets/images/td_meta_replacement.png',
                 'next_post_url'   => '#',
                 'next_post_title' => 'Next Post Title',
+                'next_post_image_url' =>TDB_URL . '/assets/images/td_meta_replacement.png',
             );
 
             if ( !$this->has_wp_query() ) {
@@ -1094,25 +1444,66 @@ class tdb_state_single extends tdb_state_base {
 		        while ( have_posts() ) {
 			        the_post();
 
-			        $next_post = get_next_post();
-			        $prev_post = get_previous_post();
+                    $in_same_cat  = false;
+                    if ( isset( $atts['same_cat_posts'] ) && $atts['same_cat_posts'] != '' ) {
+                        $in_same_cat  = true;
+                    }
+
+			        $next_post = get_next_post( $in_same_cat );
+			        $prev_post = get_previous_post( $in_same_cat );
 
 			        $post_next_prev_array['prev_post_url']   = '';
 			        $post_next_prev_array['prev_post_title'] = '';
+			        $post_next_prev_array['prev_post_image_url'] = '';
+			        $post_next_prev_array['prev_post_image_width'] = '';
+			        $post_next_prev_array['prev_post_image_height'] = '';
 
 			        $post_next_prev_array['next_post_url']   = '';
 			        $post_next_prev_array['next_post_title'] = '';
+			        $post_next_prev_array['next_post_image_url'] = '';
+			        $post_next_prev_array['next_post_image_width'] = '';
+			        $post_next_prev_array['next_post_image_height'] = '';
 
 			        if ( !empty( $next_post ) or !empty( $prev_post ) )  {
-				        if ( !empty( $prev_post ) ) {
-					        $post_next_prev_array['prev_post_url']   = esc_url( get_permalink( $prev_post->ID ) );
+
+                        $image_url = '';
+
+                        if ( !empty( $prev_post ) ) {
+                            if (get_post_thumbnail_id($prev_post->ID) != 0 ) {
+                                $image_id = get_post_thumbnail_id($prev_post->ID);
+                                $image_url = wp_get_attachment_image_url($image_id, $image_size);
+                                $image_meta = wp_get_attachment_metadata($image_id );
+                                if (isset($image_meta['sizes']) && !empty($image_meta['sizes'])) {
+                                    $image_meta_sizes = $image_meta['sizes'];
+                                }
+                            }
+                            if ( isset($image_meta_sizes[$image_size]) && !empty($image_meta_sizes[$image_size]) ) {
+                                $post_next_prev_array['prev_post_image_width'] = $image_meta_sizes[$image_size] ['width'];
+                                $post_next_prev_array['prev_post_image_height'] = $image_meta_sizes[$image_size] ['height'];
+                            }
+                            $post_next_prev_array['prev_post_url']   = esc_url( get_permalink( $prev_post->ID ) );
 					        $post_next_prev_array['prev_post_title'] = get_the_title( $prev_post->ID );
+					        $post_next_prev_array['prev_post_image_url'] = $image_url;
 				        }
 
 				        if ( !empty( $next_post ) ) {
+                            if (get_post_thumbnail_id($next_post->ID) != 0 ) {
+                                $image_id = get_post_thumbnail_id($next_post->ID);
+                                $image_url = wp_get_attachment_image_url($image_id, $image_size);
+                                $image_meta = wp_get_attachment_metadata($image_id);
+                                if (isset($image_meta['sizes']) && !empty($image_meta['sizes'])) {
+                                    $image_meta_sizes = $image_meta['sizes'];
+                                }
+                            }
+                            if ( isset($image_meta_sizes[$image_size]) && !empty($image_meta_sizes[$image_size]) ) {
+                                $post_next_prev_array['next_post_image_width'] = $image_meta_sizes[$image_size] ['width'];
+                                $post_next_prev_array['next_post_image_height'] = $image_meta_sizes[$image_size] ['height'];
+                            }
+
 					        $post_next_prev_array['next_post_url']   = esc_url( get_permalink( $next_post->ID ) );
 					        $post_next_prev_array['next_post_title'] = get_the_title( $next_post->ID );
-				        }
+                            $post_next_prev_array['next_post_image_url'] = $image_url;
+                        }
 			        } else {
 				        if ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) {
 					        return $dummy_data_array;
@@ -1385,18 +1776,19 @@ class tdb_state_single extends tdb_state_base {
 		        while ( have_posts() ) {
 			        the_post();
 			        ob_start();
-			        add_filter( 'comments_template', array( $this, 'tdb_commnets_template' ));
+			        add_filter( 'comments_template', array( $this, 'tdb_comments_template' ) );
 			        comments_template( '', true );
-			        remove_filter( 'comments_template', array( $this, 'tdb_commnets_template' ));
+			        remove_filter( 'comments_template', array( $this, 'tdb_comments_template' ) );
 			        $post_comments_array['post_comments'] = ob_get_clean();
 		        }
+
 	        } else {
 		        $post_comments_array['post_comments'] = 'we have no posts!';
             }
 
 	        $wp_query = $template_wp_query;
 
-            $post_comments_array['post_comments_number']   = $post_comments_number;
+            $post_comments_array['post_comments_number'] = $post_comments_number;
 
             if ( $post_comments_number == 0 ) {
                 if ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) {
@@ -1427,7 +1819,12 @@ class tdb_state_single extends tdb_state_base {
                 $sm_ad = rawurldecode( base64_decode( strip_tags( $sm_ad ) ) );
             }
 
-            $atts['sm_ad'] = $this->build_post_content_ad_spot( $sm_ad, 'sm_ad', $sm_ad_title, '' );
+            $sm_ad_disable = false;
+            if( isset( $atts['sm_ad_disable'] ) and $atts['sm_ad_disable'] != '' and ( current_user_can('administrator') or current_user_can('editor') ) ) {
+                $sm_ad_disable = true;
+            }
+
+            $atts['sm_ad'] = $this->build_post_content_ad_spot( $sm_ad, 'sm_ad', $sm_ad_title, '', $sm_ad_disable );
 
             // prepare smart list settings
             $smart_list_type = 'tdb_smart_list_1';
@@ -1509,27 +1906,37 @@ class tdb_state_single extends tdb_state_base {
             $template_wp_query = $wp_query;
             $wp_query = $this->get_wp_query();
 
+	        // is content locked flag
+	        $is_content_locked = class_exists( 'tds_email_locker', false ) && tds_email_locker::instance()->is_content_locked();
+
 	        if ( have_posts() ) {
 
 		        while ( have_posts() ) {
 			        the_post();
 
 			        // td composer removes wp's automatic paragraphs from post content so we need to add it again here to keep the post format
-			        add_filter( 'the_content', 'wpautop' );
+			        if ( !$is_content_locked ) { // not needed if the content is locked
+				        add_filter( 'the_content', 'wpautop' );
+			        }
 			        $content = get_the_content();
 			        $content = apply_filters( 'the_content', $content );
 			        $content = str_replace( ']]>', ']]&gt;', $content );
 
-			        $smart_list_settings = array(
-				        'post_content' => $content,
-				        'counting_order_asc' => $smart_list_order,
-				        'td_smart_list_h' => $smart_list_h,
-				        'extract_first_image' => td_api_smart_list::get_key( $smart_list_type, 'extract_first_image' )
-			        );
+			        // if content is locked just get the locker content
+                    if ( $is_content_locked ) {
+	                    $post_smart_list_array['smart_list_html'] = $content;
+                    } else {
+	                    $smart_list_settings = array(
+		                    'post_content' => $content,
+		                    'counting_order_asc' => $smart_list_order,
+		                    'td_smart_list_h' => $smart_list_h,
+		                    'extract_first_image' => td_api_smart_list::get_key( $smart_list_type, 'extract_first_image' )
+	                    );
 
-			        $smart_list_obj = new $smart_list_class( $atts );
+	                    $smart_list_obj = new $smart_list_class( $atts );
 
-			        $post_smart_list_array['smart_list_html'] = $smart_list_obj->render_from_post_content( $smart_list_settings );
+	                    $post_smart_list_array['smart_list_html'] = $smart_list_obj->render_from_post_content( $smart_list_settings );
+                    }
 
 		        }
 
@@ -1621,6 +2028,532 @@ class tdb_state_single extends tdb_state_base {
         };
 
 
+        // post reading time
+        $this->post_reading_time = function () {
+
+            $dummy_data = '3';
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_data;
+            }
+
+            $data = '';
+
+            $post_content = '';
+
+            global $wp_query;
+            $template_wp_query = $wp_query;
+            $wp_query = $this->get_wp_query();
+
+            if ( have_posts() ) {
+                while (have_posts()) {
+                    the_post();
+
+                    $post_content = get_the_content();
+                }
+            }
+
+            $wp_query = $template_wp_query;
+
+            if( $post_content == '' ) {
+                if ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) {
+                    return $dummy_data;
+                }
+            } else {
+                $post_content_word_count = str_word_count($post_content);
+                $data = floor($post_content_word_count / 200);
+            }
+
+            return $data;
+        };
+
+
+        // post acf field
+        $this->post_custom_field = function ($atts) {
+            $dummy_field_data = array(
+                'value' => 'Sample field data',
+                'type' => 'text',
+                'meta_exists' => true,
+            );
+
+            if ( !$this->has_wp_query() || !( $this->get_wp_query() instanceof WP_Query ) ) {
+                return $dummy_field_data;
+            }
+
+            $post = $this->get_wp_query()->post;
+            $post_id = $post->ID;
+
+            $field_data = array(
+                'value' => '',
+                'type' => '',
+                'meta_exists' => false,
+            );
+
+            $field_name = '';
+            if( isset( $atts['wp_field'] ) ) {
+                $field_name = $atts['wp_field'];
+            } else if( isset( $atts['acf_field'] ) ) {
+                $field_name = $atts['acf_field'];
+            }
+
+            if( $field_name != '' ) {
+                if( $field_name == 'td_source_title' ) {
+                    $source_post_id = get_post_meta( $post_id, 'tdc-parent-post-id', true );
+
+                    if ( !empty( $source_post_id ) ) {
+                        $field_data['value'] = get_the_title($source_post_id);
+                        $field_data['type'] = 'text';
+                        $field_data['meta_exists'] = true;
+                    }
+                } else {
+                    $field_data = td_util::get_acf_field_data( $field_name, $post_id );
+
+                    if( !$field_data['meta_exists'] ) {
+                        if( metadata_exists('post', $post_id, $field_name ) ) {
+                            $field_data['value'] = get_post_meta( $post_id, $field_name, true );
+                            $field_data['type'] = 'text';
+                            $field_data['meta_exists'] = true;
+                        }
+                    }
+                }
+            }
+
+            if( empty( $field_data['value'] ) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) ) {
+                return $dummy_field_data;
+            }
+
+            return $field_data;
+        };
+
+
+        // post location display
+        $this->post_location_display = function ($atts) {
+            $dummy_display_address = 'Hooper Avenue 8208, Los Angeles, California, United States';
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_display_address;
+            }
+
+
+            $post = $this->get_wp_query()->post;
+            $post_id = $post->ID;
+
+            $display_address = get_post_meta($post_id, 'tdb-location-complete', true);
+
+
+            if( empty( $display_address ) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) ) {
+                return $dummy_display_address;
+            }
+
+            return $display_address;
+
+        };
+
+
+        // post user reviews list
+        $this->post_user_reviews_list = function () {
+
+            $dummy_data_array = array(
+                array(
+                    'id' => 0,
+                    'title' => 'Sample review title 1',
+                    'author_id' => 0,
+                    'author_name' => 'John Doe',
+                    'author_email' => 'johndoe@example.com',
+                    'author_photo' => '',
+                    'date' => date( get_option( 'date_format' ), time() ),
+                    'content' => 'Donec magna dui, ullamcorper eget blandit id, luctus sit amet ipsum. Duis convallis placerat eros, sed dictum sem facilisis ac.',
+                    'ratings' => array(
+                        array(
+                            'name' => 'Review rating 1',
+                            'score' => 5
+                        ),
+                        array(
+                            'name' => 'Review rating 2',
+                            'score' => 1
+                        )
+                    ),
+                    'ratings_average' => 3
+                ),
+                array(
+                    'id' => 1,
+                    'title' => 'Sample review title 2',
+                    'author_id' => 0,
+                    'author_name' => 'Christopher Main',
+                    'author_email' => 'christopher@example.com',
+                    'author_photo' => '',
+                    'date' => date( get_option( 'date_format' ), time() ),
+                    'content' => 'Donec magna dui, ullamcorper eget blandit id, luctus sit amet ipsum. Duis convallis placerat eros, sed dictum sem facilisis ac.',
+                    'ratings' => array(
+                        array(
+                            'name' => 'Review rating 1',
+                            'score' => 4
+                        ),
+                    ),
+                    'ratings_average' => 4
+                ),
+                array(
+                    'id' => 2,
+                    'title' => 'Sample review title 3',
+                    'author_id' => 0,
+                    'author_name' => 'Jane Smith',
+                    'author_email' => 'jane@example.com',
+                    'author_photo' => '',
+                    'date' => date( get_option( 'date_format' ), time() ),
+                    'content' => 'Donec magna dui, ullamcorper eget blandit id, luctus sit amet ipsum. Duis convallis placerat eros, sed dictum sem facilisis ac.',
+                    'ratings' => array(
+                        array(
+                            'name' => 'Review rating 1',
+                            'score' => 4
+                        ),
+                        array(
+                            'name' => 'Review rating 2',
+                            'score' => 3
+                        ),
+                    ),
+                    'ratings_average' => 3.5
+                ),
+            );
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_data_array;
+            }
+
+	        $post = $this->get_wp_query()->post;
+	        $post_id = $post->ID;
+
+            $data_array = array();
+
+            $post_linked_posts = get_post_meta($post_id, 'tdc-post-linked-posts', true);
+
+            if( isset( $post_linked_posts['tdc-review'] ) ) {
+                $post_reviews_ids = $post_linked_posts['tdc-review'];
+
+                if( !empty( $post_reviews_ids ) ) {
+                    $post_reviews = get_posts(array(
+                        'post__in' => $post_reviews_ids,
+                        'post_type' => 'tdc-review'
+                    ));
+
+                    if( !empty( $post_reviews ) ) {
+                        foreach ( $post_reviews as $post_review ) {
+                            // Get the review criteria
+                            $post_review_ratings_meta = get_post_meta($post_review->ID, 'tdc-review-ratings', true);
+                            $post_review_ratings = array();
+
+                            if( !empty( $post_review_ratings_meta ) ) {
+                                foreach ( $post_review_ratings_meta as $post_review_rating_data ) {
+                                    $post_review_ratings[] = array(
+                                        'name' => $post_review_rating_data['name'],
+                                        'score' => $post_review_rating_data['score'],
+                                    );
+                                }
+                            }
+
+                            // Get the review overall score
+                            $post_review_ratings_average = td_util::get_overall_review_rating($post_review->ID);
+
+                            // Get the review author info
+                            $review_author_id = get_post_meta($post_review->ID, 'tdc-review-author-id', true);
+                            $review_author_name = get_post_meta($post_review->ID, 'tdc-review-author-name', true);
+                            $review_author_email = get_post_meta($post_review->ID, 'tdc-review-author-email', true);
+                            $review_author_photo = '';
+
+                            if( $review_author_id != 0 ) {
+                                $review_author_name = get_the_author_meta('display_name', $post_review->post_author);
+                                $review_author_photo = get_avatar_url($post_review->post_author, ['size' => 38]);
+                            }
+
+                            // Get the review replies
+                            $review_replies = array();
+                            $review_replies_meta = get_post_meta($post_review->ID, 'tdc-review-replies', true);
+                            if( !empty( $review_replies_meta ) ) {
+                                foreach ( $review_replies_meta as $review_reply_id => $review_reply ) {
+                                    $review_reply_author_id = $review_reply['author-id'];
+                                    $review_reply_author_name = $review_reply['author-name'];
+                                    $review_reply_author_email = $review_reply['author-email'];
+                                    $review_reply_content = $review_reply['content'];
+
+                                    if( $review_reply_author_id != 0 ) {
+                                        $review_reply_author_name = get_the_author_meta('display_name', $review_reply_author_id);
+                                    }
+
+                                    $review_replies[] = array(
+                                        'id' => $review_reply_id,
+                                        'author_id' => $review_reply_author_id,
+                                        'author_name' => $review_reply_author_name,
+                                        'author_email' => $review_reply_author_email,
+                                        'content' => $review_reply_content,
+                                    );
+                                }
+                            }
+
+                            // Build the review
+                            $data_array[] = array(
+                                'id' => $post_review->ID,
+                                'title' => $post_review->post_title,
+                                'author_id' => $review_author_id,
+                                'author_name' => $review_author_name,
+                                'author_email' => $review_author_email,
+                                'author_photo' => $review_author_photo,
+                                'date' => get_the_time(get_option('date_format'), $post_review->ID),
+                                'content' => $post_review->post_content,
+                                'ratings' => $post_review_ratings,
+                                'ratings_average' => $post_review_ratings_average ? $post_review_ratings_average : 0,
+                                'replies' => $review_replies
+                            );
+                        }
+                    }
+                }
+
+            }
+
+            if( empty( $data_array ) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) ) {
+                return $dummy_data_array;
+            }
+
+            return $data_array;
+
+        };
+
+
+        // post user reviews overall
+        $this->post_user_reviews_overall = function ($atts) {
+
+            $dummy_data = 3.5;
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_data;
+            }
+
+            $post = $this->get_wp_query()->post;
+            $post_id = $post->ID;
+
+            $data = '';
+
+            if( get_post_type($post_id) == 'tdc-review' ) {
+                $review_overall_rating = td_util::get_overall_review_rating($post_id);
+
+                if( $review_overall_rating ) {
+                    $data = $review_overall_rating;
+                }
+            } else {
+                $post_reviews_overall_rating = td_util::get_overall_post_rating($post_id);
+
+                if( $post_reviews_overall_rating ) {
+                    $data = $post_reviews_overall_rating;
+                }
+            }
+
+            $hide_empty = 'yes';
+            if( isset( $atts['hide_empty'] ) ) {
+                $hide_empty = $atts['hide_empty'];
+            }
+
+            if( empty($data) && $hide_empty == '' ) {
+                $data = '0';
+            }
+
+            if( empty($data) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) ) {
+                return $dummy_data;
+            }
+
+            return $data;
+
+        };
+
+
+        // post user review replies
+        $this->post_user_reviews_replies = function () {
+
+            $dummy_data_array = array(
+                array(
+                    'id' => 0,
+                    'author_id' => 1,
+                    'author_name' => 'John Doe',
+                    'author_email' => 'johndoe@example.com',
+                    'author_photo' => '',
+                    'date' => date( get_option( 'date_format' ), time() ),
+                    'content' => 'Donec magna dui, ullamcorper eget blandit id, luctus sit amet ipsum. Duis convallis placerat eros, sed dictum sem facilisis ac.',
+                ),
+                array(
+                    'id' => 1,
+                    'author_id' => 1,
+                    'author_name' => 'Christopher Main',
+                    'author_email' => 'christopher@example.com',
+                    'author_photo' => '',
+                    'date' => date( get_option( 'date_format' ), time() ),
+                    'content' => 'Donec magna dui, ullamcorper eget blandit id, luctus sit amet ipsum. Duis convallis placerat eros, sed dictum sem facilisis ac.',
+                ),
+                array(
+                    'id' => 2,
+                    'author_id' => 1,
+                    'author_name' => 'Jane Smith',
+                    'author_email' => 'jane@example.com',
+                    'author_photo' => '',
+                    'date' => date( get_option( 'date_format' ), time() ),
+                    'content' => 'Donec magna dui, ullamcorper eget blandit id, luctus sit amet ipsum. Duis convallis placerat eros, sed dictum sem facilisis ac.',
+                ),
+            );
+
+            $post = $this->get_wp_query()->post;
+            $post_id = $post->ID;
+
+            if ( !$this->has_wp_query() || get_post_type( $post_id ) != 'tdc-review' ) {
+                return $dummy_data_array;
+            }
+
+            $data_array = array();
+
+            $review_replies_meta = get_post_meta($post_id, 'tdc-review-replies', true);
+
+            if( !empty( $review_replies_meta ) ) {
+                foreach ( $review_replies_meta as $review_reply_id => $review_reply ) {
+                    // Get review reply author info
+                    $review_reply_author_id = $review_reply['author-id'];
+                    $review_reply_author_name = $review_reply['author-name'];
+                    $review_reply_author_email = $review_reply['author-email'];
+                    $review_reply_author_photo = '';
+
+                    if( $review_reply_author_id != 0 ) {
+                        $review_reply_author_name = get_the_author_meta('display_name', $review_reply_author_id);
+                        $review_reply_author_photo = get_avatar_url($review_reply_author_id, ['size' => 38]);
+                    }
+
+                    // Get the review reply date & content
+                    $review_reply_date = $review_reply['date'];
+                    $review_reply_content = $review_reply['content'];
+
+                    // Build the review reply
+                    $data_array[] = array(
+                        'id' => $review_reply_id,
+                        'author_id' => $review_reply_author_id,
+                        'author_name' => $review_reply_author_name,
+                        'author_email' => $review_reply_author_email,
+                        'author_photo' => $review_reply_author_photo,
+                        'date' => $review_reply_date,
+                        'content' => $review_reply_content,
+                    );
+                }
+            }
+
+            if( empty( $data_array ) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) ) {
+                return $dummy_data_array;
+            }
+
+            return $data_array;
+
+        };
+
+
+        // post user review ratings
+        $this->post_user_review_ratings = function () {
+
+            $dummy_data_array = array(
+                array(
+                    'name' => 'Review rating 1',
+                    'score' => 5
+                ),
+                array(
+                    'name' => 'Review rating 2',
+                    'score' => 1
+                ),
+                array(
+                    'name' => 'Review rating 3',
+                    'score' => 3
+                )
+            );
+
+            $post = $this->get_wp_query()->post;
+            $post_id = $post->ID;
+
+            if ( !$this->has_wp_query() || get_post_type( $post_id ) != 'tdc-review' ) {
+                return $dummy_data_array;
+            }
+
+            $data_array = array();
+
+
+            $post_review_ratings_meta = get_post_meta($post_id, 'tdc-review-ratings', true);
+
+            if( !empty( $post_review_ratings_meta ) ) {
+                foreach ( $post_review_ratings_meta as $post_review_rating_data ) {
+                    $data_array[] = array(
+                        'name' => $post_review_rating_data['name'],
+                        'score' => $post_review_rating_data['score'],
+                    );
+                }
+            }
+
+
+            if( empty( $data_array ) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) ) {
+                return $dummy_data_array;
+            }
+
+            return $data_array;
+
+        };
+
+
+        // post table of contents
+        $this->post_table_of_contents = function($atts) {
+
+            $hierarchical = !( isset($atts['hierarchical']) && $atts['hierarchical'] == '' );
+
+            $dummy_data = tdb_toc::getDummyMenuHTML($hierarchical);
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_data;
+            }
+
+
+            $data = '';
+
+
+            // is content locked flag
+            $is_content_locked = class_exists( 'tds_email_locker', false ) && tds_email_locker::instance()->is_content_locked();
+
+            global $wp_query;
+            $template_wp_query = $wp_query;
+            $wp_query = $this->get_wp_query();
+
+            if ( have_posts() ) {
+
+                while ( have_posts() ) {
+                    the_post();
+
+                    // td composer removes wp's automatic paragraphs from post content so we need to add it again here to keep the post format
+                    if ( !$is_content_locked ) { // not needed if the content is locked
+                        add_filter( 'the_content', 'wpautop' );
+
+                        $content = get_the_content();
+                        $content = apply_filters( 'the_content', $content );
+                        $content = str_replace( ']]>', ']]&gt;', $content );
+
+                        $exclude_headings = array();
+                        if( isset( $atts['exclude'] ) && $atts['exclude'] != '' ) {
+                            $exclude_headings = explode(',', str_replace(array('h', ', '), array('', ','), $atts['exclude']));
+                        }
+
+                        $menu = tdb_toc::getMenu($content, 1, 6, $exclude_headings);
+
+                        $data = tdb_toc::getMenuHTML($menu, $hierarchical);
+                    }
+                }
+            }
+
+            $wp_query = $template_wp_query;
+
+
+            if( empty( $data ) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) ) {
+                return $dummy_data;
+            }
+
+            return $data;
+
+        };
+
+
         // post item scope
         $this->post_item_scope = function () {
 
@@ -1630,7 +2563,7 @@ class tdb_state_single extends tdb_state_base {
 
             //show the review meta only on single posts that are reviews, the rest have to be article (in article lists)
             if ( $this->post_has_review() ) {
-                return 'itemscope itemtype="' . td_global::$http_or_https . '://schema.org/Review"';
+                return 'itemscope itemtype="' . td_global::$http_or_https . '://schema.org/Product"';
             } elseif( td_util::get_option('tds_disable_article_schema') == '' ) {
                 return 'itemscope itemtype="' . td_global::$http_or_https . '://schema.org/Article"';
             } else {
@@ -1642,13 +2575,19 @@ class tdb_state_single extends tdb_state_base {
         // post item scope meta
         $this->post_item_scope_meta = function () {
 
-            if ( is_preview() || !$this->has_wp_query() || ( td_util::get_option('tds_disable_article_schema') == 'yes' && !$this->post_has_review() ) ) {
+            if ( is_preview() || !$this->has_wp_query() || ( td_util::get_option('tds_disable_article_schema') != '' && !$this->post_has_review() ) ) {
+                return '';
+            }
+
+            // don't display meta on pages
+            if ( ! $this->get_wp_query()->is_single() ) {
                 return '';
             }
 
             $post = $this->get_wp_query()->post;
 
             $post_author = get_the_author_meta( 'display_name', $post->post_author );
+            $post_author_url = get_author_posts_url($post->post_author);
             $blog_name =  get_bloginfo( 'name' );
 
             // determine publisher name - use author name if there's no blog name
@@ -1673,66 +2612,10 @@ class tdb_state_single extends tdb_state_base {
                     $post_thumb_id = $post_thumbnail_id;
                 }
             }
-
-            // don't display meta on pages
-            if ( ! $this->get_wp_query()->is_single() ) {
-                return '';
-            }
-
-            $buffy = '';
-
-            // author
-            $buffy .= '<span class="td-page-meta" itemprop="author" itemscope itemtype="https://schema.org/Person">' ;
-            $buffy .= '<meta itemprop="name" content="' . esc_attr( $post_author ) . '">' ;
-            $buffy .= '</span>' ;
-
-            global $wp_version;
-
-            if (version_compare($wp_version, '5.3', '<')) {
-
-                // datePublished
-                $td_article_date_unix = get_the_time( 'U', $post->ID );
-                $buffy .= '<meta itemprop="datePublished" content="' . date(DATE_W3C, $td_article_date_unix ) . '">';
-
-                // dateModified - local time
-                $td_article_modified_date_unix = get_the_modified_date('U', $post->ID);
-                $buffy .= '<meta itemprop="dateModified" content="' . date(DATE_W3C, $td_article_modified_date_unix) . '">';
-
-            } else { //get_post_datetime() is used from WP 5.3
-
-                // datePublished
-                $td_article_date_unix = get_post_datetime($post, 'date', 'gmt');
-                if ( $td_article_date_unix !== false ) {
-                    $buffy .= '<meta itemprop="datePublished" content="' . $td_article_date_unix->format(DATE_W3C) . '">';
-                }
-                // dateModified - local time
-                $td_article_modified_date_unix = get_post_datetime($post, 'modified', 'gmt');
-                if ( $td_article_modified_date_unix !== false ) {
-                    $buffy .= '<meta itemprop="dateModified" content="' . $td_article_modified_date_unix->format(DATE_W3C) . '">';
-                }
-            }
-            // mainEntityOfPage
-            $buffy .= '<meta itemscope itemprop="mainEntityOfPage" itemType="https://schema.org/WebPage" itemid="' . get_permalink( $post->ID ) .'"/>';
-
-            // publisher
-            $buffy .= '<span class="td-page-meta" itemprop="publisher" itemscope itemtype="https://schema.org/Organization">';
-            $buffy .= '<span class="td-page-meta" itemprop="logo" itemscope itemtype="https://schema.org/ImageObject">';
-            $buffy .= '<meta itemprop="url" content="' . $publisher_logo . '">';
-            $buffy .= '</span>';
-            $buffy .= '<meta itemprop="name" content="' . $publisher_name . '">';
-            $buffy .= '</span>';
-
-            // headline
-            if ( !empty( $post_subtitle ) ) {
-                $buffy .= '<meta itemprop="headline" content="' . esc_attr( $post_subtitle ) . '">';
-            } else {
-                $buffy .= '<meta itemprop="headline" content="' . esc_attr( $post->post_title ) . '">';
-            }
-
             // featured image
             $featured_image = array();
 
-            if ( !is_null( $post_thumb_id ) ) {
+            if (!is_null($post_thumb_id)) {
                 /**
                  * from google documentation:
                  *  A URL, or list of URLs pointing to the representative image file(s).
@@ -1740,7 +2623,7 @@ class tdb_state_single extends tdb_state_base {
                  *  We recommend images in .jpg, .png, or. gif formats.
                  *  https://developers.google.com/structured-data/rich-snippets/articles
                  */
-                $featured_image = wp_get_attachment_image_src( $post_thumb_id, 'full');
+                $featured_image = wp_get_attachment_image_src($post_thumb_id, 'full');
 
             } else {
                 // when the post has no image use the placeholder
@@ -1749,88 +2632,185 @@ class tdb_state_single extends tdb_state_base {
                 $featured_image[2] = '580';
             }
 
-            // ImageObject meta
-            if ( !empty( $featured_image[0] ) ) {
-                $buffy .= '<span class="td-page-meta" itemprop="image" itemscope itemtype="https://schema.org/ImageObject">';
-                $buffy .= '<meta itemprop="url" content="' . $featured_image[0] . '">';
-                $buffy .= '<meta itemprop="width" content="' . $featured_image[1] . '">';
-                $buffy .= '<meta itemprop="height" content="' . $featured_image[2] . '">';
-                $buffy .= '</span>';
-            }
+            $buffy = '';
 
-            // if we have a review, we must add additional stuff
+            // if we have a review
             if ( $this->post_has_review() ) {
 
-                // take rating count for aggregateRating meta
-                $td_review = get_post_meta( $this->get_wp_query()->post->ID, 'td_post_theme_settings', true );
-                if (!empty($td_review['has_review'])) {
-                    switch ($td_review['has_review']) {
-                        case 'rate_stars' :
+                // review description
+                $read_post_theme_settings_meta = $this->read_post_theme_settings_meta('review');
+                //in case we don't have review description, we get it from content
+                if ( empty( $read_post_theme_settings_meta ) ) {
+                    $read_post_theme_settings_meta = td_util::excerpt( $post->post_content, 45);
+                }
 
-                            $rating_count = count($td_review["p_review_stars"]);
+                //get reviews post meta - author/user reviews
+                $td_post_settings = get_post_meta( $this->get_wp_query()->post->ID, 'td_post_theme_settings', true );
+                $post_linked_posts = get_post_meta($post->ID, 'tdc-post-linked-posts', true);
+
+                if ( isset($td_post_settings['has_review']) ) { //author review system
+
+                    $rating_value = round( $this->post_review_calculate_total( $td_post_settings['has_review'] ), 1);
+                    $best_rating = '';
+                    $rating_count = '';
+
+                    switch ( $td_post_settings['has_review'] ) {
+                        case 'rate_stars':
+                            $best_rating = 5;
+                            $rating_count = count($td_post_settings["p_review_stars"]);
                             break;
                         case 'rate_percent':
-                            $rating_count = count($td_review["p_review_percents"]);
+                            $best_rating = 100;
+                            $rating_count = count($td_post_settings["p_review_percents"]);
                             break;
-                        case 'rate_point' :
-                            $rating_count = count($td_review["p_review_points"]);
+                        case 'rate_point':
+                            $best_rating = 10;
+                            $rating_count = count($td_post_settings["p_review_points"]);
                             break;
+                    }
+
+                    $buffy .= '<span class="td-page-meta" itemprop="review" itemtype="https://schema.org/Review" itemscope>';
+                        $buffy .= '<span itemprop="author" itemtype="https://schema.org/Person" itemscope>';
+                            $buffy .= '<meta itemprop="name" content="' . esc_attr( $post_author ) . '" />';
+                        $buffy .= '</span>';
+                        $buffy .= '<span itemprop="reviewRating" itemtype="https://schema.org/Rating" itemscope>';
+                            $buffy .= '<meta itemprop="ratingValue" content="' . $rating_value . '" />';
+                            $buffy .= '<meta itemprop="bestRating" content="' . $best_rating . '" />';
+                        $buffy .= '</span>';
+                        $buffy.= '<span class="td-page-meta" itemprop="reviewBody">' . esc_attr( $read_post_theme_settings_meta ) . '</span>';
+                    $buffy .= '</span>';
+
+                } else { //frontend user review system
+
+                    if ( isset( $post_linked_posts['tdc-review'] ) ) {
+
+                        $post_reviews_ids = $post_linked_posts['tdc-review'];
+
+                        if ( !empty($post_reviews_ids) ) {
+                            $post_reviews = get_posts(array(
+                                'post__in' => $post_reviews_ids,
+                                'post_type' => 'tdc-review'
+                            ));
+
+                            $rating_count = count($post_reviews_ids);
+                            $rating_value = td_util::get_overall_post_rating($post->ID);
+                            $best_rating = 5;
+
+                            if ( !empty($post_reviews) ) {
+                                foreach ( $post_reviews as $post_review ) {
+
+                                    // review user name
+                                    $review_author = get_post_meta($post_review->ID, 'tdc-review-author-name', true);
+                                    // review rating value
+                                    $user_rating_value = td_util::get_overall_review_rating($post_review->ID);
+                                    // review description
+                                    $user_review_text = $post_review->post_content;
+
+                                    $buffy .= '<span class="td-page-meta" itemprop="review" itemtype="https://schema.org/Review" itemscope>';
+                                        $buffy .= '<span itemprop="author" itemtype="https://schema.org/Person" itemscope>';
+                                            $buffy .= '<meta itemprop="name" content="' . esc_attr( $review_author ) . '" />';
+                                        $buffy .= '</span>';
+                                        $buffy .= '<span itemprop="reviewRating" itemtype="https://schema.org/Rating" itemscope>';
+                                            $buffy .= '<meta itemprop="ratingValue" content="' . $user_rating_value . '" />';
+                                            $buffy .= '<meta itemprop="bestRating" content="' . $best_rating . '" />';
+                                        $buffy .= '</span>';
+                                        $buffy.= '<span class="td-page-meta" itemprop="reviewBody">' . esc_attr( $user_review_text ) . '</span>';
+                                    $buffy .= '</span>';
+                                }
+                            }
+                        }
                     }
                 }
 
-                // the item that is reviewed
-                $buffy .= '<span class="td-page-meta" itemprop="itemReviewed" itemscope itemtype="https://schema.org/Product">';
-                $buffy .= '<meta itemprop="name" content="' . esc_attr( strip_tags( $post->post_title ) ) . '">';
-                
-                $buffy .= '<span class="td-page-meta" itemprop="brand" itemscope itemtype="https://schema.org/Organization">';
-                $buffy .= '<meta itemprop="name " content = "' . $publisher_name . '">';
-                $buffy .= '</span>';
-                
-                $read_post_theme_settings_meta = $this->read_post_theme_settings_meta( 'review' );
-                if ( !empty( $read_post_theme_settings_meta ) ) {
-                    $buffy .= '<meta itemprop="description" content="' . esc_attr( $read_post_theme_settings_meta ) . '">';
-                } else {
-                    //we have no review text :| get a excerpt for the about meta thing
-                    if ( $post->post_excerpt != '' ) {
-                        $post_excerpt = $post->post_excerpt;
-                    } else {
-                        $post_excerpt = td_util::excerpt( $post->post_content, 45);
-                    }
-                    $buffy .= '<meta itemprop="description" content="' . esc_attr( $post_excerpt ) . '">';
-                }
-
-                if ( !empty( $featured_image[0] ) ) {
-                    $buffy .= '<meta itemprop="image " content = "' . $featured_image[0] . '">';
-                }
-
+                // common reviews meta
+                $buffy.= '<span class="td-page-meta" itemprop="name">' . esc_attr( strip_tags( $post->post_title ) ) . '</span>';
+                $buffy .= '<span class="td-page-meta" itemprop="brand" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name " content = "' . $publisher_name . '"></span>';
+                $buffy .= '<meta itemprop="description" content="' . esc_attr( $read_post_theme_settings_meta ) . '">';
                 $buffy .= '<meta itemprop="sku " content = "' . $post->post_name . '">';
                 $buffy .= '<meta itemprop="mpn " content = "' . $post->ID . '">';
 
-                    $buffy .= '<span itemprop="aggregateRating" itemscope itemtype="https://schema.org/aggregateRating">';
-                    $buffy .= '<meta itemprop="ratingValue" content = "' . $this->post_review_total_stars() . '">';
-                    $buffy .= '<meta itemprop="ratingCount" content = "' . $rating_count  . '">';
+                if ( !empty( $featured_image[0] ) ) {
+                    $buffy .= '<link itemprop="image " href="' . $featured_image[0] . '"/>';
+                }
+
+                // using aggregate on author review, the reviews count will replace author in google search
+                // on frontend user reviews system is always used, because multiple reviews can be added
+                if ( td_util::get_option('tds_aggregate_rating_schema') === 'yes' || isset( $post_linked_posts['tdc-review']) ) {
+                    $buffy .= '<span class="td-page-meta" itemprop="aggregateRating" itemscope itemtype="https://schema.org/aggregateRating">';
+                        $buffy .= '<meta itemprop="ratingValue" content = "' . $rating_value . '">';
+                        $buffy .= '<meta itemprop="ratingCount" content = "' . $rating_count . '">';
+                        $buffy .= '<meta itemprop="bestRating" content="' . $best_rating . '" />';
                     $buffy .= '</span>';
+                }
+
+                $buffy .= '<span class="td-page-meta" itemprop="offers" itemtype="https://schema.org/Offer" itemscope>';
+                    $buffy .= '<link itemprop="url" href="' . get_permalink( $post->ID ) . '" />';
+                    $buffy .= '<meta itemprop="availability" content="https://schema.org/InStock" />';
+                    $buffy .= '<meta itemprop="priceCurrency" content="USD" />';
+                    $buffy .= '<meta itemprop="itemCondition" content="https://schema.org/UsedCondition" />';
+                    $buffy .= '<meta itemprop="price" content="0" />';
+                    $buffy .= '<meta itemprop="priceValidUntil" content="' . date("Y-m-d") . '" />';
                 $buffy .= '</span>';
 
-//                $read_post_theme_settings_meta = $this->read_post_theme_settings_meta( 'review' );
-//                if ( !empty( $read_post_theme_settings_meta ) ) {
-//                    $buffy .= '<meta itemprop="reviewBody" content="' . esc_attr( $read_post_theme_settings_meta ) . '">';
-//                } else {
-//                    //we have no review text :| get a excerpt for the about meta thing
-//                    if ( $post->post_excerpt != '' ) {
-//                        $post_excerpt = $post->post_excerpt;
-//                    } else {
-//                        $post_excerpt = td_util::excerpt( $post->post_content, 45);
-//                    }
-//                    $buffy .= '<meta itemprop="reviewBody" content="' . esc_attr( $post_excerpt ) . '">';
-//                }
+            } else { //schema Article
 
-                // review rating
-                $buffy .= '<span class="td-page-meta" itemprop="reviewRating" itemscope itemtype="' . td_global::$http_or_https . '://schema.org/Rating">';
-                $buffy .= '<meta itemprop="worstRating" content = "1">';
-                $buffy .= '<meta itemprop="bestRating" content = "5">';
-                $buffy .= '<meta itemprop="ratingValue" content="' . $this->post_review_total_stars() . '">';
-                $buffy .= ' </span>';
+                // author
+                $buffy .= '<span class="td-page-meta" itemprop="author" itemscope itemtype="https://schema.org/Person">';
+                $buffy .= '<meta itemprop="name" content="' . esc_attr($post_author) . '">';
+                $buffy .= '<meta itemprop="url" content="' . esc_attr($post_author_url) . '">';
+                $buffy .= '</span>';
+
+                global $wp_version;
+
+                if (version_compare($wp_version, '5.3', '<')) {
+
+                    // datePublished
+                    $td_article_date_unix = get_the_time('U', $post->ID);
+                    $buffy .= '<meta itemprop="datePublished" content="' . date(DATE_W3C, $td_article_date_unix) . '">';
+
+                    // dateModified - local time
+                    $td_article_modified_date_unix = get_the_modified_date('U', $post->ID);
+                    $buffy .= '<meta itemprop="dateModified" content="' . date(DATE_W3C, $td_article_modified_date_unix) . '">';
+
+                } else { //get_post_datetime() is used from WP 5.3
+
+                    // datePublished
+                    $td_article_datetime = get_post_datetime($post, 'date', 'gmt');
+                    if ($td_article_datetime !== false) {
+                        $buffy .= '<meta itemprop="datePublished" content="' . $td_article_datetime->format(DATE_W3C) . '">';
+                    }
+                    // dateModified - local time
+                    $td_article_modified_datetime = get_post_datetime($post, 'modified', 'gmt');
+                    if ($td_article_modified_datetime !== false) {
+                        $buffy .= '<meta itemprop="dateModified" content="' . $td_article_modified_datetime->format(DATE_W3C) . '">';
+                    }
+                }
+                // mainEntityOfPage
+                $buffy .= '<meta itemscope itemprop="mainEntityOfPage" itemType="https://schema.org/WebPage" itemid="' . get_permalink($post->ID) . '"/>';
+
+                // publisher
+                $buffy .= '<span class="td-page-meta" itemprop="publisher" itemscope itemtype="https://schema.org/Organization">';
+                $buffy .= '<span class="td-page-meta" itemprop="logo" itemscope itemtype="https://schema.org/ImageObject">';
+                $buffy .= '<meta itemprop="url" content="' . $publisher_logo . '">';
+                $buffy .= '</span>';
+                $buffy .= '<meta itemprop="name" content="' . $publisher_name . '">';
+                $buffy .= '</span>';
+
+                // headline
+                if (!empty($post_subtitle)) {
+                    $buffy .= '<meta itemprop="headline" content="' . esc_attr($post_subtitle) . '">';
+                } else {
+                    $buffy .= '<meta itemprop="headline" content="' . esc_attr($post->post_title) . '">';
+                }
+
+                // ImageObject meta
+                if (!empty($featured_image[0])) {
+                    $buffy .= '<span class="td-page-meta" itemprop="image" itemscope itemtype="https://schema.org/ImageObject">';
+                    $buffy .= '<meta itemprop="url" content="' . $featured_image[0] . '">';
+                    $buffy .= '<meta itemprop="width" content="' . $featured_image[1] . '">';
+                    $buffy .= '<meta itemprop="height" content="' . $featured_image[2] . '">';
+                    $buffy .= '</span>';
+                }
             }
 
             return $buffy;
@@ -1891,6 +2871,7 @@ class tdb_state_single extends tdb_state_base {
         };
 
         parent::lock_state_definition();
+
     }
 
     /**
@@ -1943,6 +2924,19 @@ class tdb_state_single extends tdb_state_base {
 
         return $default;
     }
+    /**
+     * Helper - read post user reviews meta
+     * @param string $key
+     * @param string $default the default value if we don't have one
+     * @return mixed|string
+     */
+    private function read_post_user_review( $key, $default = '' ) {
+        if ( !empty( $this->post_user_review[$key] ) ) {
+            return $this->post_user_review[$key];
+        }
+
+        return $default;
+    }
 
     /**
      * Helper - build post content ad spot
@@ -1953,9 +2947,13 @@ class tdb_state_single extends tdb_state_base {
      * @param $ad_spot_align
      * @return string
      */
-    private function build_post_content_ad_spot( $ad_spot_ad_code, $ad_spot_id, $ad_spot_title, $ad_spot_align ) {
+    private function build_post_content_ad_spot( $ad_spot_ad_code, $ad_spot_id, $ad_spot_title, $ad_spot_align, $ad_hide_for_admins = false, $ad_hide_for_subscribed = false ) {
 
         if ( empty( $ad_spot_ad_code ) ) {
+            return '';
+        }
+
+        if( $ad_hide_for_subscribed && !( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) ) {
             return '';
         }
 
@@ -1967,8 +2965,8 @@ class tdb_state_single extends tdb_state_base {
 
         $buffy = '';
 
-        if ( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
-            $buffy .= '<div class="td-spot-id-' . $ad_spot_id . '"><span class="td-adspot-title">' . $spot_title . '</span><div class="tdc-placeholder-title"></div></div>';
+        if ( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() || $ad_hide_for_admins ) {
+            $buffy .= '<div class="td-a-ad tdc-a-ad td-spot-id-' . $ad_spot_id . ' ' . ( !empty( $ad_spot_align ) ? 'id_ad_' . $ad_spot_align : '') .  '"><span class="td-adspot-title">' . $spot_title . '</span><div class="tdc-placeholder-title"></div></div>';
         } else {
             $buffy .= '<div class="td-a-ad id_' . $ad_spot_id . ' ' . ( !empty( $ad_spot_align ) ? 'id_ad_' . $ad_spot_align : '') .  '">';
             $buffy .= '<span class="td-adspot-title">' . $spot_title . '</span>';
@@ -1991,12 +2989,14 @@ class tdb_state_single extends tdb_state_base {
         $post_review_meta_stars    = $this->read_post_theme_settings_meta( 'p_review_stars' );
         $post_review_meta_percents = $this->read_post_theme_settings_meta( 'p_review_percents' );
         $post_review_meta_points   = $this->read_post_theme_settings_meta( 'p_review_points' );
+        //user review meta
+        $post_user_review = $this->read_post_user_review('tdc-review');
 
-        if ( !empty( $post_review_meta ) and (
-                !empty( $post_review_meta_stars ) or
-                !empty( $post_review_meta_percents ) or
+        if ( (!empty( $post_review_meta ) && (
+                !empty( $post_review_meta_stars ) ||
+                !empty( $post_review_meta_percents ) ||
                 !empty( $post_review_meta_points )
-            )
+            ) ) || !empty( $post_user_review )
         ) {
             return true;
         }
@@ -2107,7 +3107,7 @@ class tdb_state_single extends tdb_state_base {
             }
         }
 
-        return $primary_category;
+	    return apply_filters( 'td_primary_category', $primary_category, $this->get_wp_query()->post );
     }
 
 	/**
@@ -2116,7 +3116,7 @@ class tdb_state_single extends tdb_state_base {
 	 *
 	 * @return string
 	 */
-    function tdb_commnets_template($template){
+    function tdb_comments_template( $template ) {
 	    return TDB_TEMPLATE_BUILDER_DIR . '/parts/tdb-comments.php';
     }
 
@@ -2188,6 +3188,121 @@ class tdb_state_single extends tdb_state_base {
 		<?php
 
 	}
+
+	/**
+	 * function for sorting terms hierarchically
+	 *
+	 * @return void
+	 * @author tagdiv
+	 */
+	function sort_terms_hierarchically( array &$terms, array &$into, $parent_id = 0 ) {
+
+        $terms_ids = array_column( $terms, 'term_id' );
+
+		foreach ( $terms as $i => $term ) {
+
+            // current term ancestors ( parents .. )
+			$term_ancestors = get_ancestors( $term->term_id, $term->taxonomy );
+
+            // current term siblings
+			$term_siblings = get_terms( $term->taxonomy, array( 'parent' => $term->parent ) );
+
+			if ( $term->parent == $parent_id ) {
+				$into[$term->term_id] = $term;
+				unset( $terms[$i] );
+			} elseif ( $parent_id === 0 && count( $term_ancestors ) > 0 ) {
+
+                // this case adds subterms as top terms *** if the top(parent) term is not found in the terms array
+                if ( !in_array( $term_ancestors[0], $terms_ids ) ) {
+	                $into[$term->term_id] = $term;
+	                unset( $terms[$i] );
+
+	                // this case adds subterm's siblings as top terms for a more logical order
+                    if ( $term_siblings ) {
+
+                        foreach ( $term_siblings as $term_sibling ) {
+                            $term_key_in_terms = array_search( $term_sibling->term_id, array_column( $terms, 'term_id' ) );
+                            if ( $term_key_in_terms ) {
+	                            $into[$term_sibling->term_id] = $term;
+	                            unset( $terms[$i] );
+                            }
+                        }
+
+                    }
+
+                }
+
+            }
+
+		}
+
+		foreach ( $into as $top_term ) {
+			$top_term->children = array();
+			$this->sort_terms_hierarchically( $terms, $top_term->children, $top_term->term_id );
+		}
+
+	}
+
+	/**
+	 * recursively sets a term's children
+	 *
+	 * @param array $to_array
+	 * @param $term
+	 * @param $tdb_shortcode
+	 *
+	 * @return void
+	 * @see self::sort_terms_hierarchically
+	 *
+	 */
+	function add_term_children( array &$to_array, $term, $tdb_shortcode ) {
+
+		if ( !empty( $term->children ) ) {
+
+			foreach ( $term->children as $term ) {
+
+				switch ( $tdb_shortcode ) {
+					case 'post_breadcrumbs':
+						$to_array[] = array (
+							'title_attribute' => 'attribute',
+							'url' => esc_url( get_term_link( $term ) ),
+							'display_name' => $term->name
+						);
+						break;
+					case 'post_taxonomies':
+
+						// get term color
+						if ( $term->taxonomy === 'category' ) {
+
+							// get the category color from theme panel
+							$term_meta_color = td_util::get_category_option( $term->term_id, 'tdc_color' );
+
+						} else {
+							$term_meta_color = get_term_meta( $term->term_id, 'tdb_filter_color', true );
+						}
+
+						// sanitize hex color
+						$sanitized_hex_color = sanitize_hex_color( $term_meta_color );
+
+						$to_array[$term->name] = array (
+							'link' => esc_url( get_term_link( $term->term_id ) ),
+							'hide_on_post' => false,
+							'color' => !empty( $sanitized_hex_color ) ? $sanitized_hex_color : ''
+						);
+						break;
+
+                    case 'post_categories':
+                        $to_array[] = $term;
+                        break;
+				}
+
+				self::add_term_children( $to_array, $term, $tdb_shortcode );
+
+			}
+
+		}
+
+	}
+
 }
 
 class tdb_Sample_Comment {

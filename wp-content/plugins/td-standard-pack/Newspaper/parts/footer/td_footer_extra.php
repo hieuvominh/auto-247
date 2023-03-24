@@ -26,15 +26,29 @@ if (td_util::get_option('tds_footer_column_1') != 'no') {
         $td_footer_logo_title = $td_logo_title;
     }
 
-    $retina_footer_logo_width = '';
-    if (!empty($td_footer_retina_logo)) {
-        // retina logo width of the normal logo
-        $retina_footer_logo_id = attachment_url_to_postid($td_footer_logo);
+    $logo_image_size = '';
 
-        if ($retina_footer_logo_id !== 0) {
-            $img_properties = wp_get_attachment_image_src($retina_footer_logo_id, 'full');
-            if ($img_properties !== false && !empty($img_properties[1])) {
-                $retina_footer_logo_width = $img_properties[1];
+    if ( function_exists('wp_getimagesize') ) {
+
+        if ($td_footer_logo !== '') {
+            $td_footer_logo_headers = @get_headers($td_footer_logo);
+
+            if ( $td_footer_logo_headers && strpos($td_footer_logo_headers[0],'200') !== false ) {
+                $info_img = wp_getimagesize($td_footer_logo);
+                if (is_array($info_img)) {
+                    $logo_image_size = $info_img[3];
+                }
+            }
+        } else {
+            if ($td_top_logo !== '') {
+                $td_top_logo_headers = @get_headers($td_top_logo);
+
+                if ($td_top_logo_headers && strpos($td_top_logo_headers[0], '200') !== false) {
+                    $info_img = wp_getimagesize($td_top_logo);
+                    if (is_array($info_img)) {
+                        $logo_image_size = $info_img[3];
+                    }
+                }
             }
         }
     }
@@ -46,15 +60,15 @@ if (td_util::get_option('tds_footer_column_1') != 'no') {
 
     if (!empty($td_footer_logo)) { // if have footer logo
         if (empty($td_footer_retina_logo)) { // if don't have a retina footer logo load the normal logo
-            $buffy .= '<a href="' . esc_url(home_url( '/' )) . '"><img src="' . $td_footer_logo . '" alt="' . $td_footer_logo_alt . '" title="' . $td_footer_logo_title . '"/></a>';
+            $buffy .= '<a href="' . esc_url(home_url( '/' )) . '"><img src="' . $td_footer_logo . '" alt="' . $td_footer_logo_alt . '" title="' . $td_footer_logo_title . '" ' . $logo_image_size . '/></a>';
         } else {
-            $buffy .= '<a href="' . esc_url(home_url( '/' )) . '"><img class="td-retina-data" src="' . $td_footer_logo . '" data-retina="' . esc_attr($td_footer_retina_logo) . '" alt="' . $td_footer_logo_alt . '" title="' . $td_footer_logo_title . '" width="' . esc_attr($retina_footer_logo_width) . '" /></a>';
+            $buffy .= '<a href="' . esc_url(home_url( '/' )) . '"><img class="td-retina-data" src="' . $td_footer_logo . '" data-retina="' . esc_attr($td_footer_retina_logo) . '" alt="' . $td_footer_logo_alt . '" title="' . $td_footer_logo_title . '" ' . $logo_image_size . ' /></a>';
         }
     } else { // if you don't have a footer logo load the top logo
         if (empty($td_top_retina_logo)) {
-            $buffy .= '<a href="' . esc_url(home_url( '/' )) . '"><img src="' . $td_top_logo . '" alt="' . $td_logo_alt . '" title="' . $td_logo_title . '"/></a>';
+            $buffy .= '<a href="' . esc_url(home_url( '/' )) . '"><img src="' . $td_top_logo . '" alt="' . $td_logo_alt . '" title="' . $td_logo_title . '" ' . $logo_image_size . '/></a>';
         } else {
-            $buffy .= '<a href="' . esc_url(home_url( '/' )) . '"><img class="td-retina-data" src="' . $td_top_logo . '" data-retina="' . esc_attr($td_top_retina_logo) . '" alt="' . $td_logo_alt . '" title="' . $td_logo_title . '" width="' . esc_attr($retina_footer_logo_width) . '" /></a>';
+            $buffy .= '<a href="' . esc_url(home_url( '/' )) . '"><img class="td-retina-data" src="' . $td_top_logo . '" data-retina="' . esc_attr($td_top_retina_logo) . '" alt="' . $td_logo_alt . '" title="' . $td_logo_title . '" ' . $logo_image_size . ' /></a>';
         }
     }
 

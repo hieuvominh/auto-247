@@ -23,7 +23,8 @@ class tds_menu_sub_active1 extends td_style {
 
         $compiled_css = '';
 
-        $unique_block_class = '.' . $this->unique_block_class;
+        //$unique_block_class = '.' . $this->unique_block_class;
+        $unique_block_class = ((td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax()) ? '.tdc-row .' : '.') . $this->unique_block_class;
 
 
 		$raw_css =
@@ -35,8 +36,22 @@ class tds_menu_sub_active1 extends td_style {
 				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-category-ancestor > a,
 				$unique_block_class .tdb-menu ul .tdb-normal-menu.tdb-hover > a,
 				$unique_block_class .tdb-menu ul .tdb-normal-menu:hover > a,
-				$unique_block_class .td-pulldown-filter-list li:hover a {
+				$unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li:hover > a {
 					color: @sub_text_color_h;
+				}
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-menu-item > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-menu-item > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-category-ancestor > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-category-ancestor > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.tdb-hover > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.tdb-hover > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu:hover > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu:hover > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li:hover > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li:hover > a .tdb-sub-menu-icon-svg svg * {
+					fill: @sub_text_color_h;
 				}
 				/* @sub_elem_bg_color_h */
 				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-menu-item > a,
@@ -44,7 +59,7 @@ class tds_menu_sub_active1 extends td_style {
 				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-category-ancestor > a,
 				$unique_block_class .tdb-menu ul .tdb-normal-menu.tdb-hover > a,
 				$unique_block_class .tdb-menu ul .tdb-normal-menu:hover > a,
-				$unique_block_class .td-pulldown-filter-list li:hover a {
+				$unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li:hover > a {
 					background-color: @sub_elem_bg_color_h;
 				}
 				/* @sub_color_h */
@@ -52,8 +67,24 @@ class tds_menu_sub_active1 extends td_style {
 				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-menu-ancestor > a i,
 				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-category-ancestor > a i,
 				$unique_block_class .tdb-menu ul .tdb-normal-menu.tdb-hover > a i,
-				$unique_block_class .tdb-menu ul .tdb-normal-menu:hover > a i {
+				$unique_block_class .tdb-menu ul .tdb-normal-menu:hover > a i,
+				$unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li:hover > a .tdb-sub-menu-icon-svg i,
+				$unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li:hover > a .tdb-sub-menu-icon-svg i {
 					color: @sub_color_h;
+				}
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-menu-item > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-menu-item > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-menu-ancestor > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-category-ancestor > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.current-category-ancestor > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.tdb-hover > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu.tdb-hover > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu:hover > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu ul .tdb-normal-menu:hover > a .tdb-sub-menu-icon-svg svg *,
+				$unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li:hover > a .tdb-sub-menu-icon-svg svg,
+				$unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li:hover > a .tdb-sub-menu-icon-svg svg * {
+					fill: @sub_color_h;
 				}
 
 
@@ -88,7 +119,7 @@ class tds_menu_sub_active1 extends td_style {
 		}
         $this->unique_style_class = td_global::td_generate_unique_id();
 
-		$buffy = PHP_EOL . '<style>' . PHP_EOL . $this->get_css() . PHP_EOL . '</style>';
+		$buffy = $this->get_style($this->get_css());
 
 		return $buffy;
 	}

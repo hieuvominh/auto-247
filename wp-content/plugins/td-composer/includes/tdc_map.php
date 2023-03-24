@@ -16,6 +16,32 @@ if ( 'Newsmag' === TD_THEME_NAME ) {
 		}
 	}
 }
+function td_social_counter_title_tag() {
+    $social_counter_title_tag = array();
+    if( 'Newspaper' == TD_THEME_NAME ) {
+        $social_counter_title_tag = array(
+            array(
+                "param_name" => "title_tag",
+                "type" => "dropdown",
+                "value" => array(
+                    'Default - H4' => '',
+                    'H1' => 'h1',
+                    'H2' => 'h2',
+                    'H3' => 'h3',
+                    'Div' => 'div'
+                ),
+                "heading" => 'Title tag (SEO)',
+                "description" => "",
+                "holder" => "div",
+                "class" => "tdc-dropdown-big",
+                "info_img" => "https://cloud.tagdiv.com/help/title_seo.png",
+            ),
+        );
+
+    }
+    return $social_counter_title_tag;
+}
+
 
 /**
  * @param $param_name - param for which fonts' params will be rendered
@@ -78,6 +104,7 @@ $external_shortcodes = array(
             'youtube',
             'instagram',
             'pinterest',
+			'tiktok',
             'soundcloud',
             'rss',
             'rss_url',
@@ -85,6 +112,7 @@ $external_shortcodes = array(
         ),
         "params" => array_merge(
 			$block_general_params_array,
+            td_social_counter_title_tag(),
             array(
                 array(
                     "param_name" => "separator",
@@ -160,9 +188,8 @@ $external_shortcodes = array(
                     "type" => "textfield",
                     "value" => "",
                     "heading" => __("Youtube id", TD_THEME_NAME),
-					"description" => " User: www.youtube.com/user/<b style='color: #000'>ENVATO</b><br/>
-									Channel: www.youtube.com/ <b style='color: #000'>channel/UCJr72fY4cTaNZv7WPbvjaSw</b><br/>
-									<b style='color: #f72c5b'>*Notice:</b> Please add <a href='https://forum.tagdiv.com/youtube-api-key/' target='_blank'> Youtube API Key </a>in Theme Panel ",                    "holder" => "div",
+                    "description" => "User: www.youtube.com/user/<b style='color: #000'>ENVATO</b><br/>Channel: www.youtube.com/ <b style='color: #000'>channel/UCJr72fY4cTaNZv7WPbvjaSw</b><br><a href='https://forum.tagdiv.com/youtube-api-key/' target='_blank'>YouTube API Key guide</a>",
+                    "holder" => "div",
                     "class" => "tdc-textfield-big"
                 ),
 				array(
@@ -174,33 +201,33 @@ $external_shortcodes = array(
 					"holder" => "div",
 					"class" => "tdc-textfield-big"
 				),
-//                array(
-//                    "param_name" => "vimeo",
-//                    "type" => "textfield",
-//                    "value" => "",
-//                    "heading" => __("Vimeo id", TD_THEME_NAME),
-//                    "description" => "",
-//                    "holder" => "div",
-//                    "class" => "tdc-textfield-big"
-//                ),
-//                array(
-//                    "param_name" => "googleplus",
-//                    "type" => "textfield",
-//                    "value" => '',
-//                    "heading" => __("Google Plus User", TD_THEME_NAME),
-//                    "description" => "",
-//                    "holder" => "div",
-//                    "class" => "tdc-textfield-big"
-//                ),
-//				array(
-//					"param_name" => "manual_count_googleplus",
-//					"type" => "textfield",
-//					"value" => "",
-//					"heading" => __("Google+ fixed count", TD_THEME_NAME),
-//					"description" => "Add a fixed followers count for google plus",
-//					"holder" => "div",
-//					"class" => "tdc-textfield-big"
-//				),
+				//array(
+				//    "param_name" => "vimeo",
+				//    "type" => "textfield",
+				//    "value" => "",
+				//    "heading" => __("Vimeo id", TD_THEME_NAME),
+				//    "description" => "",
+				//    "holder" => "div",
+				//    "class" => "tdc-textfield-big"
+				//),
+				//array(
+				//    "param_name" => "googleplus",
+				//    "type" => "textfield",
+				//    "value" => '',
+				//    "heading" => __("Google Plus User", TD_THEME_NAME),
+				//    "description" => "",
+				//    "holder" => "div",
+				//    "class" => "tdc-textfield-big"
+				//),
+				//array(
+				//	"param_name" => "manual_count_googleplus",
+				//	"type" => "textfield",
+				//	"value" => "",
+				//	"heading" => __("Google+ fixed count", TD_THEME_NAME),
+				//	"description" => "Add a fixed followers count for google plus",
+				//	"holder" => "div",
+				//	"class" => "tdc-textfield-big"
+				//),
                 array(
                     "param_name" => "instagram",
                     "type" => "textfield",
@@ -234,6 +261,24 @@ $external_shortcodes = array(
 					"value" => "",
 					"heading" => __("Pinterest fixed count", TD_THEME_NAME),
 					"description" => "Add a fixed followers count for pinterest",
+					"holder" => "div",
+					"class" => "tdc-textfield-big"
+				),
+				array(
+					"param_name" => "tiktok",
+					"type" => "textfield",
+					"value" => "",
+					"heading" => __("TikTok username", TD_THEME_NAME),
+					"description" => "User: @username OR @username/video_id",
+					"holder" => "div",
+					"class" => "tdc-textfield-big"
+				),
+				array(
+					"param_name" => "manual_count_tiktok",
+					"type" => "textfield",
+					"value" => "",
+					"heading" => __("TikTok fixed count", TD_THEME_NAME),
+					"description" => "Add a fixed followers count for TikTok",
 					"holder" => "div",
 					"class" => "tdc-textfield-big"
 				),
@@ -273,6 +318,16 @@ $external_shortcodes = array(
 					"holder" => "div",
 					"class" => "tdc-textfield-big"
 				),
+	            // twitch
+	            array(
+		            "param_name" => "twitch",
+		            "type" => "textfield",
+		            "value" => '',
+		            "heading" => __("Twitch User", TD_THEME_NAME),
+		            "description" => "The Twitch login name.",
+		            "holder" => "div",
+		            "class" => "tdc-textfield-big"
+	            ),
                 array(
                     "param_name" => "open_in_new_window",
                     "type" => "dropdown",
@@ -399,10 +454,10 @@ $external_shortcodes = array(
                     "group"      => "Style",
                 ),
             ),
-            td_config_helper::get_map_block_font_array( 'f_header', true, 'Block header', 'Style'),
+            td_config_helper::get_map_block_font_array( 'f_header', true, 'Block header', 'Style', '', '', 'https://cloud.tagdiv.com/help/module_font_block_header.png', ''),
             td_config_helper::get_map_block_font_array( 'f_counters', false, 'Counters text', 'Style'),
             td_config_helper::get_map_block_font_array( 'f_network', false, 'Social networks name text', 'Style'),
-            td_config_helper::get_map_block_font_array( 'f_btn', false, 'Buttons text', 'Style'),
+            td_config_helper::get_map_block_font_array( 'f_btn', false, 'Buttons text', 'Style', '', '', 'https://cloud.tagdiv.com/help/module_font_article_read.png', ''),
 
             array(
                 array(
@@ -451,6 +506,265 @@ $external_shortcodes = array(
 //			),
 		),
 	),
+
+//	'td_woo_product_image' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Product Image',
+//			"base" => "td_woo_product_image",
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_product_image_bg' =>
+//        array(
+//            'map_in_td_composer' => true,
+//            "name" => 'Woo Product Background Image',
+//            "base" => "td_woo_product_image_bg",
+//            'tdc_category' => 'WooCommerce Single',
+//            'params' => array()
+//        ),
+//
+//	'td_woo_product_price' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Product Price',
+//			"base" => "td_woo_product_price",
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_product_attributes' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Product Attributes',
+//			"base" => "td_woo_product_attributes",
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_product_description' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Product Description',
+//			"base" => "td_woo_product_description",
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_product_categories' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Product Categories',
+//			"base" => "td_woo_product_categories",
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_product_tags' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Product Tags',
+//			"base" => "td_woo_product_tags",
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_product_tabs' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Product Tabs',
+//			"base" => "td_woo_product_tabs",
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_product_sku' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Product SKU',
+//			"base" => "td_woo_product_sku",
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_add_to_cart' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			'base' => 'td_woo_add_to_cart',
+//			'name' => 'Woo Add to Cart',
+//			'category' => 'Content',
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_product_reviews' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			'base' => 'td_woo_product_reviews',
+//			'name' => 'Woo Product Reviews',
+//			'category' => 'Content',
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_product_rating' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Product Rating',
+//			"base" => "td_woo_product_rating",
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_product_notices' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Product Notices',
+//			"base" => "td_woo_product_notices",
+//			'tdc_category' => 'WooCommerce Single',
+//			'params' => array()
+//		),
+//
+//	'td_woo_title' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			'base' => 'td_woo_title',
+//			'name' => 'Woo Page Title',
+//			'category' => 'Content',
+//			'tdc_category' => 'WooCommerce Common',
+//            'params' => array()
+//		),
+//
+//	'td_woo_breadcrumbs' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			'base' => 'td_woo_breadcrumbs',
+//			'name' => 'Woo Breadcrumbs',
+//			'category' => 'Content',
+//			'tdc_category' => 'WooCommerce Common',
+//            'params' => array()
+//		),
+//
+//	'td_woo_add_to_cart_custom' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Custom Add To Cart',
+//			"base" => "td_woo_add_to_cart_custom",
+//			'tdc_category' => 'WooCommerce Common',
+//			'params' => array()
+//		),
+//
+//	'td_woo_products_loop' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Loop',
+//			"base" => "td_woo_products_loop",
+//			'tdc_category' => 'WooCommerce Common',
+//			'params' => array()
+//		),
+//
+//	'td_woo_loop_sorting_options' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Loop Sorting Options',
+//			"base" => "td_woo_loop_sorting_options",
+//			'tdc_category' => 'WooCommerce Common',
+//			"params" => array()
+//		),
+//
+//	'td_woo_attribute_filter' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Attribute Filters',
+//			"base" => "td_woo_attribute_filter",
+//			"class" => "",
+//			"controls" => "full",
+//			"category" => 'Blocks',
+//			'tdc_category' => 'WooCommerce Common',
+//			'icon' => '',
+//			'params' => array()
+//		),
+//
+//	'td_woo_filters_list' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Selected Filters',
+//			"base" => "td_woo_filters_list",
+//			"class" => "",
+//			"controls" => "full",
+//			"category" => 'Blocks',
+//			'tdc_category' => 'WooCommerce Common',
+//			'icon' => '',
+//			'params' => array()
+//		),
+//
+//	'td_woo_page_description' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Page Description',
+//			"base" => "td_woo_page_description",
+//			"class" => "",
+//			"controls" => "full",
+//			"category" => 'Blocks',
+//			'tdc_category' => 'WooCommerce Common',
+//			'icon' => '',
+//			'params' => array()
+//		),
+//
+//	'td_woo_products_live_search' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Products Live Search',
+//			"base" => "td_woo_products_live_search",
+//			'tdc_category' => 'Header shortcodes',
+//			'params' => array()
+//		),
+//
+//	'td_woo_menu_cart' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Menu Cart',
+//			"base" => "td_woo_menu_cart",
+//			"class" => "",
+//			"controls" => "full",
+//			"category" => 'Blocks',
+//			'tdc_category' => 'Header shortcodes',
+//			'icon' => 'icon-pagebuilder-td_woo_menu_cart',
+//			'params' => array()
+//		),
+//
+//	'td_woo_menu_login' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Menu Login',
+//			"base" => "td_woo_menu_login",
+//			"class" => "",
+//			"controls" => "full",
+//			"category" => 'Blocks',
+//			'tdc_category' => 'Header shortcodes',
+//			'icon' => 'icon-pagebuilder-td_woo_menu_login',
+//			'params' => array()
+//		),
+//
+//	'td_woo_archive_subcategories_list' =>
+//		array(
+//			'map_in_td_composer' => true,
+//			"name" => 'Woo Archive Sucategories List',
+//			"base" => "td_woo_archive_subcategories_list",
+//			'tdc_category' => 'WooCommerce Archive',
+//			"params" => array()
+//		),
+//
+//	'td_woo_products_block' =>
+//		array(
+//			'map_in_td_composer'     => true,
+//			"name"                   => 'Woo Product Block',
+//			"base"                   => 'td_woo_products_block',
+//			"category"               => 'Blocks',
+//			'tdc_category'           => 'Blocks',
+//			"params" => array()
+//		),
 
 // Example: Register an external shortcode BUT IMPLEMENTED in theme
 
@@ -603,6 +917,140 @@ if ( 'Newsmag' !== TD_THEME_NAME ) {
 	));
 }
 
+
+$flexParams = array();
+$flexOccupy = array();
+$flexWidth = array();
+if( 'Newspaper' === TD_THEME_NAME ) {
+    $flexParams = array(
+        array(
+            "param_name" => "flex_layout",
+            "type" => "dropdown-responsive",
+            "value" => array(
+                'Disabled' => 'block',
+                'Columns' => 'row',
+                'Row' => 'column',
+            ),
+            "heading" => 'Layout',
+            "description" => "",
+            "holder" => "div",
+            'tdc_dropdown_images' => true,
+            "class" => "tdc-visual-selector tdc-flex-selector tdc-flex-row-layout tdc-add-class",
+            'group' => 'Layout',
+            "info_img" => "https://cloud.tagdiv.com/help/row_layout_layout.png",
+        ),
+        array(
+            "param_name" => "flex_layout_reverse",
+            "type" => "checkbox-responsive",
+            "value" => '',
+            "heading" => "Reverse columns order",
+            "description" => "",
+            "holder" => "div",
+            "class" => "tdc-flex-row-layout-checkbox tdc-flex-row-layout-checkbox-reverse",
+            'group' => 'Layout',
+            "info_img" => "https://cloud.tagdiv.com/help/row_layout_reverse.png",
+        ),
+        array(
+            "param_name" => "flex_wrap",
+            "type" => "checkbox-responsive",
+            "value" => '',
+            "heading" => "Wrap columns",
+            "description" => "",
+            "holder" => "div",
+            "class" => "tdc-flex-row-layout-checkbox tdc-flex-row-layout-checkbox-wrap",
+            'group' => 'Layout',
+            "info_img" => "https://cloud.tagdiv.com/help/row_layout_wrap.png",
+        ),
+        array(
+            "param_name" => "flex_horiz_align",
+            "type" => "dropdown-responsive",
+            "value" => array(
+                'Start' => 'flex-start',
+                'Center' => 'center',
+                'End' => 'flex-end',
+                'Space between' => 'space-between',
+                'Space evenly' => 'space-evenly',
+            ),
+            "heading" => 'Horizontal align',
+            "description" => "",
+            "holder" => "div",
+            'tdc_dropdown_images' => true,
+            "class" => "tdc-visual-selector tdc-flex-selector tdc-flex-row-horiz-align tdc-add-class",
+            'group' => 'Layout',
+            "info_img" => "https://cloud.tagdiv.com/help/row_layout_align.png",
+        ),
+        array(
+            "param_name" => "flex_vert_align",
+            "type" => "dropdown-responsive",
+            "value" => array(
+                'Start' => 'flex-start',
+                'Center' => 'center',
+                'End' => 'flex-end',
+                'Baseline' => 'baseline',
+                'Stretch' => 'stretch',
+            ),
+            "heading" => 'Vertical align',
+            "description" => "",
+            "holder" => "div",
+            'tdc_dropdown_images' => true,
+            "class" => "tdc-visual-selector tdc-flex-selector tdc-flex-row-vert-align tdc-add-class",
+            'group' => 'Layout',
+            "info_img" => "https://cloud.tagdiv.com/help/row_layout_align.png",
+        ),
+        array(
+            "param_name" => "separator",
+            "type" => "horizontal_separator",
+            "value" => "",
+            "class" => "tdc-separator-small",
+            "group" => "Layout"
+        ),
+        array(
+            'param_name' => 'flex_order',
+            'type' => 'textfield-responsive',
+            'value' => '',
+            'heading' => 'Order',
+            'description' => '',
+            'placeholder' => 'auto',
+            'class' => 'tdc-textfield-small',
+            "group" => "Layout",
+            "info_img" => "https://cloud.tagdiv.com/help/row_layout_order.png",
+        ),
+    );
+
+    $flexOccupy = array(
+        array(
+            "param_name" => "flex_grow",
+            "type" => "dropdown-responsive",
+            "value" => array(
+                'Default' => 'default',
+                'On' => 'on',
+                'Off' => 'off',
+            ),
+            "heading" => 'Occupy remaining space in row',
+            "description" => "",
+            "holder" => "div",
+            'tdc_dropdown_images' => true,
+            "class" => "tdc-visual-selector tdc-flex-selector tdc-flex-grow tdc-add-class",
+            'group' => 'Layout',
+            "info_img" => "https://cloud.tagdiv.com/help/row_layout_width.png",
+        ),
+    );
+    $flexWidth = array(
+        array(
+            'param_name' => 'flex_width',
+            'type' => 'textfield-responsive',
+            'value' => '',
+            'heading' => 'Width',
+            'description' => '',
+            'placeholder' => '',
+            'class' => 'tdc-textfield-small',
+            "group" => "Layout",
+            "info_img" => "https://cloud.tagdiv.com/help/row_layout_width.png",
+        ),
+    );
+}
+
+
 $zoneParams = array_merge(
     array(
         array(
@@ -621,6 +1069,7 @@ $zoneParams = array_merge(
             "description" => "",
             "holder" => "div",
             "class" => "",
+            "info_img" => "https://cloud.tagdiv.com/help/row_full_height.png",
         ),
         array(
             "param_name" => "row_parallax",
@@ -630,6 +1079,7 @@ $zoneParams = array_merge(
             "description" => "",
             "holder" => "div",
             "class" => "",
+            "info_img" => "https://cloud.tagdiv.com/help/row_add_parallax.png",
         ),
         array(
             "param_name" => "row_fixed",
@@ -639,6 +1089,7 @@ $zoneParams = array_merge(
             "description" => "",
             "holder" => "div",
             "class" => "",
+            "info_img" => "https://cloud.tagdiv.com/help/row_fixed_background_image.png",
         ),
         array(
             "type" => "gradient",
@@ -649,9 +1100,10 @@ $zoneParams = array_merge(
             "value" => '',
             "description" => '',
             "group" => "",
+            "info_img" => "https://cloud.tagdiv.com/help/row_background_gradient.png",
         ),
     ),
-    td_config_helper::get_map_block_shadow_array('zone_shadow', 'Shadow', 0, 0, 6 ),
+    td_config_helper::get_map_block_shadow_array('zone_shadow', 'Shadow', 0, 0, 6, '', '', 0, true, '', 'https://cloud.tagdiv.com/help/row_shadow.png', '' ),
     array(
         array(
             "param_name" => "separator",
@@ -668,7 +1120,17 @@ $zoneParams = array_merge(
             'heading' => 'Youtube ID',
             'description' => '',
             'class' => 'tdc-textfield-big',
+            "info_img" => "https://cloud.tagdiv.com/help/row_video_background.png",
         ),
+
+		array(
+			'param_name' => 'video_start',
+			'type' => 'textfield',
+			'value' => '',
+			'heading' => 'Start video at',
+			'description' => 'Add the time in seconds',
+			'class' => 'tdc-textfield-small',
+		),
 
         array(
             'param_name' => 'video_scale',
@@ -749,18 +1211,8 @@ $zoneParams = array_merge(
             'value' => array (
                 'Default' => '',
                 'Overlay' => 'absolute',
-                'Fixed' => 'fixed',
-            ),
-            'class' => 'tdc-dropdown-extrabig',
-            'zone_group' => 'tdc_header_desktop',
-        ),
-        array(
-            'param_name' => 'h_position',
-            'heading' => 'Position',
-            'type' => 'dropdown-responsive',
-            'value' => array (
-                'Top' => '',
-                'Bottom' => 'bottom',
+                'Fixed Top' => 'fixed',
+                'Fixed Bottom' => 'fixed_bottom',
             ),
             'class' => 'tdc-dropdown-extrabig',
             'zone_group' => 'tdc_header_desktop',
@@ -786,18 +1238,20 @@ $zoneParams = array_merge(
             ),
             'class' => 'tdc-dropdown-big',
             'zone_group' => 'tdc_header_desktop_sticky',
+            "info_img" => "https://cloud.tagdiv.com/help/zone_sticky.png",
         ),
         array(
             'param_name' => 'hs_sticky_offset',
             'type' => 'range-responsive',
             'value' => '100',
             'heading' => 'Sticky offset',
-            'description' => '',
+            'description' => 'Distance from top of the page when the menu is hiding',
             'class' => 'tdc-textfield-small',
             'range_min' => '-100',
             'range_max' => '200',
             'range_step' => '1',
             'zone_group' => 'tdc_header_desktop_sticky',
+            "info_img" => "https://cloud.tagdiv.com/help/zone_sticky_offset.png",
         ),
         array(
             "param_name" => "separator",
@@ -818,6 +1272,7 @@ $zoneParams = array_merge(
             ),
             'class' => 'tdc-dropdown-big',
             'zone_group' => 'tdc_header_desktop_sticky',
+            "info_img" => "https://cloud.tagdiv.com/help/zone_effect.png",
         ),
         array(
             'param_name' => 'hs_opacity',
@@ -830,6 +1285,7 @@ $zoneParams = array_merge(
             'range_max' => '1',
             'range_step' => '0.02',
             'zone_group' => 'tdc_header_desktop_sticky',
+            "info_img" => "https://cloud.tagdiv.com/help/zone_opacity.png",
         ),
         array(
             'param_name' => 'hs_transitions_speed',
@@ -842,6 +1298,7 @@ $zoneParams = array_merge(
             'range_max' => '10',
             'range_step' => '0.1',
             'zone_group' => 'tdc_header_desktop_sticky',
+            "info_img" => "https://cloud.tagdiv.com/help/zone_speed.png",
         ),
     ),
 
@@ -861,18 +1318,8 @@ $zoneParams = array_merge(
             'value' => array (
                 'Default' => 'relative',
                 'Overlay' => 'absolute',
-                'Fixed' => 'fixed',
-            ),
-            'class' => 'tdc-dropdown-extrabig',
-            'zone_group' => 'tdc_header_mobile',
-        ),
-        array(
-            'param_name' => 'm_position',
-            'heading' => 'Position',
-            'type' => 'dropdown',
-            'value' => array (
-                'Top' => 'top',
-                'Bottom' => 'bottom',
+                'Fixed Top' => 'fixed',
+                'Fixed Bottom' => 'fixed_bottom',
             ),
             'class' => 'tdc-dropdown-extrabig',
             'zone_group' => 'tdc_header_mobile',
@@ -898,18 +1345,20 @@ $zoneParams = array_merge(
             ),
             'class' => 'tdc-dropdown-big',
             'zone_group' => 'tdc_header_mobile_sticky',
+            "info_img" => "https://cloud.tagdiv.com/help/zone_sticky.png",
         ),
         array(
             'param_name' => 'ms_sticky_offset',
             'type' => 'range-responsive',
             'value' => '100',
             'heading' => 'Sticky offset',
-            'description' => '',
+            'description' => 'Distance from top of the page when the menu is hiding',
             'class' => 'tdc-textfield-small',
             'range_min' => '-100',
             'range_max' => '200',
             'range_step' => '1',
             'zone_group' => 'tdc_header_desktop_sticky',
+            "info_img" => "https://cloud.tagdiv.com/help/zone_sticky_offset.png",
         ),
         array(
             "param_name" => "separator",
@@ -930,6 +1379,7 @@ $zoneParams = array_merge(
             ),
             'class' => 'tdc-dropdown-big',
             'zone_group' => 'tdc_header_mobile_sticky',
+            "info_img" => "https://cloud.tagdiv.com/help/zone_effect.png",
         ),
         array(
             'param_name' => 'ms_opacity',
@@ -942,6 +1392,7 @@ $zoneParams = array_merge(
             'range_max' => '1',
             'range_step' => '0.02',
             'zone_group' => 'tdc_header_mobile_sticky',
+            "info_img" => "https://cloud.tagdiv.com/help/zone_opacity.png",
         ),
         array(
             'param_name' => 'ms_transitions_speed',
@@ -954,9 +1405,66 @@ $zoneParams = array_merge(
             'range_max' => '10',
             'range_step' => '0.1',
             'zone_group' => 'tdc_header_mobile_sticky',
+            "info_img" => "https://cloud.tagdiv.com/help/zone_speed.png",
         ),
     )
 );
+
+$sticky_row = array();
+if( 'Newspaper' === TD_THEME_NAME ) {
+    $sticky_row = array_merge(
+        array(
+            array(
+                "param_name" => "separator",
+                "type" => "text_separator",
+                "value" => "",
+                "heading" => "Sticky row",
+                "class" => ""
+            ),
+            array(
+                "param_name" => "is_sticky",
+                "type" => "checkbox",
+                "value" => '',
+                "heading" => "Sticky",
+                "description" => "",
+                "holder" => "div",
+                "class" => "",
+                "info_img" => "https://cloud.tagdiv.com/help/row_sticky.png",
+            ),
+            array (
+                'param_name' => 'sticky_position',
+                'heading' => 'Sticky position',
+                'type' => 'dropdown',
+                'value' => array (
+                    'Top' => '',
+                    'Bottom' => 'bottom',
+                ),
+                'class' => 'tdc-dropdown-big',
+                "info_img" => "https://cloud.tagdiv.com/help/row_sticky_position.png",
+            ),
+            array(
+                "param_name" => "separator",
+                "type" => "horizontal_separator",
+                "value" => "",
+                "description" => "",
+                "holder" => "div",
+                "class" => "",
+            ),
+            array(
+                "type" => "gradient",
+                "holder" => "div",
+                "class" => "",
+                "heading" => 'Sticky row background gradient',
+                "param_name" => "row_bg_gradient_s",
+                "value" => '',
+                "description" => '',
+                "group" => "",
+                "info_img" => "",
+            ),
+        ),
+        td_config_helper::get_map_block_shadow_array('row_shadow_s', 'Sticky row shadow', 0, 0, 4, '', '',  0, true, '', '', '' )
+    );
+}
 
 $rowParams = array_merge(
     array(
@@ -968,6 +1476,7 @@ $rowParams = array_merge(
             'value' => $rowColumns,
             'tdc_dropdown_images' => true, // show image selector instead of classic dropdown
             'class' => 'tdc-row-col-dropdown tdc-visual-selector',
+            "info_img" => "https://cloud.tagdiv.com/help/row_layout.png",
         ),
 
         array(
@@ -977,6 +1486,7 @@ $rowParams = array_merge(
             'heading' => 'Columns gap',
             'description' => '',
             'class' => 'tdc-textfield-small',
+            "info_img" => "https://cloud.tagdiv.com/help/row_columns_gap.png",
         ),
 
         array(
@@ -992,6 +1502,7 @@ $rowParams = array_merge(
             "holder" => "div",
             'tdc_dropdown_images' => true,
             "class" => "tdc-visual-selector tdc-add-class",
+            "info_img" => "https://cloud.tagdiv.com/help/row_vertical_align.png",
         ),
 
         array(
@@ -1002,6 +1513,7 @@ $rowParams = array_merge(
             "description" => "",
             "holder" => "div",
             "class" => "",
+            "info_img" => "https://cloud.tagdiv.com/help/row_full_height.png",
         ),
 
         array(
@@ -1012,6 +1524,7 @@ $rowParams = array_merge(
             "description" => "Hides this row on templates that are using pagination when you navigate to the page 2,3,4..",
             "holder" => "div",
             "class" => "",
+            "info_img" => "https://cloud.tagdiv.com/help/row_hide_on_pagination.png",
         ),
 
         array(
@@ -1022,6 +1535,7 @@ $rowParams = array_merge(
             "description" => "",
             "holder" => "div",
             "class" => "",
+            "info_img" => "https://cloud.tagdiv.com/help/row_add_parallax.png",
         ),
 
         array(
@@ -1032,6 +1546,7 @@ $rowParams = array_merge(
             "description" => "This option turn off the image transition on load",
             "holder" => "div",
             "class" => "",
+            "info_img" => "https://cloud.tagdiv.com/help/row_turn_off_bg_transition.png",
         ),
 
         array(
@@ -1042,6 +1557,7 @@ $rowParams = array_merge(
             "description" => "",
             "holder" => "div",
             "class" => "",
+            "info_img" => "https://cloud.tagdiv.com/help/row_fixed_background_image.png",
         ),
         array(
             "type" => "gradient",
@@ -1052,10 +1568,12 @@ $rowParams = array_merge(
             "value" => '',
             "description" => '',
             "group" => "",
+            "info_img" => "https://cloud.tagdiv.com/help/row_background_gradient.png",
         ),
     ),
-    td_config_helper::get_map_block_shadow_array('row_shadow', 'Shadow', 0, 0, 6 ),
+    td_config_helper::get_map_block_shadow_array('row_shadow', 'Shadow', 0, 0, 6, '', '',  0, true, '', 'https://cloud.tagdiv.com/help/row_shadow.png', '' ),
 
+    $sticky_row,
     array(
 
         array(
@@ -1070,11 +1588,19 @@ $rowParams = array_merge(
             'param_name' => 'video_background',
             'type' => 'textfield',
             'value' => '',
-            'heading' => 'Youtube ID',
+            'heading' => 'Youtube ID or self hosted url',
             'description' => '',
-            'class' => 'tdc-textfield-big',
+            'class' => 'tdc-textfield-extrabig',
+            "info_img" => "https://cloud.tagdiv.com/help/row_video_background.png",
         ),
-
+		array(
+			'param_name' => 'video_start',
+			'type' => 'textfield',
+			'value' => '',
+			'heading' => 'Start video at',
+			'description' => 'Add the time in seconds',
+			'class' => 'tdc-textfield-small',
+		),
         array(
             'param_name' => 'video_scale',
             'type' => 'textfield',
@@ -1120,6 +1646,7 @@ $rowParams = array_merge(
                 'Stretch row and content (with paddings)' => 'stretch_row_content_no_space td-stretch-content',
             ),
             'class' => 'tdc-row-stretch-dropdown tdc-dropdown-extrabig',
+            "info_img" => "https://cloud.tagdiv.com/help/row_stretch.png",
         ),
         array(
             "param_name" => "stretch_off",
@@ -1130,6 +1657,7 @@ $rowParams = array_merge(
             "holder" => "div",
             "class" => "",
             'group' => '',
+            "info_img" => "https://cloud.tagdiv.com/help/row_stretch_row_off.png",
         ),
 
         array(
@@ -1147,6 +1675,21 @@ $rowParams = array_merge(
             'description' => 'Add a class to this row',
             'class' => 'tdc-textfield-extrabig',
         ),
+        array(
+            'param_name' => 'row_height',
+            'type' => 'textfield-responsive',
+            'value' => '',
+            'heading' => 'Height',
+            'description' => '',
+            'placeholder' => 'auto',
+            'class' => 'tdc-textfield-small',
+            "info_img" => "https://cloud.tagdiv.com/help/row_height.png",
+        ),
+    ),
+
+    td_util::get_display_restrictions_atts(),
+
+    array(
 
 	    array(
 		    "type" => 'textfield-responsive',
@@ -1198,6 +1741,7 @@ $rowParams = array_merge(
 		    'tdc_dropdown_images' => true,
 		    "class" => "tdc-visual-selector tdc-add-class tdc-dividers-class tdc-dividers-class-top",
 		    'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider.png",
 	    ),
         array(
             "type" => 'textfield-responsive',
@@ -1208,6 +1752,7 @@ $rowParams = array_merge(
             "description" => 'Optional - Choose a custom height for the separator',
             "placeholder" => "400",
             'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider_height.png",
         ),
         array(
             "type" => 'textfield-responsive',
@@ -1218,6 +1763,7 @@ $rowParams = array_merge(
             "description" => 'Optional - Choose a custom height for the separator',
             "placeholder" => "1000",
             'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider_width.png",
         ),
         array(
             "param_name" => "svg_flip_top",
@@ -1228,6 +1774,7 @@ $rowParams = array_merge(
             "holder" => "div",
             "class" => "",
             'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider_flip.png",
         ),
         array(
             'param_name' => 'space_top',
@@ -1240,6 +1787,7 @@ $rowParams = array_merge(
             'range_max' => '200',
             'range_step' => '2',
             'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider_space.png",
         ),
         array(
             "param_name" => "separator",
@@ -1259,9 +1807,10 @@ $rowParams = array_merge(
             "value" => '',
             "description" => '',
             'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider_color.png",
         ),
     ),
-    td_config_helper::get_map_block_shadow_array('shadow_top', 'Shadow', 0, 0, 2, 'Divider' ),
+    td_config_helper::get_map_block_shadow_array('shadow_top', 'Shadow', 0, 0, 2, 'Divider', '', 0, true, 'td-row-divider-shadow'),
 
     array(
         array(
@@ -1304,6 +1853,7 @@ $rowParams = array_merge(
 		    'tdc_dropdown_images' => true,
 		    "class" => "tdc-visual-selector tdc-add-class tdc-dividers-class",
 		    'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider.png",
 	    ),
         array(
             "type" => 'textfield-responsive',
@@ -1314,6 +1864,7 @@ $rowParams = array_merge(
             "description" => 'Optional - Choose a custom height for the separator',
             "placeholder" => "400",
             'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider_height.png",
         ),
         array(
             "type" => 'textfield-responsive',
@@ -1324,6 +1875,7 @@ $rowParams = array_merge(
             "description" => 'Optional - Choose a custom height for the separator',
             "placeholder" => "1000",
             'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider_width.png",
         ),
         array(
             "param_name" => "svg_flip_bottom",
@@ -1334,6 +1886,7 @@ $rowParams = array_merge(
             "holder" => "div",
             "class" => "",
             'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider_flip.png",
         ),
         array(
             'param_name' => 'space_bottom',
@@ -1346,6 +1899,7 @@ $rowParams = array_merge(
             'range_max' => '200',
             'range_step' => '2',
             'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider_space.png",
         ),
         array(
             "param_name" => "separator",
@@ -1365,9 +1919,13 @@ $rowParams = array_merge(
             "value" => '',
             "description" => '',
             'group' => 'Divider',
+            "info_img" => "https://cloud.tagdiv.com/help/row_divider_color.png",
         )
     ),
-    td_config_helper::get_map_block_shadow_array('shadow_bot', 'Shadow', 0, 0, 2, 'Divider' ),
+    td_config_helper::get_map_block_shadow_array('shadow_bot', 'Shadow', 0, 0, 2, 'Divider', '', 0, true, 'td-row-divider-shadow'),
+
+    $flexParams,
+    $flexWidth,
 
     array(
         array (
@@ -1377,7 +1935,6 @@ $rowParams = array_merge(
             'heading' => 'Css',
             'group' => 'Design options',
         ),
-
         array (
             'param_name' => 'tdc_css',
             'value' => '',
@@ -1412,6 +1969,20 @@ if ( 'Newsmag' === TD_THEME_NAME ) {
 		}
 	}
 
+}
+
+$sticky_column_offset = array();
+if( 'Newspaper' === TD_THEME_NAME ) {
+    $sticky_column_offset = array(
+        array(
+            'type' => 'textfield-responsive',
+            'heading' => 'Sticky offset',
+            'param_name' => 'sticky_offset',
+            'description' => '',
+            'class' => 'tdc-textfield-big',
+            'placeholder' => '20',
+        ),
+    );
 }
 
 
@@ -1472,50 +2043,74 @@ tdc_mapper::map_shortcode(
         	'width',
             'el_class'
         ),
-		'params' => array(
-			array(
-                "param_name" => "is_sticky",
-                "type" => "checkbox",
-                "value" => '',
-                "heading" => "Sticky",
-                "description" => "",
-                "holder" => "div",
-                "class" => "",
-            ),
-            array (
-                'param_name' => 'vertical_align',
-                'heading' => 'Vertical align',
-                'type' => 'dropdown-responsive',
-                'value' => array (
-                    'Default' => '',
-                    'Top' => 'top',
-                    'Middle' => 'middle',
-                    'Bottom' => 'bottom',
+		'params' => array_merge(
+		    array(
+                array(
+                    "param_name" => "is_sticky",
+                    "type" => "checkbox",
+                    "value" => '',
+                    "heading" => "Sticky",
+                    "description" => "",
+                    "holder" => "div",
+                    "class" => "",
+                    "info_img" => "https://cloud.tagdiv.com/help/column_sticky.png",
                 ),
-                'class' => 'tdc-dropdown-big',
             ),
-			array(
-				'type' => 'textfield',
-				'heading' => 'Extra class',
-				'param_name' => 'el_class',
-				'description' => 'Add a class to this column',
-				'class' => 'tdc-textfield-extrabig'
-			),
-			array (
-				'param_name' => 'css',
-				'value' => '',
-				'type' => 'css_editor',
-				'heading' => 'Css',
-				'group' => 'Design options',
-			),
-			array (
-	            'param_name' => 'tdc_css',
-	            'value' => '',
-	            'type' => 'tdc_css_editor',
-	            'heading' => '',
-	            'group' => 'Design options',
-	        ),
-		)
+            $sticky_column_offset,
+            array(
+                array (
+                    'param_name' => 'vertical_align',
+                    'heading' => 'Vertical align',
+                    'type' => 'dropdown-responsive',
+                    "description" => "Deprecated: Used on mobile to align elements in columns with display inline-block. Use Layout tab options instead.",
+                    'value' => array (
+                        'Default' => '',
+                        'Top' => 'top',
+                        'Middle' => 'middle',
+                        'Bottom' => 'bottom',
+                    ),
+                    'class' => 'tdc-dropdown-big',
+                ),
+                array(
+                    'type' => 'textfield',
+                    'heading' => 'Extra class',
+                    'param_name' => 'el_class',
+                    'description' => 'Add a class to this column',
+                    'class' => 'tdc-textfield-extrabig'
+                ),
+                array(
+                    'type' => 'textfield-responsive',
+                    'heading' => 'Height',
+                    'param_name' => 'column_height',
+                    'description' => '',
+                    'class' => 'tdc-textfield-small',
+                    "info_img" => "https://cloud.tagdiv.com/help/row_height.png",
+                ),
+            ),
+
+            td_util::get_display_restrictions_atts(),
+
+            $flexParams,
+            $flexWidth,
+
+            $flexOccupy,
+            array(
+                array (
+                    'param_name' => 'css',
+                    'value' => '',
+                    'type' => 'css_editor',
+                    'heading' => 'Css',
+                    'group' => 'Design options',
+                ),
+                array (
+                    'param_name' => 'tdc_css',
+                    'value' => '',
+                    'type' => 'tdc_css_editor',
+                    'heading' => '',
+                    'group' => 'Design options',
+                ),
+            )
+        )
 	)
 );
 
@@ -1565,6 +2160,7 @@ if( 'Newspaper' === TD_THEME_NAME ) {
                 '1800px content' => 'absolute_inner_1800 absolute_inner',
             ),
             'class' => 'tdc-dropdown-big',
+            "info_img" => "https://cloud.tagdiv.com/help/inner_row_absolute_width.png",
         )
     );
 }
@@ -1591,7 +2187,8 @@ tdc_mapper::map_shortcode(
                     'type' => 'dropdown',
                     'value' => $innerRowColumns,
                     'tdc_dropdown_images' => true, // show image selector instead of classic dropdown
-                    'class' => 'tdc-innerRow-col-dropdown tdc-visual-selector'
+                    'class' => 'tdc-innerRow-col-dropdown tdc-visual-selector',
+                    "info_img" => "https://cloud.tagdiv.com/help/inner_row_layout.png",
                 ),
 
                 array(
@@ -1601,6 +2198,7 @@ tdc_mapper::map_shortcode(
                     'heading' => 'Inner columns gap',
                     'description' => '',
                     'class' => 'tdc-textfield-small',
+                    "info_img" => "https://cloud.tagdiv.com/help/inner_row_gap.png",
                 ),
 
                 array(
@@ -1616,6 +2214,7 @@ tdc_mapper::map_shortcode(
                     "holder" => "div",
                     'tdc_dropdown_images' => true,
                     "class" => "tdc-visual-selector tdc-add-class",
+                    "info_img" => "https://cloud.tagdiv.com/help/inner_row_align.png",
                 ),
                 array(
                     "type" => "gradient",
@@ -1626,9 +2225,10 @@ tdc_mapper::map_shortcode(
                     "value" => '',
                     "description" => '',
                     "group" => "",
+                    "info_img" => "https://cloud.tagdiv.com/help/inner_row_background.png",
                 ),
             ),
-            td_config_helper::get_map_block_shadow_array('row_shadow', 'Shadow', 0, 0, 6 ),
+            td_config_helper::get_map_block_shadow_array('row_shadow', 'Shadow', 0, 0, 6, '', '', 0, true, '', 'https://cloud.tagdiv.com/help/inner_row_shadow.png', '' ),
 
             array(
 
@@ -1647,6 +2247,7 @@ tdc_mapper::map_shortcode(
                     "description" => "",
                     "holder" => "div",
                     "class" => "",
+                    "info_img" => "https://cloud.tagdiv.com/help/inner_row_absolute2.png",
                 ),
 
                 array (
@@ -1659,6 +2260,7 @@ tdc_mapper::map_shortcode(
                         'Bottom' => 'bottom',
                     ),
                     'class' => 'tdc-dropdown-big',
+                    "info_img" => "https://cloud.tagdiv.com/help/inner_row_absolute_align.png",
                 )
             ),
 
@@ -1671,7 +2273,6 @@ tdc_mapper::map_shortcode(
                     "value" => "",
                     "class" => ""
                 ),
-
                 array(
                     'type' => 'textfield', // should have been vc_el_id but we use textfield
                     'heading' => 'Row ID',
@@ -1686,8 +2287,23 @@ tdc_mapper::map_shortcode(
                     'description' => 'Add a class to this row',
                     'class' => 'tdc-textfield-extrabig',
                 ),
+                array(
+                    'type' => 'textfield-responsive',
+                    'heading' => 'Height',
+                    'param_name' => 'inner_row_height',
+                    'description' => '',
+                    'class' => 'tdc-textfield-small',
+                    "info_img" => "https://cloud.tagdiv.com/help/row_height.png",
+                ),
 
+            ),
 
+            td_util::get_display_restrictions_atts(),
+
+            $flexParams,
+            $flexOccupy,
+
+            array(
                 array (
                     'param_name' => 'css',
                     'value' => '',
@@ -1720,56 +2336,80 @@ tdc_mapper::map_shortcode(
         	'width',
             'el_class'
         ),
-		'params' => array(
-			array(
-                "param_name" => "is_sticky",
-                "type" => "checkbox",
-                "value" => '',
-                "heading" => "Sticky",
-                "description" => "",
-                "holder" => "div",
-                "class" => "",
-            ),
-            array (
-                'param_name' => 'vertical_align',
-                'heading' => 'Vertical align',
-                'type' => 'dropdown-responsive',
-                'value' => array (
-                    'Default' => '',
-                    'Top' => 'top',
-                    'Middle' => 'middle',
-                    'Bottom' => 'bottom',
+		'params' => array_merge(
+		    array(
+                array(
+                    "param_name" => "is_sticky",
+                    "type" => "checkbox",
+                    "value" => '',
+                    "heading" => "Sticky",
+                    "description" => "",
+                    "holder" => "div",
+                    "class" => "",
+                    "info_img" => "https://cloud.tagdiv.com/help/column_sticky.png",
                 ),
-                'class' => 'tdc-dropdown-big',
             ),
-			array(
-				'type' => 'textfield',
-				'heading' => 'Extra class',
-				'param_name' => 'el_class',
-				'description' => 'Add a class to this inner column',
-				'class' => 'tdc-textfield-extrabig',
-			),
-			array (
-				'param_name' => 'css',
-				'value' => '',
-				'type' => 'css_editor',
-				'heading' => 'Css',
-				'group' => 'Design options',
-			),
-			array (
-	            'param_name' => 'tdc_css',
-	            'value' => '',
-	            'type' => 'tdc_css_editor',
-	            'heading' => '',
-	            'group' => 'Design options',
-	        ),
-		)
+            $sticky_column_offset,
+            array(
+                array (
+                    'param_name' => 'vertical_align',
+                    'heading' => 'Vertical align',
+                    'type' => 'dropdown-responsive',
+                    "description" => "Deprecated: Used on mobile to align elements in columns with display inline-block. Use Layout tab options instead.",
+                    'value' => array (
+                        'Default' => '',
+                        'Top' => 'top',
+                        'Middle' => 'middle',
+                        'Bottom' => 'bottom',
+                    ),
+                    'class' => 'tdc-dropdown-big',
+                ),
+                array(
+                    'type' => 'textfield',
+                    'heading' => 'Extra class',
+                    'param_name' => 'el_class',
+                    'description' => 'Add a class to this inner column',
+                    'class' => 'tdc-textfield-extrabig',
+                ),
+                array(
+                    'type' => 'textfield-responsive',
+                    'heading' => 'Height',
+                    'param_name' => 'column_height',
+                    'description' => '',
+                    'class' => 'tdc-textfield-small',
+                    "info_img" => "https://cloud.tagdiv.com/help/row_height.png",
+                ),
+            ),
+
+            td_util::get_display_restrictions_atts(),
+
+            $flexParams,
+            $flexWidth,
+            $flexOccupy,
+
+            array(
+                array (
+                    'param_name' => 'css',
+                    'value' => '',
+                    'type' => 'css_editor',
+                    'heading' => 'Css',
+                    'group' => 'Design options',
+                ),
+                array (
+                    'param_name' => 'tdc_css',
+                    'value' => '',
+                    'type' => 'tdc_css_editor',
+                    'heading' => '',
+                    'group' => 'Design options',
+                ),
+            )
+        )
 	)
 );
 tdc_mapper::map_shortcode(
 	array(
 		'base' => 'vc_raw_html',
-		'name' => __( 'Raw html', 'td_composer' ),
+		'name' => __( 'Raw HTML', 'td_composer' ),
 		'icon' => 'icon-wpb-raw-html',
 		'category' => __( 'Content', 'td_composer' ),
 		'tdc_category' => 'Extended',
@@ -1781,10 +2421,10 @@ tdc_mapper::map_shortcode(
 		'params' => array(
 			array(
 				"param_name" => "content",
-				"type" => "textarea_raw_html",
+				"type" => "textarea_raw_html_ace",
 				"holder" => "div",
 				'class' => '',
-				"heading" => 'Text',
+				"heading" => 'HTML Code',
 				"value" => base64_encode(__('Html code here! Replace this with any non empty raw html code and that\'s it', 'td_composer' ) ),
 				"description" => 'Enter your content.'
 			),
@@ -2137,6 +2777,7 @@ if (td_global::$is_woocommerce_installed === true ) {
                         "class"       => "tdc-textfield-big",
                         "placeholder" => "10px 10px 10px 10px",
                         "group"       => "",
+                        "info_img" => "https://cloud.tagdiv.com/help/module_button_padding.png",
                     ),
                     array(
                         "param_name" => "separator",
@@ -2281,6 +2922,7 @@ if (td_global::$is_woocommerce_installed === true ) {
                         "value"       => '',
                         "description" => '',
                         "group"       => "Style",
+                        "info_img" => "https://cloud.tagdiv.com/help/module_button_color_text.png",
                     ),
                     array(
                         "type"        => "colorpicker",
@@ -2301,6 +2943,7 @@ if (td_global::$is_woocommerce_installed === true ) {
                         "value"       => '',
                         "description" => '',
                         "group"       => "Style",
+                        "info_img" => "https://cloud.tagdiv.com/help/module_button_color_bg.png",
                     ),
                     array(
                         "type"        => "colorpicker",
@@ -2348,6 +2991,129 @@ if (td_global::$is_woocommerce_installed === true ) {
 
 	);
 }
+$single_image_video_popup = array();
+//if( 'Newspaper' === TD_THEME_NAME ) {
+    $single_image_video_popup = array(
+        array(
+            "param_name" => "separator",
+            "type" => "text_separator",
+            'heading' => 'Video pop-up',
+            "value" => "",
+            "class" => "",
+        ),
+        array(
+            "param_name"  => "video_popup",
+            "type"        => "checkbox",
+            "value"       => '',
+            "heading"     => "Enable",
+            "description" => "",
+            "holder"      => "div",
+            "class"       => "",
+            "group"       => '',
+            "info_img" => "https://cloud.tagdiv.com/help/layout_enable_video_pop-up.png",
+        ),
+        array(
+            "param_name"  => "video_url",
+            "type"        => "textfield",
+            "value"       => '',
+            "heading"     => 'Video url',
+            "description" => "",
+            "holder"      => "div",
+            "class"       => "tdc-textfield-extrabig",
+            "placeholder" => "",
+            "group"       => "",
+        ),
+        array(
+            "param_name"  => "autoplay_vid",
+            "type"        => "checkbox",
+            "value"       => 'yes',
+            "heading"     => "Autoplay video",
+            "description" => "When it is inactive, the sound will be ON",
+            "holder"      => "div",
+            "class"       => "",
+            "group"       => ''
+        ),
+        array(
+            "param_name" => "video_rec",
+            "type" => "textarea_raw_html",
+            "holder" => "div",
+            "class" => "tdc-textarea-raw-small",
+            "heading" => 'Ad',
+            "value" => "",
+            "description" => 'Paste your ad code here.',
+            'group'      => '',
+            "info_img" => "https://cloud.tagdiv.com/help/module_video_popup_ad.png",
+        ),
+        array(
+            "param_name" => "spot_header",
+            "type" => "spot_header",
+            "value" => "",
+            "class" => '',
+            'group' => '',
+        ),
+        array(
+            "param_name" => "video_rec_title",
+            "type" => "textfield",
+            "value" => '',
+            "heading" => 'Ad title',
+            "description" => "",
+            "placeholder" => "- Advertisement -",
+            "holder" => "div",
+            "class" => "tdc-textfield-extrabig tdc-spot-controller tdc-spot-title",
+            'group'      => '',
+        ),
+        array(
+            "type"        => "colorpicker",
+            "holder"      => "div",
+            "class"       => "tdc-spot-controller tdc-spot-color",
+            "heading"     => 'Ad title color',
+            "param_name"  => "video_rec_color",
+            "value"       => '',
+            "description" => '',
+            "group"       => "",
+        ),
+        array(
+            "param_name"  => "video_icon_size",
+            "type"        => "textfield-responsive",
+            "value"       => '',
+            "heading"     => 'Video icon size',
+            "description" => "",
+            "holder"      => "div",
+            "class"       => "tdc-textfield-small",
+            "placeholder" => "40",
+            "group"       => "",
+            "info_img" => "https://cloud.tagdiv.com/help/layout_video_icon_size.png",
+        ),
+        array(
+            "param_name" => "separator",
+            "type" => "text_separator",
+            'heading' => 'Style',
+            "value" => "",
+            "class" => "tdc-separator-small",
+            "group" => ""
+        ),
+        array(
+            "param_name" => "video_bg",
+            "holder"     => "div",
+            "type"       => "gradient",
+            'heading'    => "Background color",
+            "value"      => "",
+            "class"      => "",
+            "group"      => "",
+            "info_img" => "https://cloud.tagdiv.com/help/module_video_background.png",
+        ),
+        array(
+            "param_name" => "video_overlay",
+            "holder"     => "div",
+            "type"       => "gradient",
+            'heading'    => "Overlay color",
+            "value"      => "",
+            "class"      => "",
+            "group"      => "",
+            "info_img" => "https://cloud.tagdiv.com/help/module_video_overlay_color.png",
+        ),
+    );
+//}
 $tdc_api_blocks = array(
 	array(
 		'base' => 'vc_wp_recentcomments',
@@ -2366,6 +3132,7 @@ $tdc_api_blocks = array(
                 array(
                     array(
                         'com_divider' => 'dashed',
+						'number' => 5
                     ),
                 )
             )
@@ -2502,7 +3269,7 @@ $tdc_api_blocks = array(
                     "group"       => '',
                 ),
             ),
-            td_config_helper::get_map_block_font_array( 'f_header', true, 'Block header' ),
+            td_config_helper::get_map_block_font_array( 'f_header', true, 'Block header', '', '', '', 'https://cloud.tagdiv.com/help/module_font_block_header.png', '' ),
             td_config_helper::get_map_block_font_array( 'f_link', false, 'Linking word text' ),
             td_config_helper::get_map_block_font_array( 'f_auth', false, 'Author name text' ),
             td_config_helper::get_map_block_font_array( 'f_title', false, 'Post title text' ),
@@ -2554,6 +3321,29 @@ $tdc_api_blocks = array(
 		'params' => array_merge(
 			$block_general_params_array,
 			array(
+                array(
+                    "param_name" => "title_tag",
+                    "type" => "dropdown",
+                    "value" => array(
+                        'Default - H4' => '',
+                        'H1' => 'h1',
+                        'H2' => 'h2',
+                        'H3' => 'h3',
+                        'Div' => 'div'
+                    ),
+                    "heading" => 'Title tag (SEO)',
+                    "description" => "",
+                    "holder" => "div",
+                    "class" => "tdc-dropdown-big",
+                    "info_img" => "https://cloud.tagdiv.com/help/module_title_seo.png",
+                ),
+                array(
+                    "param_name" => "separator",
+                    "type" => "horizontal_separator",
+                    "value" => "",
+                    "class" => "tdc-separator-small",
+                    "group" => '',
+                ),
 				array(
 					"param_name" => "content",
 					"type" => "textarea_html",
@@ -2665,7 +3455,7 @@ $tdc_api_blocks = array(
 	),
 	array(
 		'base' => 'vc_single_image',
-		'name' => __( 'Single image', 'td_composer' ),
+		'name' => __( 'Single background image', 'td_composer' ),
 		'icon' => 'icon-wpb-empty-space',
 		'category' => __( 'Content', 'td_composer' ),
 		'tdc_category' => 'Extended',
@@ -2673,6 +3463,21 @@ $tdc_api_blocks = array(
         'tdc_style_params' => array(
             'image',
             'image_url',
+            'open_in_new_window',
+            'url_rel',
+            'title_attr',
+            'display_inline',
+            'height',
+            'width',
+            'video_popup',
+            'video_url',
+            'video_rec',
+            'video_rec_title',
+            'ga_event_action',
+            'ga_event_category',
+            'ga_event_label',
+            'fb_pixel_event_name',
+            'fb_pixel_event_content_name',
             'el_class'
         ),
 		'params' => array_merge(
@@ -2685,6 +3490,15 @@ $tdc_api_blocks = array(
                     "description" => "",
                     "holder" => "div",
                     "class" => "",
+                ),
+                array(
+                    "param_name" => "image_cf",
+                    "type" => "textfield",
+                    "value" => '',
+                    "heading" => __( "External image", 'td_composer' ),
+                    "description" => "",
+                    "holder" => "div",
+                    "class" => "tdc-textfield-extrabig"
                 ),
                 array(
                     "param_name" => "image_url",
@@ -2703,6 +3517,28 @@ $tdc_api_blocks = array(
                     "description" => "",
                     "holder" => "div",
                     "class" => "",
+                ),
+				array(
+					"param_name" => "url_rel",
+					"type" => "dropdown",
+					"value" => array(
+						'Disable' => '',
+						'Nofollow' => 'nofollow',
+						'Noopener' => 'noopener',
+						'Noreferrer' => 'noreferrer'
+					),
+					"heading" => "Set rel attribute",
+					"description" => "",
+					"holder" => "div",
+					"class" => "tdc-dropdown-big"
+				),
+                array(
+                    'param_name' => 'title_attr',
+                    'type' => 'textarea_raw_html',
+                    'value' => '',
+                    'heading' => 'Title attribute',
+                    'description' => '',
+                    'class' => 'tdc-textarea-extrasmall',
                 ),
                 array(
                     "param_name" => "display_inline",
@@ -2782,6 +3618,17 @@ $tdc_api_blocks = array(
                     "class" => "tdc-dropdown-big",
                 ),
                 array(
+                    "param_name"  => "img_position",
+                    "type"        => "textfield-responsive",
+                    "value"       => '',
+                    "heading"     => 'Image position',
+                    "description" => "Useful if you want to set a specific background position eg. 0 top (or percentage). It will overwrite Image alignment option.",
+                    "placeholder" => "0 top",
+                    "holder"      => "div",
+                    "class"       => "tdc-textfield-extrabig",
+                    "info_img" => "",
+                ),
+                array(
                     "param_name" => "style",
                     "type" => "dropdown",
                     "value" => array(
@@ -2817,8 +3664,11 @@ $tdc_api_blocks = array(
                     "class" => "",
                 ),
             ),
-            td_config_helper::mix_blend(''),
-            td_config_helper::image_filters(''),
+
+            $single_image_video_popup,
+
+            td_config_helper::mix_blend('Effects'),
+            td_config_helper::image_filters('Effects'),
             array(
                 array(
                     "param_name" => "separator",
@@ -2945,7 +3795,7 @@ function register_external_shortcodes() {
 		if ( isset( $shortcode_tags[ $shortcode_tag ] ) ) {
 
 //			// The social counter plugin, even it is external shorcode, is our shortcode and we trust its js
-			if ( 'td_block_social_counter' !== $shortcode_tag ) {
+			if ( 'td_block_social_counter' !== $shortcode_tag && false === strpos($shortcode_tag, 'td_woo_')) {
 				add_shortcode( $shortcode_tag, 'tdc_proxy_external_shortcode' );
 			}
 

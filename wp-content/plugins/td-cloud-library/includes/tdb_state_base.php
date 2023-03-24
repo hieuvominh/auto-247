@@ -8,6 +8,8 @@
 class tdb_state_base {
     private $state = array ();
 
+    private $is_tax = false;
+
     private $is_state_definition_locked = false;
 
 
@@ -133,8 +135,9 @@ class tdb_state_base {
     }
 
     /**
-     * @param WP_Query $wp_query
-     */
+	 * @param WP_Query $wp_query
+	 * @param bool $is_tax
+	 */
     function set_wp_query($wp_query) {
         $this->wp_query = $wp_query;
     }
@@ -148,4 +151,19 @@ class tdb_state_base {
         return $this->wp_query;
     }
 
+
+	/**
+	 * Get the status of current query, because is too late to require it later
+	 * @return bool
+	 */
+    function is_tax() {
+    	return $this->is_tax;
+    }
+
+	/**
+	 * Set the current query as being for tax, for later usage
+	 */
+    function set_tax() {
+    	$this->is_tax = true;
+    }
 }

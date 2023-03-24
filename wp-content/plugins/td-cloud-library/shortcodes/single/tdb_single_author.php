@@ -8,13 +8,50 @@ class tdb_single_author extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer';
+            }
+        }
+        $general_block_class = $unique_block_class_prefix ? '.' . $unique_block_class_prefix : '';
+        $unique_block_class = ( $unique_block_class_prefix ? $unique_block_class_prefix . ' .' : '' ) . ( $in_composer ? 'tdc-column .' : '' ) . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_single_author */
+                $general_block_class .tdb_single_author {
+                  line-height: 30px;
+                }
+                $general_block_class .tdb_single_author a {
+                  vertical-align: middle;
+                }
+                $general_block_class .tdb_single_author .tdb-block-inner {
+                  display: flex;
+                  align-items: center;
+                }
+                $general_block_class .tdb_single_author .tdb-author-name-wrap {
+                  display: flex;
+                }
+                $general_block_class .tdb_single_author .tdb-author-name {
+                  font-weight: 700;
+                  margin-right: 3px;
+                }
+                $general_block_class .tdb_single_author .tdb-author-by {
+                  margin-right: 3px;
+                }
+                $general_block_class .tdb_single_author .tdb-author-photo img {
+                  display: block;
+                }
+                
+                
                 /* @float_right */
                 .$unique_block_class {
                     float: right;
@@ -100,6 +137,9 @@ class tdb_single_author extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_post_meta', 1 );
+        $res_ctx->load_settings_raw( 'style_general_single_author', 1 );
 
         // float right
         $res_ctx->load_settings_raw( 'float_right', $res_ctx->get_shortcode_att('float_right') );
@@ -219,7 +259,7 @@ class tdb_single_author extends td_block {
 
             $buffy .= '<div class="tdb-block-inner td-fix-index">';
                 if( $this->get_att( 'author_photo' ) != '' ) {
-                    $buffy .= '<a class="tdb-author-photo"  href="' . $post_author_data['author_url'] . '">' . $post_author_data['author_avatar'] . '</a>';
+                    $buffy .= '<a class="tdb-author-photo"  href="' . $post_author_data['author_url'] . '" title="' . $post_author_data['author_name'] . '">' . $post_author_data['author_avatar'] . '</a>';
                 }
 
                 $buffy .= '<div class="tdb-author-name-wrap">';

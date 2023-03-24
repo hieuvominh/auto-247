@@ -709,7 +709,7 @@ function tdsp_css_generator() {
     .block-title > span,
     .block-title > a,
     .widgettitle,
-    .td-trending-now-title,
+    body .td-trending-now-title,
     .wpb_tabs li a,
     .vc_tta-container .vc_tta-color-grey.vc_tta-tabs-position-top.vc_tta-style-classic .vc_tta-tabs-container .vc_tta-tab > a,
     .td-theme-wrap .td-related-title a,

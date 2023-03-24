@@ -11,12 +11,75 @@ class tdb_category_subcategories extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+                /* @style_general_cat_subcategories */
+                .tdb_category_subcategories .tdb-block-inner {
+                  display: flex;
+                  flex-wrap: wrap;
+                  margin: 0 -15px;
+                }
+                .tdb_category_subcategories .tdb-subcategory {
+                  width: 33.33%;
+                  padding: 0 15px;
+                }
+                .tdb_category_subcategories .tdb-subcategory-wrap {
+                  display: flex;
+                  flex-direction: column;
+                  height: 100%;
+                }
+                .tdb_category_subcategories .tdb-subcategory-img {
+                  position: relative;
+                  width: 100%;
+                  height: 0;
+                  padding-bottom: 60%;
+                  display: block;
+                  background-color: #f5f5f5;
+                  background-repeat: no-repeat;
+                  background-size: cover;
+                  background-position: center;
+                }
+                .tdb_category_subcategories .tdb-subcategory-overlay {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  display: none;
+                }
+                .tdb_category_subcategories .tdb-subcategory-info-bottom {
+                  margin-top: 17px;
+                }
+                .tdb_category_subcategories .tdb-subcategory-name {
+                  margin: 0 0 8px;
+                  font-size: 21px;
+                  line-height: 1.2;
+                }
+                .tdb_category_subcategories .tdb-subcategory-wrap:hover .tdb-subcategory-name a {
+                  color: #4db2ec;
+                }
+                .tdb_category_subcategories .tdb-subcategory-descr {
+                  margin-bottom: 0;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 13px;
+                  line-height: 1.6;
+                  color: #777;
+                }
+
             
                 /* @columns */
                 .$unique_block_class .tdb-subcategory {
@@ -190,7 +253,11 @@ class tdb_category_subcategories extends td_block {
                 }
                 
                 
-                
+				/* @f_header */
+				.$unique_block_class .td-block-title a,
+				.$unique_block_class .td-block-title span {
+					@f_header
+				}
                 /* @f_name */
                 .$unique_block_class .tdb-subcategory-name {
                     @f_name
@@ -212,10 +279,15 @@ class tdb_category_subcategories extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_cat_subcategories', 1 );
+
         /*-- GENERAL -- */
         // columns
         $limit = $res_ctx->get_shortcode_att('tdb_sibling_categories_limit');
         $columns = $res_ctx->get_shortcode_att('columns');
+        if ( empty($columns ) ) {
+        	$columns = '100%';
+        }
         $res_ctx->load_settings_raw( 'columns', $columns );
 
         $columns_number = str_replace('%', '', $columns);
@@ -387,6 +459,7 @@ class tdb_category_subcategories extends td_block {
 
 
         /*-- FONTS -- */
+        $res_ctx->load_font_settings( 'f_header' );
         $res_ctx->load_font_settings( 'f_name' );
         $res_ctx->load_font_settings( 'f_descr' );
 
@@ -402,30 +475,68 @@ class tdb_category_subcategories extends td_block {
         parent::render( $atts );
 
         global $tdb_state_category;
+
+        if ( !empty(tdb_state_template::get_template_type() ) && 'cpt_tax' === tdb_state_template::get_template_type()) {
+            $tdb_state_category->set_tax();
+        }
         $category_sibling_categories_data = $tdb_state_category->category_sibling_categories->__invoke( $atts, false );
         $categories_list = $category_sibling_categories_data['categories'];
 
 
         $name_pos = $this->get_att('name_pos');
         $descr_pos = $this->get_att('descr_pos');
+        $name_tag = 'h3';
+        if ($this->get_att('title_tag') !== '') {
+            $name_tag = $this->get_att('title_tag');
+        }
+
+        if ( $this->get_att('descr_limit') != '' && is_numeric($this->get_att('descr_limit')) ) {
+            $descr_limit = $this->get_att('descr_limit');
+        }
+
+        if( $this->get_att('block_template_id') != '' ) {
+            $global_block_template_id = $this->get_att('block_template_id');
+        } else {
+            $global_block_template_id = td_options::get( 'tds_global_block_template', 'td_block_template_1' );
+        }
+        $td_css_cls_block_title = 'td-block-title';
+
+        if ( $global_block_template_id === 'td_block_template_1' ) {
+            $td_css_cls_block_title = 'block-title';
+        }
 
 
         $buffy = ''; //output buffer
 
-        $buffy .= '<div class="' . $this->get_block_classes() . '"' . $this->get_block_html_atts() . '>';
+        if( !empty($categories_list) ) {
+            $buffy .= '<div class="' . $this->get_block_classes() . '"' . $this->get_block_html_atts() . '>';
+                //get the block css
+                $buffy .= $this->get_block_css();
 
-            //get the block css
-            $buffy .= $this->get_block_css();
+                //get the js for this block
+                $buffy .= $this->get_block_js();
 
-            //get the js for this block
-            $buffy .= $this->get_block_js();
+                $custom_title = $this->get_att( 'custom_title' );
+
+                if( $custom_title != '' ) {
+                    //get the filter for this block
+                    $buffy .= '<div class="td-block-title-wrap">';
+                    $buffy .= '<h4 class="' . $td_css_cls_block_title . '">';
+                    $buffy .= '<span>' . $custom_title . '</span>';
+                    $buffy .= '</h4>';
+                    $buffy .= '</div>';
+                }
 
 
-            $buffy .= '<div id="' . $this->block_uid . '" class="tdb-block-inner">';
+                $buffy .= '<div id="' . $this->block_uid . '" class="tdb-block-inner td-fix-index">';
 
                 foreach ( $categories_list as $category ) {
                     $cat_img = $category['category_img'];
                     $cat_color = $category['color'];
+                    $cat_descr = $category['category_descr'];
+                    if (isset($descr_limit)) {
+                        $cat_descr = td_util::excerpt( $category['category_descr'], $descr_limit);
+                    }
 
                     $cat_img_html = '';
                     if( !empty( $cat_img ) ) {
@@ -439,12 +550,12 @@ class tdb_category_subcategories extends td_block {
 
                     $buffy .= '<div class="tdb-subcategory">';
                         $buffy .= '<div class="tdb-subcategory-wrap">';
-                            if( $name_pos == 'above' || ( $descr_pos != '' && $category['category_descr'] == 'above' ) ) {
+                            if( $name_pos == 'above' || ( $descr_pos != '' && $category['category_descr'] != '' ) ) {
                                 $buffy .= '<div class="tdb-subcategory-info-top">';
                                     if( $name_pos == 'above' ) {
-                                        $buffy .= '<h3 class="tdb-subcategory-name">';
+                                        $buffy .= '<' . $name_tag . ' class="tdb-subcategory-name">';
                                             $buffy .= '<a href="' . $category['category_link'] . '">' . $category['category_name'] . '</a>';
-                                        $buffy .= '</h3>';
+                                        $buffy .= '</' . $name_tag . '>';
                                     }
 
                                     if( $category['category_descr'] != '' && $descr_pos == 'above' ) {
@@ -459,24 +570,24 @@ class tdb_category_subcategories extends td_block {
 
                             if( $name_pos == 'bellow' || ( $category['category_descr'] != '' && $descr_pos == 'bellow' ) ) {
                                 $buffy .= '<div class="tdb-subcategory-info-bottom">';
-                                if( $name_pos == 'bellow' ) {
-                                    $buffy .= '<h3 class="tdb-subcategory-name">';
-                                        $buffy .= '<a href="' . $category['category_link'] . '">' . $category['category_name'] . '</a>';
-                                    $buffy .= '</h3>';
-                                }
+                                    if( $name_pos == 'bellow' ) {
+                                        $buffy .= '<' . $name_tag . ' class="tdb-subcategory-name">';
+                                            $buffy .= '<a href="' . $category['category_link'] . '">' . $category['category_name'] . '</a>';
+                                        $buffy .= '</' . $name_tag . '>';
+                                    }
 
-                                if( $category['category_descr'] != '' && $descr_pos == 'bellow' ) {
-                                    $buffy .= '<p class="tdb-subcategory-descr">' . $category['category_descr'] . '</p>';
-                                }
+                                    if( $category['category_descr'] != '' && $descr_pos == 'bellow' ) {
+                                        $buffy .= '<p class="tdb-subcategory-descr">' . $cat_descr . '</p>';
+                                    }
                                 $buffy .= '</div>';
                             }
                         $buffy .= '</div>';
                     $buffy .= '</div>';
                 }
 
+                $buffy .= '</div>';
             $buffy .= '</div>';
-
-        $buffy .= '</div>';
+        }
 
         return $buffy;
     }

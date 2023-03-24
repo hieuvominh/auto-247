@@ -13,9 +13,18 @@
 </head>
 
 <body <?php body_class() ?> itemscope="itemscope" itemtype="<?php echo td_global::$http_or_https?>://schema.org/WebPage">
+<?php do_action('td_wp_body_open') ?>
 
-    <?php /* scroll to top */?>
-    <div class="td-scroll-up"><i class="td-icon-menu-up"></i></div>
+    <?php /* scroll to top */
+    $td_hide_totop_on_mob = '';
+    if (td_util::get_option('tds_to_top_on_mobile') !== 'show') {
+        $td_hide_totop_on_mob = ' td-hide-scroll-up-on-mob';
+    }
+
+    if ( td_util::get_option('tds_to_top') != 'hide' ) {
+        ?>
+        <div class="td-scroll-up <?php echo $td_hide_totop_on_mob ?>" style="display:none;"><i class="td-icon-menu-up"></i></div>
+    <?php } ?>
 
     <?php load_template( TDC_PATH_LEGACY . '/parts/menu-mobile.php', true);?>
     <?php load_template( TDC_PATH_LEGACY . '/parts/search.php', true);?>

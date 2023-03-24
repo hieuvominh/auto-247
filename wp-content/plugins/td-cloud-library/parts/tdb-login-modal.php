@@ -1,6 +1,6 @@
 <?php
 
-if( defined( 'TDC_PATH_LEGACY' ) ) {
+if( defined( 'TDC_PATH_LEGACY' ) && !is_user_logged_in() ) {
 	require_once( TDC_PATH_LEGACY . '/parts/header/td-login-modal.php');
 } else {
     

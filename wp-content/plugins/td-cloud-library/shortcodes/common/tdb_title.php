@@ -7,13 +7,118 @@ class tdb_title extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
             
+                /* @style_general_single_title */
+                .tdb_title {
+                  margin-bottom: 19px;
+                }
+                .tdb_title.tdb-content-horiz-center {
+                  text-align: center;
+                }
+                .tdb_title.tdb-content-horiz-center .tdb-title-line {
+                  margin: 0 auto;
+                }
+                .tdb_title.tdb-content-horiz-right {
+                  text-align: right;
+                }
+                .tdb_title.tdb-content-horiz-right .tdb-title-line {
+                  margin-left: auto;
+                  margin-right: 0;
+                }
+                .tdb-title-text {
+                  display: inline-block;
+                  position: relative;
+                  margin: 0;
+                  word-wrap: break-word;
+                  font-size: 30px;
+                  line-height: 38px;
+                  font-weight: 700;
+                }
+                .tdb-first-letter {
+                  position: absolute;
+                  -webkit-user-select: none;
+                  user-select: none;
+                  pointer-events: none;
+                  text-transform: uppercase;
+                  color: rgba(0, 0, 0, 0.08);
+                  font-size: 6em;
+                  font-weight: 300;
+                  top: 50%;
+                  -webkit-transform: translateY(-50%);
+                  transform: translateY(-50%);
+                  left: -0.36em;
+                  z-index: -1;
+                  -webkit-text-fill-color: initial;
+                }
+                .tdb-title-line {
+                  display: none;
+                  position: relative;
+                }
+                .tdb-title-line:after {
+                  content: '';
+                  width: 100%;
+                  position: absolute;
+                  background-color: #4db2ec;
+                  top: 0;
+                  left: 0;
+                  margin: auto;
+                }
+                
+                /* @style_general_title_single */
+                .tdb-single-title .tdb-title-text {
+                  font-size: 41px;
+                  line-height: 50px;
+                  font-weight: 400;
+                }
+                
+                /* @style_general_title_attachment */
+                .tdb-attachment-title .tdb-title-text {
+                   font-weight: 400;
+                }
+                
+                /* @style_general_title_date */
+                .tdb-date-title .tdb-title-text {
+                  font-weight: 400;
+                }
+                
+                /* @style_general_title_tag */
+                .tdb-tag-title .tdb-title-text {
+                  font-weight: 400;
+                }
+                
+                /* @style_general_title_category */
+                .tdb-category-title .tdb-title-text {
+                  text-transform: uppercase;
+                }
+
+                /* @style_general_title_author */
+                .tdb-author-title .tdb-title-text {
+                  font-weight: 400;
+                }
+                
+                /* @style_general_title_search */
+                .tdb-search-title .tdb-title-text {
+                  font-weight: 400;
+                }
+                
+                
+                
                 /* @add_text_space_bottom */
 				.$unique_block_class .tdb-add-text {
 					margin-bottom: @add_text_space_bottom;
@@ -124,7 +229,7 @@ class tdb_title extends td_block {
 					text-align: right;
 				}	
 				.$unique_block_class .tdb-first-letter {
-					left: auto0;
+					left: auto;
 					right: -0.36em;
 				}
 				.$unique_block_class .tdb-title-line {
@@ -166,6 +271,33 @@ class tdb_title extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_single_title', 1 );
+
+        switch( tdb_state_template::get_template_type() ) {
+            case 'cpt':
+            case 'single':
+                $res_ctx->load_settings_raw( 'style_general_title_single', 1 );
+                break;
+            case 'category':
+                $res_ctx->load_settings_raw( 'style_general_title_category', 1 );
+                break;
+            case 'author':
+                $res_ctx->load_settings_raw( 'style_general_title_author', 1 );
+                break;
+            case 'search':
+                $res_ctx->load_settings_raw( 'style_general_title_search', 1 );
+                break;
+            case 'date':
+                $res_ctx->load_settings_raw( 'style_general_title_date', 1 );
+                break;
+            case 'tag':
+                $res_ctx->load_settings_raw( 'style_general_title_tag', 1 );
+                break;
+            case 'attachment':
+                $res_ctx->load_settings_raw( 'style_general_title_attachment', 1 );
+                break;
+        }
 
         // title color
         $res_ctx->load_color_settings( 'title_color', 'title_color_solid', 'title_color_gradient', 'title_color_gradient_1', '' );
@@ -258,7 +390,7 @@ class tdb_title extends td_block {
         $res_ctx->load_font_settings( 'f_add' );
 
     }
-    
+
     function __construct() {
         parent::disable_loop_block_features();
     }
@@ -271,9 +403,15 @@ class tdb_title extends td_block {
 
         switch( tdb_state_template::get_template_type() ) {
 
+            case 'cpt':
             case 'single':
                 $title_data = $tdb_state_single->post_title->__invoke( $atts );
                 break;
+
+            case 'cpt_tax':
+            	$tdb_state_category->set_tax();
+            	$title_data = $tdb_state_category->category_title->__invoke( $atts );
+            	break;
 
             case 'category':
                 $title_data = $tdb_state_category->category_title->__invoke( $atts );
@@ -303,7 +441,9 @@ class tdb_title extends td_block {
                 $title_data = $tdb_state_single_page->title->__invoke( $atts );
 
         }
-        
+
+        //var_dump($atts);
+
         parent::render($atts); // sets the live atts, $this->atts, $this->block_uid, $this->td_query (it runs the query)
 
 
@@ -339,8 +479,15 @@ class tdb_title extends td_block {
                     $buffy .= '<div class="tdb-title-line"></div>';
                 }
 
+                $title_letter = '';
                 if ( $first_letter == true ) {
-                    $title_letter = '<div class="tdb-first-letter">' . substr( $title_data['title'], 0, 1 ) . '</div>';
+                    if( mb_substr( $title_data['title'], 0, 5 ) == '&#821' ) {
+                        $title_letter = '\'';
+                    } else if( mb_substr( $title_data['title'], 0, 5 ) == '&#822' ) {
+                        $title_letter = '"';
+                    } else {
+                        $title_letter = mb_substr( $title_data['title'], 0, 1 );
+                    }
                 }
 
 
@@ -353,7 +500,11 @@ class tdb_title extends td_block {
                             $buffy .= '<span class="tdb-add-text">' . $add_text . '</span>';
                         }
 
-                        $buffy .= $title_data['title'] . $title_letter;
+                        $buffy .= $title_data['title'];
+
+                        if( $title_letter != '' ) {
+                            $buffy .= '<div class="tdb-first-letter">' . $title_letter . '</div>';
+                        }
 
                         if( $add_text_position == 'after' && $add_text != '' ) {
                             $buffy .= '<span class="tdb-add-text">' . $add_text . '</span>';

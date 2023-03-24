@@ -7,12 +7,122 @@ class tdb_search_form extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+				
+				/* @style_general_search_form */
+				.tdb_search_form {
+                  margin-bottom: 40px;
+                }
+                .tdb_search_form .tdb-search-form-inner {
+                  position: relative;
+                  display: flex;
+                  background-color: #fff;
+                }
+                .tdb_search_form .tdb-search-form-border {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  border: 1px solid #e1e1e1;
+                  pointer-events: none;
+                  transition: all .3s ease;
+                }
+                .tdb_search_form .tdb-search-form-input:focus + .tdb-search-form-border {
+                  border-color: #b0b0b0;
+                }
+                .tdb_search_form .tdb-search-form-input:not([value=\"\"]) + .tdb-search-form-border + .tdb-search-form-placeholder {
+                  display: none;
+                }
+                .tdb_search_form .tdb-search-form-input,
+                .tdb_search_form .tdb-search-form-btn {
+                  height: auto;
+                  min-height: 32px;
+                }
+                .tdb_search_form .tdb-search-form-input {
+                  position: relative;
+                  flex: 1;
+                  background-color: transparent;
+                  line-height: 19px;
+                  border: 0;
+                }
+                .tdb_search_form .tdb-search-form-placeholder {
+                  position: absolute;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  padding: 3px 9px;
+                  font-size: 12px;
+                  line-height: 21px;
+                  color: #999;
+                  -webkit-transition: all 0.3s ease;
+                  transition: all 0.3s ease;
+                  pointer-events: none;
+                }
+                .tdb_search_form .tdb-search-form-input:focus + .tdb-search-form-border + .tdb-search-form-placeholder,
+                 .tdb-search-form-input:not(:placeholder-shown) ~ .tdb-search-form-placeholder{
+                  opacity: 0;
+                }
+
+                .tdb_search_form .tdb-search-form-btn {
+                  text-shadow: none;
+                  padding: 7px 15px 8px 15px;
+                  line-height: 16px;
+                  margin: 0;
+                  background-color: #222222;
+                  font-family: 'Roboto', sans-serif;
+                  font-size: 13px;
+                  font-weight: 500;
+                  color: #fff;
+                  z-index: 1;
+                  -webkit-transition: all 0.3s ease;
+                  transition: all 0.3s ease;
+                }
+                .tdb_search_form .tdb-search-form-btn:hover {
+                  background-color: #4db2ec;
+                }
+                .tdb_search_form .tdb-search-form-btn i,
+                .tdb_search_form .tdb-search-form-btn span {
+                  display: inline-block;
+                  vertical-align: middle;
+                }
+                .tdb_search_form .tdb-search-form-btn i {
+                  position: relative;
+                  font-size: 12px;
+                }
+                .tdb_search_form .tdb-search-form-btn .tdb-search-form-btn-icon {
+                  position: relative;
+                }
+                .tdb_search_form .tdb-search-form-btn .tdb-search-form-btn-icon-svg {
+                  line-height: 0;
+                }
+                .tdb_search_form .tdb-search-form-btn svg {
+                  width: 12px;
+                  height: auto;
+                }
+                .tdb_search_form .tdb-search-form-btn svg,
+                .tdb_search_form .tdb-search-form-btn svg * {
+                  fill: #fff;
+                  -webkit-transition: all 0.3s ease;
+                  transition: all 0.3s ease;
+                }
+                .tdb_search_form .tdb-search-msg {
+                  font-size: 12px;
+                }
 				
 				/* @width */
 				.$unique_block_class {
@@ -43,7 +153,8 @@ class tdb_search_form extends td_block {
 				
 				
 				/* @placeholder_travel */
-                .$unique_block_class .tdb-search-form-input:focus + .tdb-search-form-border + .tdb-search-form-placeholder {
+                .$unique_block_class .tdb-search-form-input:focus + .tdb-search-form-border + .tdb-search-form-placeholder,
+                 .tdb-search-form-input:not(:placeholder-shown) ~ .tdb-search-form-placeholder{
                     top: -@placeholder_travel;
                     transform: translateY(0);
                 }
@@ -73,16 +184,20 @@ class tdb_search_form extends td_block {
                 .$unique_block_class .tdb-search-form-btn i {
                     font-size: @btn_icon_size;
                 }
+                /* @btn_icon_svg_size */
+                .$unique_block_class .tdb-search-form-btn svg {
+                    width: @btn_icon_svg_size;
+                }
                 /* @btn_icon_space_right */
-                .$unique_block_class .tdb-search-form-btn i {
+                .$unique_block_class .tdb-search-form-btn-icon {
                     margin-right: @btn_icon_space_right;
                 }
                 /* @btn_icon_space_left */
-                .$unique_block_class .tdb-search-form-btn i {
+                .$unique_block_class .tdb-search-form-btn-icon {
                     margin-left: @btn_icon_space_left;
                 }
                 /* @btn_icon_align */
-                .$unique_block_class .tdb-search-form-btn i {
+                .$unique_block_class .tdb-search-form-btn-icon {
                     top: @btn_icon_align;
                 }
                 
@@ -121,7 +236,8 @@ class tdb_search_form extends td_block {
                     color: @placeholder_color;
                 }
                 /* @placeholder_opacity */
-                .$unique_block_class .tdb-search-form-input:focus + .tdb-search-form-border + .tdb-search-form-placeholder {
+                .$unique_block_class .tdb-search-form-input:focus + .tdb-search-form-border + .tdb-search-form-placeholder,
+                 .tdb-search-form-input:not(:placeholder-shown) ~ .tdb-search-form-placeholder{
                     opacity: @placeholder_opacity;
                 }
 				/* @input_bg */
@@ -146,17 +262,33 @@ class tdb_search_form extends td_block {
 				.$unique_block_class .tdb-search-form-btn {
 					color: @btn_text_color;
 				}
+                .$unique_block_class .tdb-search-form-btn svg,
+                .$unique_block_class .tdb-search-form-btn svg * {
+                    fill: @btn_text_color;
+                }
 				/* @btn_text_h */
 				.$unique_block_class .tdb-search-form-btn:hover {
 					color: @btn_text_h;
 				}
+                .$unique_block_class .tdb-search-form-btn:hover svg,
+                .$unique_block_class .tdb-search-form-btn:hover svg * {
+                    fill: @btn_text_h;
+                }
                 /* @btn_icon_color */
                 .$unique_block_class .tdb-search-form-btn i {
                     color: @btn_icon_color;
                 }
+                .$unique_block_class .tdb-search-form-btn svg,
+                .$unique_block_class .tdb-search-form-btn svg * {
+                    fill: @btn_icon_color;
+                }
                 /* @btn_icon_color_h */
                 .$unique_block_class .tdb-search-form-btn:hover i {
                     color: @btn_icon_color_h;
+                }
+                .$unique_block_class .tdb-search-form-btn:hover svg,
+                .$unique_block_class .tdb-search-form-btn:hover svg * {
+                    fill: @btn_icon_color_h;
                 }
 				/* @btn_bg */
 				.$unique_block_class .tdb-search-form-btn {
@@ -222,6 +354,8 @@ class tdb_search_form extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_search_form', 1 );
+
         // block width
         $width = $res_ctx->get_shortcode_att('width');
         $res_ctx->load_settings_raw( 'width', $width );
@@ -268,11 +402,18 @@ class tdb_search_form extends td_block {
 
 
         /*-- BUTTON -- */
-        // button icon size
+        $btn_icon = $res_ctx->get_icon_att('btn_tdicon');
         $btn_icon_size = $res_ctx->get_shortcode_att('btn_icon_size');
-        $res_ctx->load_settings_raw('btn_icon_size', $btn_icon_size);
-        if ($btn_icon_size != '' && is_numeric($btn_icon_size)) {
-            $res_ctx->load_settings_raw('btn_icon_size', $btn_icon_size . 'px');
+        if( base64_encode( base64_decode( $btn_icon ) ) == $btn_icon ) {
+            $res_ctx->load_settings_raw('btn_icon_svg_size', $btn_icon_size);
+            if ($btn_icon_size != '' && is_numeric($btn_icon_size)) {
+                $res_ctx->load_settings_raw('btn_icon_svg_size', $btn_icon_size . 'px');
+            }
+        } else {
+            $res_ctx->load_settings_raw('btn_icon_size', $btn_icon_size);
+            if ($btn_icon_size != '' && is_numeric($btn_icon_size)) {
+                $res_ctx->load_settings_raw('btn_icon_size', $btn_icon_size . 'px');
+            }
         }
         // button icon space
         $btn_icon_pos = $res_ctx->get_shortcode_att('btn_icon_pos');
@@ -363,7 +504,6 @@ class tdb_search_form extends td_block {
         parent::disable_loop_block_features();
     }
 
-
     function render( $atts, $content = null ) {
         parent::render( $atts );
 
@@ -373,7 +513,7 @@ class tdb_search_form extends td_block {
         // input placeholder
         $input_placeholder = $this->get_att('input_placeholder');
         if( $input_placeholder != '' ) {
-            $input_placeholder = '<div class="tdb-search-form-placeholder">' . $input_placeholder . '</div>';
+            $input_placeholder = '<label for="tdb-search-form-input" class="tdb-search-form-placeholder">' . $input_placeholder . '</label>';
         }
 
         // button text
@@ -384,54 +524,75 @@ class tdb_search_form extends td_block {
 
         // button icon
         $btn_icon_pos = $this->get_att('btn_icon_pos');
-        $btn_icon = $this->get_att('btn_tdicon');
+        $btn_icon = $this->get_icon_att('btn_tdicon');
+        $btn_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $btn_icon_data = 'data-td-svg-icon="' . $this->get_att('btn_tdicon') . '"';
+        }
+        $btn_icon_html = '';
         if( $btn_icon != '' ) {
-            $btn_icon = '<i class="' . $this->get_att('btn_tdicon') . '"></i>';
+            if( base64_encode( base64_decode( $btn_icon ) ) == $btn_icon ) {
+                $btn_icon_html = '<span class="tdb-search-form-btn-icon tdb-search-form-btn-svg" ' . $btn_icon_data . '>' . base64_decode( $btn_icon ) . '</span>';
+            } else {
+                $btn_icon_html = '<i class="tdb-search-form-btn-icon ' . $btn_icon . '"></i>';
+            }
         }
 
         $message = $this->get_att( 'message' );
 
-
-        $buffy = ''; //output buffer
+        $buffy = ''; // output buffer
 
         $buffy .= '<div class="' . $this->get_block_classes() . '" ' . $this->get_block_html_atts() . '>';
 
-            //get the block css
-            $buffy .= $this->get_block_css();
+        // get the block css
+        $buffy .= $this->get_block_css();
 
-            //get the js for this block
-            $buffy .= $this->get_block_js();
+        // get the js for this block
+        $buffy .= $this->get_block_js();
 
+	    // set post type
+	    $atts_post_type = $this->get_att('post_type');
+	    $post_type = !empty( $_GET['post_type'] ) ? $_GET['post_type'] : ( !empty( $atts_post_type ) ? $atts_post_type : '' );
 
-            $buffy .= '<div class="tdb-block-inner td-fix-index">';
+        $buffy .= '<div class="tdb-block-inner td-fix-index">';
 
-                $buffy .= '<form method="get" class="tdb-search-form" action="' . esc_url(home_url( '/' )) . '">';
-                    $buffy .= '<div role="search" class="tdb-search-form-inner">';
-                        $buffy .= '<input class="tdb-search-form-input" type="text" value="' . $search_form_data['search_query'] . '" name="s" id="s" />';
-                        $buffy .= '<div class="tdb-search-form-border"></div>';
-                        $buffy .= $input_placeholder;
-                        $buffy .= '<button class="wpb_button wpb_btn-inverse tdb-search-form-btn" type="submit" id="searchsubmit">';
-                            if( $btn_icon_pos == '' ) {
-                                $buffy .= $btn_icon;
-                            }
-                            $buffy .= $btn_text;
-                            if( $btn_icon_pos == 'after' ) {
-                                $buffy .= $btn_icon;
-                            }
-                    $buffy .= '</div>';
-                $buffy .= '</form>';
+	        $buffy .= '<form method="get" class="tdb-search-form" action="' . esc_url( home_url( '/' ) ) . '">';
+	            $buffy .= '<div role="search" class="tdb-search-form-inner">';
+	                $buffy .= '<input id="tdb-search-form-input" class="tdb-search-form-input" placeholder=" " type="text" value="' . $search_form_data['search_query'] . '" name="s" />';
+	                $buffy .= '<div class="tdb-search-form-border"></div>';
+	                $buffy .= $input_placeholder;
 
-                if( $message != '' ) {
-                    if( $search_form_data['results_msg'] ||
-                        ( ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() )
-                            && $this->get_att('show_message') == 'yes' ) ) {
-                        $buffy .= '<div class="tdb-search-msg">';
-                            $buffy .= rawurldecode( base64_decode( strip_tags( $message ) ) );
-                        $buffy .= '</div>';
+                    if( !empty( $post_type ) ) {
+
+                        // add post type
+                        $post_type_object = get_post_type_object( $post_type );
+                        if ( $post_type_object ) {
+                            $buffy .= '<input type="hidden" value="' . $post_type . '" name="post_type" />';
+                        }
+
                     }
-                }
 
-            $buffy .= '</div>';
+	                $buffy .= '<button class="wpb_button wpb_btn-inverse tdb-search-form-btn" aria-label="Search" type="submit">';
+			        if( $btn_icon_pos == '' ) {
+			            $buffy .= $btn_icon_html;
+			        }
+			            $buffy .= $btn_text;
+			        if( $btn_icon_pos == 'after' ) {
+			            $buffy .= $btn_icon_html;
+			        }
+	                $buffy .= '</button>';
+	            $buffy .= '</div>';
+	        $buffy .= '</form>';
+
+	        if( $message != '' ) {
+	            if( $search_form_data['results_msg'] || ( ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) && $this->get_att('show_message') == 'yes' ) ) {
+	                $buffy .= '<div class="tdb-search-msg">';
+	                $buffy .= rawurldecode( base64_decode( strip_tags( $message ) ) );
+	                $buffy .= '</div>';
+	            }
+	        }
+
+	        $buffy .= '</div>';
 
         $buffy .= '</div>';
 

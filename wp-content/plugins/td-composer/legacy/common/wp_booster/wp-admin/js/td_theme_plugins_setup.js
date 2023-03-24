@@ -1,30 +1,8 @@
-
+/* global jQuery:{} */
+/* global theme_plugins_setup_params:{} */
 var ThemePluginsSetup = (function($){
 
     var t;
-
-    // callbacks from form button clicks.
-    var callbacks = {
-        install_plugins: function(btn){
-            var plugins = new PluginManager();
-            plugins.init(btn);
-        }
-    };
-
-    function window_loaded(){
-        // init button clicks:
-        $('.td-button-install-plugins').on( 'click', function(e) {
-
-            if( $(this).data('callback') && typeof callbacks[$(this).data('callback')] !== 'undefined' ){
-                // we have to process a callback before continue with form submission
-                callbacks[$(this).data('callback')](this);
-                return false;
-            } else {
-                return true;
-            }
-
-        });
-    }
 
     function PluginManager(){
 
@@ -142,7 +120,6 @@ var ThemePluginsSetup = (function($){
                 jQuery(btn).attr( 'disabled', true );
 
                 complete = function() {
-
                     setTimeout( function () {
                         var failedPlugins = [];
 
@@ -158,7 +135,7 @@ var ThemePluginsSetup = (function($){
                                 var $this = $(this),
                                     hrefAttr = $this.attr('href');
 
-                                if ( hrefAttr.indexOf( 'td_cake_panel' ) > 0 || hrefAttr.indexOf( 'td_theme_demos' ) > 0 || hrefAttr.indexOf( 'td_theme_panel' ) > 0 ) {
+                                if ( hrefAttr.indexOf( 'td_cake_panel' ) > 0 || hrefAttr.indexOf( 'td_theme_demos' ) > 0 || hrefAttr.indexOf( 'td_theme_panel' ) > 0 || hrefAttr.indexOf( 'td_theme_updates' ) > 0 ) {
                                     $this.show();
                                 }
                             });
@@ -167,7 +144,7 @@ var ThemePluginsSetup = (function($){
                                 var $this = $(this),
                                     hrefAttr = $this.attr('href');
 
-                                if ( hrefAttr.indexOf( 'td_cake_panel' ) > 0 || hrefAttr.indexOf( 'td_theme_demos' ) > 0 || hrefAttr.indexOf( 'td_theme_panel' ) > 0 ) {
+                                if ( hrefAttr.indexOf( 'td_cake_panel' ) > 0 || hrefAttr.indexOf( 'td_theme_demos' ) > 0 || hrefAttr.indexOf( 'td_theme_panel' ) > 0 || hrefAttr.indexOf( 'td_theme_updates' ) > 0 ) {
                                     $this.css( 'display', 'block');
                                 }
                             });
@@ -178,7 +155,7 @@ var ThemePluginsSetup = (function($){
                         } else {
                             $('.theme-plugins-setup').after(
                                 '<p class="theme-plugins-error-msg">' +
-                                    'An error occurred and we could not finish the process. <br>Please reload the page and try again, or <a href="https://forum.tagdiv.com/newspaper-how-to-update-a-plugin/" target="_blank">manually update the plugins</a>.' +
+                                    'An error occurred and we could not finish the process. <br>Please <a href="https://forum.tagdiv.com/newspaper-how-to-update-a-plugin/" target="_blank">manually update the plugins.</a>' +
                                 '</p>' );
 
                             pluginsWrap.removeClass('td-installing-plugins');
@@ -187,14 +164,38 @@ var ThemePluginsSetup = (function($){
                     }, 700);
                 };
 
-                pluginsInstalledImg.load(function () {
+                pluginsInstalledImg.on( 'load', function () {
                     pluginsWrap.removeClass('td-installing-plugins');
                     pluginsWrap.addClass('td-installed-plugins');
                 });
 
                 find_next();
             }
+        };
+
+    }
+
+    // callbacks from form button clicks.
+    var callbacks = {
+        install_plugins: function(btn){
+            var plugins = new PluginManager();
+            plugins.init(btn);
         }
+    };
+
+    function window_loaded(){
+        // init button clicks:
+        $('.td-button-install-plugins').on( 'click', function(e) {
+
+            if( $(this).data('callback') && typeof callbacks[$(this).data('callback')] !== 'undefined' ){
+                // we have to process a callback before continue with form submission
+                callbacks[$(this).data('callback')](this);
+                return false;
+            } else {
+                return true;
+            }
+
+        });
     }
 
     return {
@@ -202,7 +203,7 @@ var ThemePluginsSetup = (function($){
             t = this;
             $(window_loaded);
         }
-    }
+    };
 
 })(jQuery);
 

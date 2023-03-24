@@ -8,13 +8,93 @@ class tdb_single_review_overview extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_review_overview */
+                .tdb_single_review_overview .td-review-row-stars:hover {
+                  background-color: #fcfcfc;
+                }
+                .tdb_single_review_overview .td-review {
+                  margin-bottom: 0;
+                }
+                .tdb_single_review_overview i {
+                  width: auto;
+                  min-width: 20px;
+                  font-size: 15px;
+                }
+                .tdb_single_review_overview .td-review-stars {
+                  text-align: center;
+                  white-space: nowrap;
+                }
+                .tdb_single_review_overview .td-review-row-bars td {
+                  padding-bottom: 14px;
+                }
+                .tdb_single_review_overview td,
+                .tdb_single_review_overview .td-review-row-stars {
+                  border: none;
+                }
+                .tdb_single_review_overview .td-rating-bar-wrap {
+                  margin: 0;
+                }
+                .td-review-row-stars {
+                    display: flex;
+                }
+                .td-review-row-stars .td-review-desc {
+                    flex: 1;
+                }
+                @media (max-width: 767px) {
+                  .td-review-row-stars {
+                    border: 1px solid #ededed;
+                    border-bottom: 0;
+                    border-right: 0;
+                  }
+                  .td-review-row-stars td {
+                    border: 0;
+                  }
+                  .td-review-row-stars .td-review-desc {
+                    padding: 9px 14px;
+                  }
+                  .td-review-row-stars .td-review-stars {
+                    text-align: right;
+                  }
+                  .td-review-row-stars:nth-last-of-type(2) {
+                    border-bottom: 1px solid #ededed;
+                  }
+                }
+                .td-rating-bar-wrap {
+                  margin: 0 0 7px 0;
+                  background-color: #f5f5f5;
+                }
+                .td-rating-bar-wrap div {
+                  height: 20px;
+                  background-color: #4db2ec;
+                  max-width: 100%;
+                }
+                .td-review-row-bars .td-review-desc {
+                  display: inline-block;
+                  padding-bottom: 2px;
+                }
+                .td-review-percent {
+                  float: right;
+                  padding-bottom: 2px;
+                }
+
+                
                 /* @label_padding */
                 .$unique_block_class .td-review-row-stars .td-review-desc {
                     padding: @label_padding;
@@ -154,6 +234,11 @@ class tdb_single_review_overview extends td_block {
 				
 
 
+                /* @f_header */
+				.$unique_block_class .td-block-title a,
+				.$unique_block_class .td-block-title span {
+					@f_header
+				}
 				/* @f_feat */
 				.$unique_block_class .td-review-row-stars .td-review-desc {
 					@f_feat
@@ -178,6 +263,9 @@ class tdb_single_review_overview extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_review', 1 );
+        $res_ctx->load_settings_raw( 'style_general_review_overview', 1 );
 
         /*-- STARS -- */
         // label padding
@@ -236,10 +324,16 @@ class tdb_single_review_overview extends td_block {
 
         // box border size
         $all_border_size = $res_ctx->get_shortcode_att('all_border_size');
-        $res_ctx->load_settings_raw( 'all_border_size', '1px' );
-        if( $all_border_size != '' && is_numeric( $all_border_size ) ) {
-            $res_ctx->load_settings_raw( 'all_border_size', $all_border_size . 'px' );
+        if ( $all_border_size != '' ) {
+            if ( is_numeric( $all_border_size ) ) {
+                $res_ctx->load_settings_raw( 'all_border_size', $all_border_size . 'px' );
+            } else {
+                $res_ctx->load_settings_raw( 'all_border_size', $all_border_size );
+            }
+        } else {
+            $res_ctx->load_settings_raw( 'all_border_size', '1px' );
         }
+
         // row border size
         $row_border_size = $res_ctx->get_shortcode_att('row_border_size');
         $res_ctx->load_settings_raw( 'row_border_size', '1px' );
@@ -311,6 +405,7 @@ class tdb_single_review_overview extends td_block {
 
 
         /*-- FONTS -- */
+        $res_ctx->load_font_settings( 'f_header' );
         $res_ctx->load_font_settings( 'f_feat' );
         $res_ctx->load_font_settings( 'f_pp_feat' );
         $res_ctx->load_font_settings( 'f_val' );
@@ -332,6 +427,17 @@ class tdb_single_review_overview extends td_block {
 
         $post_review_data = $tdb_state_single->post_review->__invoke();
 
+        if( $this->get_att('block_template_id') != '' ) {
+            $global_block_template_id = $this->get_att('block_template_id');
+        } else {
+            $global_block_template_id = td_options::get( 'tds_global_block_template', 'td_block_template_1' );
+        }
+        $td_css_cls_block_title = 'td-block-title';
+
+        if ( $global_block_template_id === 'td_block_template_1' ) {
+            $td_css_cls_block_title = 'block-title';
+        }
+
         // additional classes
         $additional_classes = array();
         if( $post_review_data['review_meta'] == 'rate_stars' ) {
@@ -340,8 +446,8 @@ class tdb_single_review_overview extends td_block {
             $additional_classes[] = 'tdb-review-overview-pp';
         }
 
-        $buffy = ''; //output buffer
 
+        $buffy = ''; //output buffer
 
         if( $post_review_data['review_meta'] != '' ) {
             $buffy .= '<div class="' . $this->get_block_classes($additional_classes) . '" ' . $this->get_block_html_atts() . '>';
@@ -352,7 +458,24 @@ class tdb_single_review_overview extends td_block {
             //get the js for this block
             $buffy .= $this->get_block_js();
 
+            $custom_title = $this->get_att( 'custom_title' );
+            $title_tag = 'h4';
+
+            // title_tag used only on Title shortcode
+            $block_title_tag = $this->get_att('title_tag');
+            if(!empty($block_title_tag)) {
+                $title_tag = $block_title_tag ;
+            }
+
             $buffy .= '<table class="td-review td-fix-index">';
+
+            if( $custom_title != '' ) {
+                $buffy .= '<div class="td-block-title-wrap">';
+                $buffy .= '<' . $title_tag . ' class="' . $td_css_cls_block_title . '">';
+                $buffy .= '<span>' . $custom_title . '</span>';
+                $buffy .= '</' . $title_tag . '';
+                $buffy .= '</div>';
+            }
 
             switch ( $post_review_data['review_meta'] ) {
                 case 'rate_stars' :

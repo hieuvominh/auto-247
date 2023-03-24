@@ -15,24 +15,37 @@ if ( td_util::tdc_is_live_editor_iframe() || ( ! td_util::is_template_footer() &
 
         <div class="td-main-content-wrap td-footer-instagram-container td-container-wrap <?php echo td_util::get_option( 'td_full_footer_instagram' ) ?><?php echo esc_attr( $hide_class ) ?>">
 			<?php
-			//get the instagram id from the panel
+			// get the instagram id from the panel
 			$tds_footer_instagram_id = td_instagram::strip_instagram_user( td_util::get_option( 'tds_footer_instagram_id' ) );
+
+			// check for a connected account
+			if ( empty( $tds_footer_instagram_id ) ) {
+				$td_instagram_connected_account = td_options::get_array( 'td_instagram_connected_account');
+				$footer_instagram_id = '';
+
+				if ( ! empty( $td_instagram_connected_account['connected_account'] ) ) {
+					$footer_instagram_id = $td_instagram_connected_account['connected_account']['username'];
+				}
+
+			} else {
+				$footer_instagram_id = $tds_footer_instagram_id;
+			}
+
 			?>
 
             <div class="td-instagram-user">
                 <h4 class="td-footer-instagram-title">
 					<?php echo __td( 'Follow us on Instagram', TD_THEME_NAME ); ?>
-                    <a class="td-footer-instagram-user-link"
-                       href="https://www.instagram.com/<?php echo esc_attr( $tds_footer_instagram_id ) ?>"
-                       target="_blank">@<?php printf( '%1$s', $tds_footer_instagram_id ) ?></a>
+                    <a class="td-footer-instagram-user-link" href="https://www.instagram.com/<?php echo esc_attr( $footer_instagram_id ) ?>" target="_blank">@<?php printf( '%1$s', $footer_instagram_id ) ?></a>
                 </h4>
             </div>
 
 			<?php
-			//get the other panel seetings
+			// get the other panel settings
 			$tds_footer_instagram_data             = base64_encode( td_util::get_option( 'tds_footer_instagram_data' ) );
 			$tds_footer_instagram_nr_of_row_images = intval( td_util::get_option( 'tds_footer_instagram_on_row_images_number' ) );
 			$tds_footer_instagram_nr_of_rows       = intval( td_util::get_option( 'tds_footer_instagram_rows_number' ) );
+			$tds_footer_instagram_img_size         = td_util::get_option( 'tds_footer_instagram_image_size' );
 			$tds_footer_instagram_img_gap          = td_util::get_option( 'tds_footer_instagram_image_gap' );
 			$tds_footer_instagram_header           = td_util::get_option( 'tds_footer_instagram_header_section' );
 
@@ -41,10 +54,10 @@ if ( td_util::tdc_is_live_editor_iframe() || ( ! td_util::is_template_footer() &
 				array(
 					'instagram_id'             => $tds_footer_instagram_id,
 					'instagram_demo_data'      => $tds_footer_instagram_data,
-					'instagram_header'         => /*td_util::get_option('tds_footer_instagram_header_section')*/
-						1,
+					'instagram_header'         => /*td_util::get_option('tds_footer_instagram_header_section')*/ 1,
 					'instagram_images_per_row' => $tds_footer_instagram_nr_of_row_images,
 					'instagram_number_of_rows' => $tds_footer_instagram_nr_of_rows,
+					'instagram_images_size'    => $tds_footer_instagram_img_size,
 					'instagram_margin'         => $tds_footer_instagram_img_gap
 				)
 			);

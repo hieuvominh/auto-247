@@ -13,312 +13,817 @@ class tdb_header_menu extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $unique_block_class = ((td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax()) ? '[class*="tdc-row"] .' : '.') . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_header_menu_in_more */
+                .tdb_header_menu .tdb-menu-items-pulldown {
+                  -webkit-transition: opacity 0.5s;
+                  transition: opacity 0.5s;
+                  opacity: 1;
+                }
+                .tdb_header_menu .tdb-menu-items-pulldown.tdb-menu-items-pulldown-inactive {
+                  white-space: nowrap;
+                  opacity: 0;
+                }
+                .tdb_header_menu .tdb-menu-items-pulldown.tdb-menu-items-pulldown-inactive .tdb-menu {
+                  white-space: nowrap;
+                }
+                .tdb_header_menu .tdb-menu-items-pulldown.tdb-menu-items-pulldown-inactive .tdb-menu > li {
+                  float: none;
+                  display: inline-block;
+                }
+                .tdb_header_menu .tdb-menu-items-dropdown {
+                  position: relative;
+                  display: inline-block;
+                  vertical-align: middle;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                }
+                .tdb_header_menu .tdb-menu-items-dropdown:hover .td-pulldown-filter-list {
+                  display: block;
+                }
+                .tdb_header_menu .tdb-menu-items-dropdown:hover .td-subcat-more:after {
+                  width: 100%;
+                }
+                .tdb_header_menu .tdb-menu-items-dropdown .tdb-menu-sep {
+                  position: relative;
+                  vertical-align: middle;
+                  font-size: 14px;
+                }
+                .tdb_header_menu .tdb-menu-items-dropdown .tdb-menu-more-icon-svg,
+                .tdb_header_menu .tdb-menu-items-dropdown .tdb-menu-sep-svg {
+                  line-height: 0;
+                }
+                .tdb_header_menu .tdb-menu-items-dropdown .tdb-menu-more-icon-svg svg,
+                .tdb_header_menu .tdb-menu-items-dropdown .tdb-menu-sep-svg svg {
+                  width: 14px;
+                  height: auto;
+                }
+                .tdb_header_menu .tdb-menu-items-dropdown .tdb-menu-more-icon-svg {
+                  vertical-align: middle;
+                }
+                .tdb_header_menu .tdb-menu-items-empty + .tdb-menu-items-dropdown .tdb-menu-sep {
+                  display: none;
+                }
+                .tdb_header_menu .td-subcat-more {
+                  position: relative;
+                  display: inline-block;
+                  padding: 0 14px;
+                  font-size: 14px;
+                  line-height: 48px;
+                  vertical-align: middle;
+                  -webkit-backface-visibility: hidden;
+                  color: #000;
+                  cursor: pointer;
+                }
+                .tdb_header_menu .td-subcat-more > .tdb-menu-item-text {
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                }
+                .tdb_header_menu .td-subcat-more:after {
+                  content: '';
+                  position: absolute;
+                  bottom: 0;
+                  left: 0;
+                  right: 0;
+                  margin: 0 auto;
+                  width: 0;
+                  height: 3px;
+                  background-color: #4db2ec;
+                  -webkit-transform: translate3d(0, 0, 0);
+                  transform: translate3d(0, 0, 0);
+                  -webkit-transition: width 0.2s ease;
+                  transition: width 0.2s ease;
+                }
+                .tdb_header_menu .td-subcat-more > .tdb-menu-item-text {
+                  float: left;
+                }
+                .tdb_header_menu .td-subcat-more .tdb-menu-more-subicon {
+                  margin: 0 0 0 7px;
+                }
+                .tdb_header_menu .td-subcat-more .tdb-menu-more-subicon-svg {
+                  line-height: 0;
+                }
+                .tdb_header_menu .td-subcat-more .tdb-menu-more-subicon-svg svg {
+                  width: 14px;
+                  height: auto;
+                }
+                .tdb_header_menu .td-subcat-more .tdb-menu-more-subicon-svg svg,
+                .tdb_header_menu .td-subcat-more .tdb-menu-more-subicon-svg svg * {
+                  fill: #000;
+                }
+                .tdb_header_menu .td-pulldown-filter-list,
+                .tdb_header_menu .td-pulldown-filter-list .sub-menu {
+                    position: absolute;
+                    width: 170px !important;
+                    background-color: #fff;
+                    display: none;
+                    z-index: 99;
+                }
+                .tdb_header_menu .td-pulldown-filter-list {
+                    list-style-type: none;
+                    top: 100%;
+                    left: -15px;
+                    margin: 0;
+                    padding: 15px 0;
+                    text-align: left;
+                }
+                @media (max-width: 1018px) {
+                  .tdb_header_menu .td-pulldown-filter-list {
+                    left: auto;
+                    right: -15px;
+                  }
+                }
+                .tdb_header_menu .td-pulldown-filter-list .sub-menu {
+                    top: 0;
+                    right: 100%;
+                    left: auto;
+                    margin-top: -15px;
+                }
+                .tdb_header_menu .td-pulldown-filter-list li {
+                  margin: 0;
+                }
+                .tdb_header_menu .td-pulldown-filter-list li a {
+                  position: relative;
+                  display: block;
+                  padding: 7px 30px;
+                  font-size: 12px;
+                  line-height: 20px;
+                  color: #111;
+                }
+                .tdb_header_menu .td-pulldown-filter-list li:hover > a {
+                  color: #4db2ec;
+                }
+                .tdb_header_menu .td-pulldown-filter-list li:hover > .sub-menu {
+                    display: block !important;
+                }
+                .tdb_header_menu .td-pulldown-filter-list li .tdb-menu-sep {
+                  display: none;
+                }
+                
+                .tdb_header_menu .td-pulldown-filter-list li:not(.tdb-normal-menu) > a > .tdb-sub-menu-icon,
+                .tdb_header_menu .td-pulldown-filter-list li:not(.tdb-normal-menu) .sub-menu {
+                  display: none !important;
+                }
+                
+               
+                /* @style_general_header_menu */
+                .tdb_header_menu {
+                  margin-bottom: 0;
+                  z-index: 999;
+                  clear: none;
+                }
+                .tdb_header_menu .tdb-main-sub-icon-fake,
+                .tdb_header_menu .tdb-sub-icon-fake {
+                    display: none;
+                }
+                .rtl .tdb_header_menu .tdb-menu {
+                  display: flex;
+                }
+                .tdb_header_menu .tdb-menu {
+                  display: inline-block;
+                  vertical-align: middle;
+                  margin: 0;
+                }
+                .tdb_header_menu .tdb-menu .tdb-mega-menu-inactive,
+                .tdb_header_menu .tdb-menu .tdb-menu-item-inactive {
+                  pointer-events: none;
+                }
+                .tdb_header_menu .tdb-menu .tdb-mega-menu-inactive > ul,
+                .tdb_header_menu .tdb-menu .tdb-menu-item-inactive > ul {
+                  visibility: hidden;
+                  opacity: 0;
+                }
+                .tdb_header_menu .tdb-menu .sub-menu {
+                  font-size: 14px;
+                }
+                .tdb_header_menu .tdb-menu .sub-menu > li {
+                  list-style-type: none;
+                  margin: 0;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                }
+                .tdb_header_menu .tdb-menu > li {
+                  float: left;
+                  list-style-type: none;
+                  margin: 0;
+                }
+                .tdb_header_menu .tdb-menu > li > a {
+                  position: relative;
+                  display: inline-block;
+                  padding: 0 14px;
+                  font-weight: 700;
+                  font-size: 14px;
+                  line-height: 48px;
+                  vertical-align: middle;
+                  text-transform: uppercase;
+                  -webkit-backface-visibility: hidden;
+                  color: #000;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                }
+                .tdb_header_menu .tdb-menu > li > a:after {
+                  content: '';
+                  position: absolute;
+                  bottom: 0;
+                  left: 0;
+                  right: 0;
+                  margin: 0 auto;
+                  width: 0;
+                  height: 3px;
+                  background-color: #4db2ec;
+                  -webkit-transform: translate3d(0, 0, 0);
+                  transform: translate3d(0, 0, 0);
+                  -webkit-transition: width 0.2s ease;
+                  transition: width 0.2s ease;
+                }
+                .tdb_header_menu .tdb-menu > li > a > .tdb-menu-item-text {
+                  display: inline-block;
+                }
+                .tdb_header_menu .tdb-menu > li > a .tdb-menu-item-text,
+                .tdb_header_menu .tdb-menu > li > a span {
+                  vertical-align: middle;
+                  float: left;
+                }
+                .tdb_header_menu .tdb-menu > li > a .tdb-sub-menu-icon {
+                  margin: 0 0 0 7px;
+                }
+                .tdb_header_menu .tdb-menu > li > a .tdb-sub-menu-icon-svg {
+                  float: none;
+                  line-height: 0;
+                }
+                .tdb_header_menu .tdb-menu > li > a .tdb-sub-menu-icon-svg svg {
+                  width: 14px;
+                  height: auto;
+                }
+                .tdb_header_menu .tdb-menu > li > a .tdb-sub-menu-icon-svg svg,
+                .tdb_header_menu .tdb-menu > li > a .tdb-sub-menu-icon-svg svg * {
+                  fill: #000;
+                }
+                .tdb_header_menu .tdb-menu > li.current-menu-item > a:after,
+                .tdb_header_menu .tdb-menu > li.current-menu-ancestor > a:after,
+                .tdb_header_menu .tdb-menu > li.current-category-ancestor > a:after,
+                .tdb_header_menu .tdb-menu > li:hover > a:after,
+                .tdb_header_menu .tdb-menu > li.tdb-hover > a:after {
+                  width: 100%;
+                }
+                .tdb_header_menu .tdb-menu > li:hover > ul,
+                .tdb_header_menu .tdb-menu > li.tdb-hover > ul {
+                  top: auto;
+                  display: block !important;
+                }
+                .tdb_header_menu .tdb-menu > li.td-normal-menu > ul.sub-menu {
+                  top: auto;
+                  left: 0;
+                  z-index: 99;
+                }
+                .tdb_header_menu .tdb-menu > li .tdb-menu-sep {
+                  position: relative;
+                  vertical-align: middle;
+                  font-size: 14px;
+                }
+                .tdb_header_menu .tdb-menu > li .tdb-menu-sep-svg {
+                  line-height: 0;
+                }
+                .tdb_header_menu .tdb-menu > li .tdb-menu-sep-svg svg {
+                  width: 14px;
+                  height: auto;
+                }
+                .tdb_header_menu .tdb-menu > li:last-child .tdb-menu-sep {
+                  display: none;
+                }
+                .tdb_header_menu .tdb-menu-item-text {
+                  word-wrap: break-word;
+                }
+                .tdb_header_menu .tdb-menu-item-text,
+                .tdb_header_menu .tdb-sub-menu-icon,
+                .tdb_header_menu .tdb-menu-more-subicon {
+                  vertical-align: middle;
+                }
+                .tdb_header_menu .tdb-sub-menu-icon,
+                .tdb_header_menu .tdb-menu-more-subicon {
+                  position: relative;
+                  top: 0;
+                  padding-left: 0;
+                }
+                .tdb_header_menu .tdb-menu .sub-menu {
+                  position: absolute;
+                  top: -999em;
+                  background-color: #fff;
+                  z-index: 99;
+                }
+                .tdb_header_menu .tdb-normal-menu {
+                  position: relative;
+                }
+                .tdb_header_menu .tdb-normal-menu ul {
+                  left: 0;
+                  padding: 15px 0;
+                  text-align: left;
+                }
+                .tdb_header_menu .tdb-normal-menu ul ul {
+                  margin-top: -15px;
+                }
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item {
+                  position: relative;
+                  list-style-type: none;
+                }
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item > a {
+                  position: relative;
+                  display: block;
+                  padding: 7px 30px;
+                  font-size: 12px;
+                  line-height: 20px;
+                  color: #111;
+                }
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon,
+                .tdb_header_menu .td-pulldown-filter-list .tdb-menu-item > a .tdb-sub-menu-icon {
+                  position: absolute;
+                  top: 50%;
+                  -webkit-transform: translateY(-50%);
+                  transform: translateY(-50%);
+                  right: 0;
+                  padding-right: inherit;
+                  font-size: 7px;
+                  line-height: 20px;
+                }
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon-svg,
+                .tdb_header_menu .td-pulldown-filter-list .tdb-menu-item > a .tdb-sub-menu-icon-svg {
+                  line-height: 0;
+                }
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon-svg svg,
+                .tdb_header_menu .td-pulldown-filter-list .tdb-menu-item > a .tdb-sub-menu-icon-svg svg {
+                  width: 7px;
+                  height: auto;
+                }
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon-svg svg,
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon-svg svg *,
+                .tdb_header_menu .td-pulldown-filter-list .tdb-menu-item > a .tdb-sub-menu-icon svg,
+                .tdb_header_menu .td-pulldown-filter-list .tdb-menu-item > a .tdb-sub-menu-icon svg * {
+                  fill: #000;
+                }
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item:hover > ul,
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item.tdb-hover > ul {
+                  top: 0;
+                  display: block !important;
+                }
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item.current-menu-item > a,
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item.current-menu-ancestor > a,
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item.current-category-ancestor > a,
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item.tdb-hover > a,
+                .tdb_header_menu .tdb-normal-menu ul .tdb-menu-item:hover > a {
+                  color: #4db2ec;
+                }
+                .tdb_header_menu .tdb-normal-menu > ul {
+                  left: -15px;
+                }
+                .tdb_header_menu.tdb-menu-sub-inline .tdb-normal-menu ul,
+                .tdb_header_menu.tdb-menu-sub-inline .td-pulldown-filter-list {
+                  width: 100% !important;
+                }
+                .tdb_header_menu.tdb-menu-sub-inline .tdb-normal-menu ul li,
+                .tdb_header_menu.tdb-menu-sub-inline .td-pulldown-filter-list li {
+                  display: inline-block;
+                  width: auto !important;
+                }
+                .tdb_header_menu.tdb-menu-sub-inline .tdb-normal-menu,
+                .tdb_header_menu.tdb-menu-sub-inline .tdb-normal-menu .tdb-menu-item {
+                  position: static;
+                }
+                .tdb_header_menu.tdb-menu-sub-inline .tdb-normal-menu ul ul {
+                  margin-top: 0 !important;
+                }
+                .tdb_header_menu.tdb-menu-sub-inline .tdb-normal-menu > ul {
+                  left: 0 !important;
+                }
+                .tdb_header_menu.tdb-menu-sub-inline .tdb-normal-menu .tdb-menu-item > a .tdb-sub-menu-icon {
+                  float: none;
+                  line-height: 1;
+                }
+                .tdb_header_menu.tdb-menu-sub-inline .tdb-normal-menu .tdb-menu-item:hover > ul,
+                .tdb_header_menu.tdb-menu-sub-inline .tdb-normal-menu .tdb-menu-item.tdb-hover > ul {
+                  top: 100%;
+                }
+                .tdb_header_menu.tdb-menu-sub-inline .tdb-menu-items-dropdown {
+                  position: static;
+                }
+                .tdb_header_menu.tdb-menu-sub-inline .td-pulldown-filter-list {
+                  left: 0 !important;
+                }
+                .tdb-menu .tdb-mega-menu .sub-menu {
+                  -webkit-transition: opacity 0.3s ease;
+                  transition: opacity 0.3s ease;
+                  width: 1114px !important;
+                }
+                .tdb-menu .tdb-mega-menu .sub-menu,
+                .tdb-menu .tdb-mega-menu .sub-menu > li {
+                  position: absolute;
+                  left: 50%;
+                  -webkit-transform: translateX(-50%);
+                  transform: translateX(-50%);
+                }
+                .tdb-menu .tdb-mega-menu .sub-menu > li {
+                  top: 0;
+                  width: 100%;
+                  max-width: 1114px !important;
+                  height: auto;
+                  background-color: #fff;
+                  border: 1px solid #eaeaea;
+                  overflow: hidden;
+                }
+                @media (max-width: 1140px) {
+                  .tdb-menu .tdb-mega-menu .sub-menu > li {
+                    width: 100% !important;
+                  }
+                }
+                .tdc-dragged .tdb-block-menu ul {
+                  visibility: hidden !important;
+                  opacity: 0 !important;
+                  -webkit-transition: all 0.3s ease;
+                  transition: all 0.3s ease;
+                }
+                .tdb-mm-align-screen .tdb-menu .tdb-mega-menu .sub-menu {
+                  -webkit-transform: translateX(0);
+                  transform: translateX(0);
+                }
+                .tdb-mm-align-parent .tdb-menu .tdb-mega-menu {
+                  position: relative;
+                }
+
+
+                
+                
                 /* @disable_hover */
-                .$unique_block_class:not(.tdc-element-selected) .sub-menu,
-                .$unique_block_class:not(.tdc-element-selected) .td-pulldown-filter-list {
+                $unique_block_class:not(.tdc-element-selected) .sub-menu,
+                $unique_block_class:not(.tdc-element-selected) .td-pulldown-filter-list {
                     visibility: hidden !important;
                 }
                 /* @show_subcat */
-                .$unique_block_class .tdb-first-submenu > ul {
+                $unique_block_class .tdb-first-submenu > ul {
                     display: block !important;
                     top: auto !important;
                 }
                 /* @show_mega */
-                .$unique_block_class .tdb-mega-menu-first > ul {
+                $unique_block_class .tdb-mega-menu-first > ul {
                     display: block !important;
                     top: auto !important;
                 }
                 /* @show_mega_cats */
-                .$unique_block_class .tdb-mega-menu-cats-first > ul {
+                $unique_block_class .tdb-mega-menu-cats-first > ul {
                     display: block !important;
                     top: auto !important;
                 }
                 
                 
                 /* @width */
-                .$unique_block_class {
+                $unique_block_class {
                     max-width: @width;
                 }
                 /* @inline */
-                .$unique_block_class {
+                $unique_block_class {
                     display: inline-block;
                 }
                 /* @float_right */
-                .$unique_block_class {
+                $unique_block_class {
                     float: right;
                     clear: none;
                 }
                 /* @align_horiz_center */
-                .$unique_block_class .td_block_inner {
+                $unique_block_class .td_block_inner {
                     text-align: center;
                 }
                 /* @align_horiz_right */
-                .$unique_block_class .td_block_inner {
+                $unique_block_class .td_block_inner {
                     text-align: right;
                 }
                 
                 /* @elem_space */
-                .$unique_block_class .tdb-menu > li {
+                $unique_block_class .tdb-menu > li {
                     margin-right: @elem_space;
                 }
-                .$unique_block_class .tdb-menu > li:last-child {
+                $unique_block_class .tdb-menu > li:last-child {
                     margin-right: 0;
                 }
-                .$unique_block_class .tdb-menu-items-dropdown {
+                $unique_block_class .tdb-menu-items-dropdown {
                     margin-left: @elem_space;
                 }
-                .$unique_block_class .tdb-menu-items-empty + .tdb-menu-items-dropdown {
+                $unique_block_class .tdb-menu-items-empty + .tdb-menu-items-dropdown {
                     margin-left: 0;
                 }
                 
                 /* @elem_padd */
-                .$unique_block_class .tdb-menu > li > a,
-                .$unique_block_class .td-subcat-more {
+                $unique_block_class .tdb-menu > li > a,
+                $unique_block_class .td-subcat-more {
                     padding: @elem_padd;
                 }
                 
                 /* @sep_icon_size */
-                .$unique_block_class .tdb-menu > li .tdb-menu-sep,
-                .$unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep {
+                $unique_block_class .tdb-menu > li .tdb-menu-sep,
+                $unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep {
                     font-size: @sep_icon_size;
                 }
+                /* @sep_icon_svg_size */
+                $unique_block_class .tdb-menu > li .tdb-menu-sep-svg svg,
+                $unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep-svg svg {
+                    width: @sep_icon_svg_size;
+                }
                 /* @sep_icon_space */
-                .$unique_block_class .tdb-menu > li .tdb-menu-sep,
-                .$unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep {
+                $unique_block_class .tdb-menu > li .tdb-menu-sep,
+                $unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep {
                     margin: 0 @sep_icon_space;
                 }
                 /* @sep_icon_align */
-                .$unique_block_class .tdb-menu > li .tdb-menu-sep,
-                .$unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep {
+                $unique_block_class .tdb-menu > li .tdb-menu-sep,
+                $unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep {
                     top: @sep_icon_align;
                 }
                 
                 /* @main_sub_icon_size */
-                .$unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon,
-                .$unique_block_class .td-subcat-more .tdb-menu-more-subicon {
+                $unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon,
+                $unique_block_class .td-subcat-more .tdb-menu-more-subicon {
                     font-size: @main_sub_icon_size;
                 }
+                /* @main_sub_icon_svg_size */
+                $unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon-svg svg,
+                $unique_block_class .td-subcat-more .tdb-menu-more-subicon-svg svg {
+                    width: @main_sub_icon_svg_size;
+                }
                 /* @main_sub_icon_space */
-                .$unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon,
-                .$unique_block_class .td-subcat-more .tdb-menu-more-subicon {
+                $unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon,
+                $unique_block_class .td-subcat-more .tdb-menu-more-subicon {
                     margin-left: @main_sub_icon_space;
                 }
                 /* @main_sub_icon_align */
-                .$unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon,
-                .$unique_block_class .td-subcat-more .tdb-menu-more-subicon {
+                $unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon,
+                $unique_block_class .td-subcat-more .tdb-menu-more-subicon {
                     top: @main_sub_icon_align;
                 }
                 
                 /* @more_icon_size */
-                .$unique_block_class .td-subcat-more .tdb-menu-more-icon {
+                $unique_block_class .td-subcat-more .tdb-menu-more-icon {
                     font-size: @more_icon_size;
                 }
+                /* @more_icon_svg_size */
+                $unique_block_class .td-subcat-more .tdb-menu-more-icon-svg svg {
+                    width: @more_icon_svg_size;
+                }
                 /* @more_icon_align */
-                .$unique_block_class .td-subcat-more .tdb-menu-more-icon {
+                $unique_block_class .td-subcat-more .tdb-menu-more-icon {
                     top: @more_icon_align;
                 }
                 
                 /* @text_color */
-                .$unique_block_class .tdb-menu > li > a,
-                .$unique_block_class .td-subcat-more {
+                $unique_block_class .tdb-menu > li > a,
+                $unique_block_class .td-subcat-more {
                     color: @text_color;
                 }
+                $unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon-svg svg,
+                $unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon-svg svg *,
+                $unique_block_class .td-subcat-more .tdb-menu-more-subicon-svg svg,
+                $unique_block_class .td-subcat-more .tdb-menu-more-subicon-svg svg *,
+                $unique_block_class .td-subcat-more .tdb-menu-more-icon-svg,
+                $unique_block_class .td-subcat-more .tdb-menu-more-icon-svg * {
+                    fill: @text_color;
+                }
                 /* @main_sub_color */
-                .$unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon,
-                .$unique_block_class .td-subcat-more .tdb-menu-more-subicon {
+                $unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon,
+                $unique_block_class .td-subcat-more .tdb-menu-more-subicon {
                     color: @main_sub_color;
                 }
+                $unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon-svg svg,
+                $unique_block_class .tdb-menu > li > a .tdb-sub-menu-icon-svg svg *,
+                $unique_block_class .td-subcat-more .tdb-menu-more-subicon-svg svg,
+                $unique_block_class .td-subcat-more .tdb-menu-more-subicon-svg svg * {
+                    fill: @main_sub_color;
+                }
                 /* @sep_color */
-                .$unique_block_class .tdb-menu > li .tdb-menu-sep,
-                .$unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep {
+                $unique_block_class .tdb-menu > li .tdb-menu-sep,
+                $unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep {
                     color: @sep_color;
                 }
+                $unique_block_class .tdb-menu > li .tdb-menu-sep-svg svg,
+                $unique_block_class .tdb-menu > li .tdb-menu-sep-svg svg *,
+                $unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep-svg svg,
+                $unique_block_class .tdb-menu-items-dropdown .tdb-menu-sep-svg svg * {
+                    fill: @sep_color;
+                }
                 /* @more_icon_color */
-                .$unique_block_class .td-subcat-more .tdb-menu-more-icon {
+                $unique_block_class .td-subcat-more .tdb-menu-more-icon {
                     color: @more_icon_color;
+                }
+                $unique_block_class .td-subcat-more .tdb-menu-more-icon-svg,
+                $unique_block_class .td-subcat-more .tdb-menu-more-icon-svg * {
+                    fill: @more_icon_color;
                 }
                 
                 /* @f_elem */
-                .$unique_block_class .tdb-menu > li > a,
-                .$unique_block_class .td-subcat-more > .tdb-menu-item-text {
+                $unique_block_class .tdb-menu > li > a,
+                $unique_block_class .td-subcat-more,
+                $unique_block_class .td-subcat-more > .tdb-menu-item-text {
                     @f_elem
-                }
-                /* @f_elem_line_height */
-                .$unique_block_class .td-subcat-more {
-                    line-height: @f_elem_line_height;
                 }
                 
                 
                 /* @sub_width */
-                .$unique_block_class .tdb-normal-menu ul.sub-menu,
-                .$unique_block_class .td-pulldown-filter-list {
+                $unique_block_class .tdb-normal-menu ul.sub-menu,
+                $unique_block_class .td-pulldown-filter-list {
                     width: @sub_width !important;
                 }
                 /* @sub_first_left */
-                .$unique_block_class .tdb-normal-menu > ul,
-                .$unique_block_class .td-pulldown-filter-list {
+                $unique_block_class .tdb-menu > .tdb-normal-menu > ul,
+                $unique_block_class .td-pulldown-filter-list {
                     left: @sub_first_left;
                 }
                 @media (max-width: 1018px) {
-                    .$unique_block_class .td-pulldown-filter-list {
+                    $unique_block_class .td-pulldown-filter-list {
                         left: auto;
                         right: @sub_first_left;
                     }
                 }
                 /* @sub_rest_top */
-                .$unique_block_class .tdb-normal-menu ul ul {
+                $unique_block_class .tdb-normal-menu ul ul,
+                $unique_block_class .td-pulldown-filter-list .sub-menu {
                     margin-top: @sub_rest_top;
                 }
                 /* @sub_padd */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul,
-                .$unique_block_class .td-pulldown-filter-list {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul,
+                $unique_block_class .td-pulldown-filter-list,
+                $unique_block_class .td-pulldown-filter-list .sub-menu {
                     padding: @sub_padd;
                 }
                 /* @sub_align_horiz_center */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul,
-                .$unique_block_class .td-pulldown-filter-list {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul,
+                $unique_block_class .td-pulldown-filter-list,
+                $unique_block_class .td-pulldown-filter-list .sub-menu {
                     text-align: center;
                 }
                 /* @sub_align_horiz_right */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul,
-                .$unique_block_class .td-pulldown-filter-list {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul,
+                $unique_block_class .td-pulldown-filter-list,
+                $unique_block_class .td-pulldown-filter-list .sub-menu {
                     text-align: right;
                 }
                 
                 /* @sub_elem_space_right */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
-                .$unique_block_class .td-pulldown-filter-list li a {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
+                $unique_block_class .td-pulldown-filter-list li a {
                     margin-right: @sub_elem_space_right;
                 }
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item:last-child > a,
-                .$unique_block_class .td-pulldown-filter-list li:last-child a {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item:last-child > a,
+                $unique_block_class .td-pulldown-filter-list li:last-child a {
                     margin-right: 0;
                 }
                 /* @sub_elem_space_bot */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
-                .$unique_block_class .td-pulldown-filter-list li a {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
+                $unique_block_class .td-pulldown-filter-list li a {
                     margin-bottom: @sub_elem_space_bot;
                 }
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item:last-child > a,
-                .$unique_block_class .td-pulldown-filter-list li:last-child a {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item:last-child > a,
+                $unique_block_class .td-pulldown-filter-list li:last-child a {
                     margin-bottom: 0;
                 }
                 /* @sub_elem_padd */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
-                .$unique_block_class .td-pulldown-filter-list li a {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
+                $unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li > a {
                     padding: @sub_elem_padd;
                 }
                 /* @sub_elem_radius */
-				.$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
-                .$unique_block_class .td-pulldown-filter-list li a {
+				$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
+                $unique_block_class .td-pulldown-filter-list li a {
 					border-radius: @sub_elem_radius;
 				}
                 
                 
                 /* @sub_icon_size */
-                .$unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon {
+                $unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon,
+                $unique_block_class .td-pulldown-filter-list .tdb-menu-item > a .tdb-sub-menu-icon {
                     font-size: @sub_icon_size;
                 }
+                /* @sub_icon_svg_size */
+                $unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon-svg svg,
+                $unique_block_class .td-pulldown-filter-list .tdb-menu-item > a .tdb-sub-menu-icon svg {
+                    width: @sub_icon_svg_size;
+                }
                 /* @sub_icon_space */
-                .$unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-menu-item-text {
+                $unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-menu-item-text {
                     margin-right: @sub_icon_space;
                 }
                 /* @sub_icon_pos_text */
-                .$unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon {
+                $unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon {
                     right: auto;
                 }
+                $unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-menu-item-text {
+                    display: inline-block;
+                }
+                
                 /* @sub_icon_pos_list */
-                .$unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon {
+                $unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon,
+                $unique_block_class .td-pulldown-filter-list .tdb-menu-item > a .tdb-sub-menu-icon {
                     right: 0;
                 }
                 /* @sub_icon_align */
-                .$unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon {
+                $unique_block_class .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon,
+                $unique_block_class .td-pulldown-filter-list .tdb-menu-item > a .tdb-sub-menu-icon {
                     margin-top: @sub_icon_align;
                 }
                 
                 /* @sub_bg_color */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul,
-                .$unique_block_class .td-pulldown-filter-list {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul,
+                $unique_block_class .td-pulldown-filter-list,
+                $unique_block_class .td-pulldown-filter-list .sub-menu {
                     background-color: @sub_bg_color;
                 }
                 /* @sub_border_size */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul,
-                .$unique_block_class .td-pulldown-filter-list {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul,
+                $unique_block_class .td-pulldown-filter-list,
+                $unique_block_class .td-pulldown-filter-list .sub-menu {
                     border-width: @sub_border_size;
                     border-style: solid;
                     border-color: #000;
                 }
                 /* @sub_border_color */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul,
-                .$unique_block_class .td-pulldown-filter-list {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul,
+                $unique_block_class .td-pulldown-filter-list,
+                $unique_block_class .td-pulldown-filter-list .sub-menu {
                     border-color: @sub_border_color;
                 }
                 /* @sub_elem_bg_color */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
-                .$unique_block_class .td-pulldown-filter-list li a {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
+                $unique_block_class .td-pulldown-filter-list li a,
+                $unique_block_class .td-pulldown-filter-list .sub-menu li a {
                     background-color: @sub_elem_bg_color;
                 }
                 /* @sub_text_color */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
-                .$unique_block_class .td-pulldown-filter-list li a {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
+                $unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li a,
+                $unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li a {
                     color: @sub_text_color;
                 }
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon-svg svg,
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon-svg svg *,
+                $unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li a .tdb-sub-menu-icon-svg svg,
+                $unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li a .tdb-sub-menu-icon-svg svg * {
+                    fill: @sub_text_color;
+                }
                 /* @sub_color */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon,
+                $unique_block_class .tdb-menu-items-dropdown .td-pulldown-filter-list li a .tdb-sub-menu-icon {
                     color: @sub_color;
                 }
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon-svg svg,
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a .tdb-sub-menu-icon-svg svg *,
+                $unique_block_class .tdb-menu-items-dropdown  .td-pulldown-filter-list li a .tdb-sub-menu-icon-svg svg,
+                $unique_block_class .tdb-menu-items-dropdown  .td-pulldown-filter-list li a .tdb-sub-menu-icon-svg svg *  {
+                    fill: @sub_color;
+                }
                 /* @sub_shadow */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul,
-                .$unique_block_class .td-pulldown-filter-list {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul,
+                $unique_block_class .td-pulldown-filter-list,
+                $unique_block_class .td-pulldown-filter-list .sub-menu {
                     box-shadow: @sub_shadow;
                 }
                 
                 /* @f_sub_elem */
-                .$unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
-                .$unique_block_class .td-pulldown-filter-list li a {
+                $unique_block_class .tdb-menu .tdb-normal-menu ul .tdb-menu-item > a,
+                $unique_block_class .td-pulldown-filter-list li a {
                     @f_sub_elem
                 }
                 
                 
                 /* @mm_width */
-                .$unique_block_class:not(.tdb-mm-align-screen) .tdb-mega-menu .sub-menu,
-                .$unique_block_class .tdb-mega-menu .sub-menu > li {
+                $unique_block_class:not(.tdb-mm-align-screen) .tdb-mega-menu .sub-menu,
+                $unique_block_class .tdb-mega-menu .sub-menu > li {
                     max-width: @mm_width !important;
                 }
-                .$unique_block_class:not(.tdb-mm-align-screen) .tdb-mega-menu .sub-menu {
+                $unique_block_class:not(.tdb-mm-align-screen) .tdb-mega-menu .sub-menu {
                     width: 100vw !important;
                 }
                 /* @mm_width_with_ul */
-                .$unique_block_class:not(.tdb-mm-align-screen) .tdb-mega-menu .sub-menu,
-                .$unique_block_class .tdb-mega-menu .sub-menu > li {
+                $unique_block_class:not(.tdb-mm-align-screen) .tdb-mega-menu .sub-menu,
+                $unique_block_class .tdb-mega-menu .sub-menu > li {
                     max-width: @mm_width_with_ul !important;
                 }
                 /* @mm_content_width */
-                .$unique_block_class .tdb-mega-menu .tdb_header_mega_menu {
+                $unique_block_class .tdb-mega-menu .tdb_header_mega_menu {
                     max-width: @mm_content_width;
                     margin: 0 auto;
                 }
                 /* @mm_height */
-                .$unique_block_class .tdb-mega-menu .tdb_header_mega_menu {
+                $unique_block_class .tdb-mega-menu .tdb_header_mega_menu {
                     min-height: @mm_height;
                 }
                 
                 /* @mm_align_horiz_align_left */
-                .$unique_block_class .tdb-mega-menu .sub-menu {
+                $unique_block_class .tdb-mega-menu .sub-menu {
                     left: 0;
                     transform: none;
                     -webkit-transform: none;
                     -moz-transform: none;
                 }
                 /* @mm_align_horiz_align_right */
-                .$unique_block_class .tdb-mega-menu .sub-menu {
+                $unique_block_class .tdb-mega-menu .sub-menu {
                     left: auto;
                     right: 0;
                     transform: none;
@@ -326,44 +831,44 @@ class tdb_header_menu extends td_block {
                     -moz-transform: none;
                 }
                 /* @mm_align_horiz_align_left2 */
-                .$unique_block_class .tdb-mega-menu .tdb_header_mega_menu {
+                $unique_block_class .tdb-mega-menu .tdb_header_mega_menu {
                     margin-left: 0;
                 }
                 /* @mm_align_horiz_align_right2 */
-                .$unique_block_class .tdb-mega-menu .tdb_header_mega_menu {
+                $unique_block_class .tdb-mega-menu .tdb_header_mega_menu {
                     margin-right: 0;
                 }
                 
                 /* @mm_offset */
-                .$unique_block_class .tdb-mega-menu .sub-menu > li {
+                $unique_block_class .tdb-mega-menu .sub-menu > li {
                     margin-left: @mm_offset;
                 }
                 
 				/* @mm_bg */
-				.$unique_block_class .tdb-menu .tdb-mega-menu .sub-menu > li {
+				$unique_block_class .tdb-menu .tdb-mega-menu .sub-menu > li {
 					background-color: @mm_bg;
 				}
 				/* @mm_border_size */
-				.$unique_block_class .tdb-menu .tdb-mega-menu .sub-menu > li {
+				$unique_block_class .tdb-menu .tdb-mega-menu .sub-menu > li {
 					border-width: @mm_border_size;
 				}
 				/* @mm_border_color */
-				.$unique_block_class .tdb-menu .tdb-mega-menu .sub-menu > li {
+				$unique_block_class .tdb-menu .tdb-mega-menu .sub-menu > li {
 					border-color: @mm_border_color;
 				}
 				/* @mm_shadow */
-				.$unique_block_class .tdb-menu .tdb-mega-menu .sub-menu > li {
+				$unique_block_class .tdb-menu .tdb-mega-menu .sub-menu > li {
 					box-shadow: @mm_shadow;
 				}
 				
 				/* @hover_opacity */
-				.$unique_block_class .tdb-menu > li > a {
+				$unique_block_class .tdb-menu > li > a {
 				    transition: all 0.5s ease;
 				}
-				.$unique_block_class .tdb-menu:hover > li > a {
+				$unique_block_class .tdb-menu:hover > li > a {
 					opacity: @hover_opacity;
 				}
-				.$unique_block_class .tdb-menu > li:hover > a {
+				$unique_block_class .tdb-menu > li:hover > a {
 					opacity: 1;
 				}
 				
@@ -378,6 +883,14 @@ class tdb_header_menu extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $more = $res_ctx->get_shortcode_att('more');
+        if( $more == 'yes' ) {
+            $res_ctx->load_settings_raw('style_general_header_menu_in_more', 1);
+        }
+        $res_ctx->load_settings_raw( 'style_general_header_menu', 1 );
+        $res_ctx->load_settings_raw( 'style_general_header_align', 1 );
+
 
         if ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) {
             $res_ctx->load_settings_raw('disable_hover', 1);
@@ -418,10 +931,18 @@ class tdb_header_menu extends td_block {
             $res_ctx->load_settings_raw( 'elem_padd', $elem_padd . 'px' );
         }
         // separator icon size
+        $sep_icon = $res_ctx->get_icon_att('sep_tdicon');
         $sep_icon_size = $res_ctx->get_shortcode_att('sep_icon_size');
-        $res_ctx->load_settings_raw( 'sep_icon_size', $sep_icon_size );
-        if( $sep_icon_size != '' && is_numeric( $sep_icon_size ) ) {
-            $res_ctx->load_settings_raw( 'sep_icon_size', $sep_icon_size . 'px' );
+        if( base64_encode( base64_decode( $sep_icon ) ) == $sep_icon ) {
+            $res_ctx->load_settings_raw( 'sep_icon_svg_size', $sep_icon_size );
+            if( $sep_icon_size != '' && is_numeric( $sep_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'sep_icon_svg_size', $sep_icon_size . 'px' );
+            }
+        } else {
+            $res_ctx->load_settings_raw( 'sep_icon_size', $sep_icon_size );
+            if( $sep_icon_size != '' && is_numeric( $sep_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'sep_icon_size', $sep_icon_size . 'px' );
+            }
         }
         // separator icon space
         $sep_icon_space = $res_ctx->get_shortcode_att('sep_icon_space');
@@ -432,10 +953,18 @@ class tdb_header_menu extends td_block {
         $res_ctx->load_settings_raw( 'sep_icon_align', $res_ctx->get_shortcode_att('sep_icon_align') . 'px' );
 
         // main sub menu icon size
+        $main_sub_icon = $res_ctx->get_icon_att('main_sub_tdicon');
         $main_sub_icon_size = $res_ctx->get_shortcode_att('main_sub_icon_size');
-        $res_ctx->load_settings_raw( 'main_sub_icon_size', $main_sub_icon_size );
-        if( $main_sub_icon_size != '' && is_numeric( $main_sub_icon_size ) ) {
-            $res_ctx->load_settings_raw( 'main_sub_icon_size', $main_sub_icon_size . 'px' );
+        if( base64_encode( base64_decode( $main_sub_icon ) ) == $main_sub_icon ) {
+            $res_ctx->load_settings_raw( 'main_sub_icon_svg_size', $main_sub_icon_size );
+            if( $main_sub_icon_size != '' && is_numeric( $main_sub_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'main_sub_icon_svg_size', $main_sub_icon_size . 'px' );
+            }
+        } else {
+            $res_ctx->load_settings_raw( 'main_sub_icon_size', $main_sub_icon_size );
+            if( $main_sub_icon_size != '' && is_numeric( $main_sub_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'main_sub_icon_size', $main_sub_icon_size . 'px' );
+            }
         }
         // main sub menu icon space
         $main_sub_icon_space = $res_ctx->get_shortcode_att('main_sub_icon_space');
@@ -446,10 +975,19 @@ class tdb_header_menu extends td_block {
         $res_ctx->load_settings_raw( 'main_sub_icon_align', $res_ctx->get_shortcode_att('main_sub_icon_align') . 'px' );
 
         // more icon size
-        $more_icon_size = $res_ctx->get_shortcode_att('more_icon_size');
-        $res_ctx->load_settings_raw( 'more_icon_size', $more_icon_size );
-        if( $more_icon_size != '' && is_numeric( $more_icon_size ) ) {
-            $res_ctx->load_settings_raw( 'more_icon_size', $more_icon_size . 'px' );
+        $more_icon = $res_ctx->get_icon_att('more_tdicon');
+        if( base64_encode( base64_decode( $more_icon ) ) == $more_icon ) {
+            $more_icon_size = $res_ctx->get_shortcode_att('more_icon_size');
+            $res_ctx->load_settings_raw( 'more_icon_svg_size', $more_icon_size );
+            if( $more_icon_size != '' && is_numeric( $more_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'more_icon_svg_size', $more_icon_size . 'px' );
+            }
+        } else {
+            $more_icon_size = $res_ctx->get_shortcode_att('more_icon_size');
+            $res_ctx->load_settings_raw( 'more_icon_size', $more_icon_size );
+            if( $more_icon_size != '' && is_numeric( $more_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'more_icon_size', $more_icon_size . 'px' );
+            }
         }
         // more icon alignment
         $res_ctx->load_settings_raw( 'more_icon_align', $res_ctx->get_shortcode_att('more_icon_align') . 'px' );
@@ -462,6 +1000,7 @@ class tdb_header_menu extends td_block {
 
         // fonts
         $res_ctx->load_font_settings( 'f_elem' );
+        $res_ctx->load_settings_raw( 'f_elem_font_size', $res_ctx->get_shortcode_att( 'f_elem_font_size' ) );
         $res_ctx->load_settings_raw( 'f_elem_line_height', $res_ctx->get_shortcode_att( 'f_elem_font_line_height' ) );
 
 
@@ -522,10 +1061,18 @@ class tdb_header_menu extends td_block {
         }
 
         // sub menu icon size
+        $sub_icon = $res_ctx->get_icon_att('sub_tdicon');
         $sub_icon_size = $res_ctx->get_shortcode_att('sub_icon_size');
-        $res_ctx->load_settings_raw( 'sub_icon_size', $sub_icon_size );
-        if( $sub_icon_size != '' && is_numeric( $sub_icon_size ) ) {
-            $res_ctx->load_settings_raw( 'sub_icon_size', $sub_icon_size . 'px' );
+        if( base64_encode( base64_decode( $sub_icon ) ) == $sub_icon ) {
+            $res_ctx->load_settings_raw( 'sub_icon_svg_size', $sub_icon_size );
+            if( $sub_icon_size != '' && is_numeric( $sub_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'sub_icon_svg_size', $sub_icon_size . 'px' );
+            }
+        } else {
+            $res_ctx->load_settings_raw( 'sub_icon_size', $sub_icon_size );
+            if( $sub_icon_size != '' && is_numeric( $sub_icon_size ) ) {
+                $res_ctx->load_settings_raw( 'sub_icon_size', $sub_icon_size . 'px' );
+            }
         }
         // sub menu icon space
         $sub_icon_space = $res_ctx->get_shortcode_att('sub_icon_space');
@@ -637,9 +1184,31 @@ class tdb_header_menu extends td_block {
 
         parent::render($atts);
 
-        global $tdb_state_single, $tdb_state_category;
+        if (td_global::get_in_menu() && (td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax())) {
+
+            $buffy = '';
+            $buffy .= $this->get_block_js();
+
+            $buffy .= '<div class="' . $this->get_block_classes()  . ' tdb-header-align" ' . $this->get_block_html_atts() . ' style=" z-index: 999;">';
+            $buffy .= '<div id=' . $this->block_uid . ' class="td_block_inner td-fix-index">';
+            $buffy .= td_util::get_block_error( 'Header Main Menu', 'Render stoped in Composer - you are already in a menu' );
+            $buffy .= '</div>';
+
+            $buffy .= '</div>';
+
+            td_global::set_in_menu( false );
+
+            return $buffy;
+        }
+
+        td_global::set_in_menu(true);
+
+
+
+        global $tdb_state_single, $tdb_state_category, $tdb_state_single_page;
 
         switch( tdb_state_template::get_template_type() ) {
+            case 'cpt':
             case 'single':
 
                 // The flag that inform composer do not parse the menu content, is set
@@ -653,6 +1222,14 @@ class tdb_header_menu extends td_block {
                 // The flag that inform composer do not parse the menu content, is set
                 td_global::set_in_element( true );
                 $state_menu = $tdb_state_category->menu->__invoke( $this->get_all_atts() );
+                td_global::set_in_element( false );
+                break;
+
+            case 'page':
+
+                // The flag that inform composer do not parse the menu content, is set
+                td_global::set_in_element( true );
+                $state_menu = $tdb_state_single_page->menu->__invoke( $this->get_all_atts() );
                 td_global::set_in_element( false );
                 break;
         }
@@ -751,6 +1328,7 @@ class tdb_header_menu extends td_block {
                 $buffy .= '</div>';
 
                 td_global::set_in_element( false );
+                td_global::set_in_menu( false );
 
                 return $buffy;
             }
@@ -758,11 +1336,12 @@ class tdb_header_menu extends td_block {
             $buffy .= '<div id=' . $this->block_uid . ' class="td_block_inner td-fix-index">';
 
                 // if the menu was built and comes from a state and we just need to add it to the buffer
-                if ( !empty( $state_menu ) ) {
+                if ( ! empty( $state_menu ) ) {
                     $buffy .= $this->inner( $state_menu, 'state_menu' );
 
-                // otherwise we use the menu id and call the wp_nav_menu @see $this->inner()
+                    // otherwise we use the menu id and call the wp_nav_menu @see $this->inner()
                 } else {
+
                     $buffy .= $this->inner( $menu_id );
                 }
 
@@ -771,6 +1350,7 @@ class tdb_header_menu extends td_block {
         $buffy .= '</div>';
 
         td_global::set_in_element( false );
+        td_global::set_in_menu( false );
 
         return $buffy;
     }
@@ -780,11 +1360,67 @@ class tdb_header_menu extends td_block {
         $buffy = '';
         $td_block_layout = new td_block_layout();
 
-        $main_sub_icon = $this->get_att('main_sub_tdicon');
-        $sep_icon = $this->get_att('sep_tdicon');
+        $main_sub_icon = $this->get_icon_att('main_sub_tdicon');
+        $main_sub_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $main_sub_icon_data = 'data-td-svg-icon="' . $this->get_att('main_sub_tdicon') . '"';
+        }
+        $main_sub_icon_html = '';
+        if( $main_sub_icon != '' ) {
+            $buffy .= '<div class="tdb-main-sub-icon-fake">';
+                if( base64_encode( base64_decode( $main_sub_icon ) ) == $main_sub_icon ) {
+                    $main_sub_icon_html = '<span class="tdb-menu-more-subicon tdb-menu-more-subicon-svg tdb-main-sub-menu-icon" '. $main_sub_icon_data . '>' . base64_decode( $main_sub_icon ) . '</span>';
+                    $buffy .= '<span class="tdb-sub-menu-icon tdb-sub-menu-icon-svg" '. $main_sub_icon_data . '>' . base64_decode( $main_sub_icon ) . '</span>';
+                } else {
+                    $main_sub_icon_html = '<i class="tdb-menu-more-subicon ' . $main_sub_icon . ' tdb-main-sub-menu-icon"></i>';
+                    $buffy .= '<i class="tdb-sub-menu-icon ' . $main_sub_icon . ' tdb-main-sub-menu-icon"></i>';
+                }
+            $buffy .= '</div>';
+        }
+
+        $sub_icon = $this->get_icon_att('sub_tdicon');
+        $sub_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $sub_icon_data = 'data-td-svg-icon="' . $this->get_att('sub_tdicon') . '"';
+        }
+        if( $sub_icon != '' ) {
+            $buffy .= '<div class="tdb-sub-icon-fake">';
+                if( base64_encode( base64_decode( $sub_icon ) ) == $sub_icon ) {
+                    $buffy .= '<span class="tdb-sub-menu-icon tdb-sub-menu-icon-svg" ' . $sub_icon_data . '>' . base64_decode( $sub_icon ) . '</span>';
+                } else {
+                    $buffy .= '<i class="tdb-sub-menu-icon ' . $sub_icon . '"></i>';
+                }
+            $buffy .= '</div>';
+        }
+
+        $sep_icon = $this->get_icon_att('sep_tdicon');
+        $sep_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $sep_icon_data = 'data-td-svg-icon="' . $this->get_att('sep_tdicon') . '"';
+        }
+        $sep_icon_html = '';
+        if( $sep_icon != '' ) {
+            if( base64_encode( base64_decode( $sep_icon ) ) == $sep_icon ) {
+                $sep_icon_html = '<span class="tdb-menu-sep tdb-menu-sep-svg" ' . $sep_icon_data . '>' . base64_decode( $sep_icon ) . '</span>';
+            } else {
+                $sep_icon_html = '<i class="tdb-menu-sep ' . $sep_icon . '"></i>';
+            }
+        }
 
         $more_txt = $this->get_att('more_txt');
-        $more_icon = $this->get_att('more_tdicon');
+        $more_icon = $this->get_icon_att('more_tdicon');
+        $more_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $more_icon_data = 'data-td-svg-icon="' . $this->get_att('more_tdicon') . '"';
+        }
+        $more_icon_html = '';
+        if( $more_icon != '' ) {
+            if( base64_encode( base64_decode( $more_icon ) ) == $more_icon ) {
+                $more_icon_html = '<span class="tdb-menu-more-icon tdb-menu-more-icon-svg" ' . $more_icon_data . '>' . base64_decode( $more_icon ) . '</span>';
+            } else {
+                $more_icon_html = '<i class="tdb-menu-more-icon ' . $more_icon . '"></i>';
+            }
+        }
 
         // menu pulldown
         $pulldown = ( $this->get_att('more') != '' ) ? true : false;
@@ -800,20 +1436,17 @@ class tdb_header_menu extends td_block {
                     // menu items dropdown list
                     $buffy .= '<div class="tdb-menu-items-dropdown">';
 
-                        if( $sep_icon != '' ) {
-                            $buffy .= '<i class="tdb-menu-sep ' . $sep_icon . '"></i>';
-                        }
+                        $buffy .= $sep_icon_html;
+
                         $buffy .= '<div class="td-subcat-more">';
                             $buffy .= '<span class="tdb-menu-item-text">';
                                 if( $more_icon == '' ) {
                                         $buffy .= $more_txt != '' ? $more_txt : 'More';
                                     $buffy .= '</span>';
 
-                                    if( $main_sub_icon != '' ) {
-                                        $buffy .= '<i class="tdb-menu-more-subicon ' . $main_sub_icon . '"></i>';
-                                    }
+                                    $buffy .= $main_sub_icon_html;
                                 } else {
-                                        $buffy .= '<i class="tdb-menu-more-icon ' . $more_icon . '"></i>';
+                                        $buffy .= $more_icon_html;
                                     $buffy .= '</span>';
                                 }
 
@@ -830,7 +1463,7 @@ class tdb_header_menu extends td_block {
             ?>
             <script>
                 /* global jQuery:{} */
-                jQuery().ready(function () {
+                jQuery(document).ready( function () {
 
                     var tdbMenuItem = new tdbMenu.item();
                     tdbMenuItem.blockUid = '<?php echo $this->block_uid; ?>';
@@ -842,14 +1475,14 @@ class tdb_header_menu extends td_block {
 
 	                <?php } ?>
 
-	                <?php if( $this->get_att('mm_align_screen') == '' || $this->get_att('mm_align_screen') == 'parent' ) { ; ?>
+	                <?php if( $this->get_att('mm_align_screen') == '' || $this->get_att('mm_align_screen') == 'parent' ) { ?>
 
                     tdbMenuItem.isMegaMenuParentPos = true;
 
 	                <?php } ?>
 
 	                <?php
-	                if (tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) {
+	                if ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) {
 	                ?>
                     tdbMenuItem.inComposer = true;
 	                <?php
@@ -894,20 +1527,17 @@ class tdb_header_menu extends td_block {
                     // menu items dropdown list
                     $buffy .= '<div class="tdb-menu-items-dropdown">';
 
-                        if( $sep_icon != '' ) {
-                            $buffy .= '<i class="tdb-menu-sep ' . $sep_icon . '"></i>';
-                        }
+                        $buffy .= $sep_icon_html;
+
                         $buffy .= '<div class="td-subcat-more">';
                             $buffy .= '<div class="tdb-menu-item-text">';
                             if( $more_icon == '' ) {
                                     $buffy .= $more_txt != '' ? $more_txt : 'More';
                                 $buffy .= '</div>';
 
-                                if( $main_sub_icon != '' ) {
-                                    $buffy .= '<i class="tdb-menu-more-subicon ' . $main_sub_icon . '"></i>';
-                                }
+                                $buffy .= $main_sub_icon_html;
                             } else {
-                                    $buffy .= '<i class="tdb-menu-more-icon ' . $more_icon . '"></i>';
+                                    $buffy .= $more_icon_html;
                                 $buffy .= '</div>';
                             }
 
@@ -925,7 +1555,7 @@ class tdb_header_menu extends td_block {
             ?>
             <script>
                 /* global jQuery:{} */
-                jQuery(window).load(function () {
+                jQuery(document).ready( function () {
 
                     var tdbMenuItem = new tdbMenu.item();
                     tdbMenuItem.blockUid = '<?php echo $this->block_uid; ?>';
@@ -937,14 +1567,14 @@ class tdb_header_menu extends td_block {
 
 	                <?php } ?>
 
-	                <?php if( $this->get_att('mm_align_screen') == '' || $this->get_att('mm_align_screen') == 'parent' ) { ; ?>
+	                <?php if( $this->get_att('mm_align_screen') == '' || $this->get_att('mm_align_screen') == 'parent' ) { ?>
 
                     tdbMenuItem.isMegaMenuParentPos = true;
 
 	                <?php } ?>
 
 	                <?php
-	                if (tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) {
+	                if ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) {
 	                ?>
                     tdbMenuItem.inComposer = true;
 	                <?php
@@ -976,7 +1606,7 @@ class tdb_header_menu extends td_block {
         ?>
         <script>
             /* global jQuery:{} */
-            (function () {
+            ( function () {
 
                 var tdbMenuItem = new tdbMenu.item();
                 tdbMenuItem.blockUid = '<?php echo $this->block_uid; ?>';
@@ -988,7 +1618,7 @@ class tdb_header_menu extends td_block {
 
 	            <?php } ?>
 
-	            <?php if( $this->get_att('mm_align_screen') == '' || $this->get_att('mm_align_screen') == 'parent' ) { ; ?>
+	            <?php if( $this->get_att('mm_align_screen') == '' || $this->get_att('mm_align_screen') == 'parent' ) { ?>
 
                 tdbMenuItem.isMegaMenuParentPos = true;
 
@@ -1078,6 +1708,16 @@ class tdb_header_menu extends td_block {
                         // the excluded elements
                         pulldown_item_obj.excluded_jquery_elements = excluded_jquery_elements;
 
+                        // send the main sub icon and the sub icon
+                        var mainSubIcon = blockMenu.find('.tdb-main-sub-icon-fake');
+                        if( mainSubIcon.length ) {
+                            pulldown_item_obj.main_sub_icon = mainSubIcon.html();
+                        }
+                        var subIcon = blockMenu.find('.tdb-sub-icon-fake');
+                        if( subIcon.length ) {
+                            pulldown_item_obj.sub_icon = subIcon.html();
+                        }
+
                         tdPullDown.add_item(pulldown_item_obj);
                     }
 
@@ -1087,8 +1727,6 @@ class tdb_header_menu extends td_block {
                 }
 
             })();
-
-
         </script>
         <?php
 

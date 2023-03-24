@@ -12,7 +12,7 @@ class tdb_state_loader {
      *  - We have to get the content by making a new wp_query
      */
     static function on_tdc_loaded_load_state() {
-        if (tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe()) {
+        if ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) {
 
             global $tdb_state_single_page, $tdb_state_single, $tdb_state_category, $tdb_state_author, $tdb_state_search, $tdb_state_date, $tdb_state_tag, $tdb_state_attachment;
 
@@ -22,7 +22,7 @@ class tdb_state_loader {
 
             // try to load the content, if we fail to load it, we will ship the default state... ? @todo ?
             if ( $tdbLoadDataFromId !== false && $tdbTemplateType !== false ) {
-                switch ($tdbTemplateType) {
+				switch ($tdbTemplateType) {
                     case 'single':
                         // get the content wp_query
                         $wp_query_content = new WP_Query( array(
@@ -33,6 +33,19 @@ class tdb_state_loader {
                         $tdb_state_single->set_wp_query($wp_query_content);
                     break;
 
+	                case 'cpt':
+
+						$loadedPost = get_post($tdbLoadDataFromId);
+
+		                // get the content wp_query
+		                $wp_query_content = new WP_Query( array(
+				                'page_id' => $tdbLoadDataFromId,
+				                'post_type' => $loadedPost->post_type
+			                )
+		                );
+		                $tdb_state_single->set_wp_query($wp_query_content);
+		                break;
+
                     case 'attachment':
                         // get the content wp_query
                         $wp_query_content = new WP_Query( array(
@@ -42,6 +55,155 @@ class tdb_state_loader {
                         );
                         $tdb_state_attachment->set_wp_query($wp_query_content);
                     break;
+
+	                case 'cpt_tax':
+
+		                add_action( 'init', function() {
+
+							global $tdb_state_category;
+
+							$template_id = '';
+	                        $tem_content = '';
+
+			                $tdbLoadDataFromId = tdb_util::get_get_val('tdbLoadDataFromId');
+			                $current_category_obj = get_term( $tdbLoadDataFromId );
+
+	                        if ( tdc_state::is_live_editor_ajax() ) {
+	                            $tem_content = stripcslashes( $_POST['shortcode'] );
+	                        } else {
+
+	                            $td_cpt_tax = td_util::get_option('td_cpt_tax');
+
+								$default_template_id = $td_cpt_tax[ $current_category_obj->taxonomy ][ 'tdb_category_template' ];
+
+	                            // if we find an individual template..
+		                        if ( td_global::is_tdb_template( $default_template_id, true ) ) {
+			                        $template_id = td_global::tdb_get_template_id( $default_template_id );
+		                        }
+
+	                            // if we don't have a template do not build the query
+	                            if ( !empty( $template_id ) ) {
+
+	                                // load the tdb template
+	                                $wp_query_template = new WP_Query( array(
+	                                        'p' => $template_id,
+	                                        'post_type' => 'tdb_templates'
+	                                    )
+	                                );
+	                            }
+
+	                            if ( !empty( $wp_query_template ) && $wp_query_template->have_posts() ) {
+	                                $tem_content = $wp_query_template->post->post_content;
+	                            }
+	                        }
+
+							$args = array(
+		                        'tax_query' => [
+									[ 'taxonomy' => $current_category_obj->taxonomy, 'terms' => $tdbLoadDataFromId ]
+								],
+
+	                            'posts_per_page' => tdb_util::get_shortcode_att( $tem_content, 'tdb_loop', 'limit' ),
+	                            'offset' => tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','offset' ),
+	                        );
+
+	                        // exclude or include certain posts or pages from your posts loop
+	                        $posts_not_in = self::parse_shortcode_att( tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','post_ids' ), 'post__not_in' );
+	                        $posts_in     = self::parse_shortcode_att( tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','post_ids' ), 'post__in' );
+
+	                        if ( !empty($posts_in) && is_array($posts_in) ) {
+	                            $args['post__in'] = $posts_in;
+	                            $args['orderby'] = 'post__in';
+	                        }
+
+	                        if ( !empty($posts_not_in) && is_array($posts_not_in) ) {
+	                            $args['post__not_in'] = $posts_not_in;
+	                        }
+
+	                        // get post types from att
+	                        $installed_post_types = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop', 'installed_post_types' );
+	                        if ( !empty($installed_post_types) ) {
+	                            $array_selected_post_types = array();
+	                            $expl_installed_post_types = explode(',', $installed_post_types);
+	                            foreach ($expl_installed_post_types as $val_this_post_type) {
+	                                if (trim($val_this_post_type) != '') {
+	                                    $array_selected_post_types[] = trim($val_this_post_type);
+	                                }
+	                            }
+	                            $args['post_type'] = $array_selected_post_types;//$installed_post_types;
+	                        }
+
+	                        // sort posts
+	                        $sort = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','sort' );
+	                        switch ($sort) {
+	                            case 'oldest_posts':
+	                                $args['order'] = 'ASC';
+	                                break;
+
+	                            case 'modified_date':
+	                                $args['orderby'] = 'post_modified';
+	                                break;
+
+	                            case 'alphabetical_order':
+	                                $args['orderby'] = 'title';
+	                                $args['order'] = 'ASC';
+
+	                                break;
+
+	                            case 'popular':
+	                                $args['meta_key'] = td_page_views::$post_view_counter_key;
+	                                $args['orderby'] = 'meta_value_num';
+	                                $args['order'] = 'DESC';
+
+	                                break;
+
+	                            case 'popular7':
+	                                $args['meta_query'] = 	array(
+	                                    'relation' => 'AND',
+	                                    array(
+	                                        'key'     => td_page_views::$post_view_counter_7_day_total,
+	                                        'type'    => 'numeric'
+	                                    ),
+	                                    array(
+	                                        'key'     => td_page_views::$post_view_counter_7_day_last_date,
+	                                        'value'   => (date('U') - 604800), // current date minus 7 days
+	                                        'type'    => 'numeric',
+	                                        'compare' => '>'
+	                                    )
+	                                );
+	                                $args['orderby'] = td_page_views::$post_view_counter_7_day_total;
+	                                $args['order'] = 'DESC';
+
+	                                break;
+
+	                            case 'review_high':
+	                                $args['meta_key'] = 'td_review_key';
+	                                $args['orderby'] = 'meta_value_num';
+	                                $args['order'] = 'DESC';
+
+	                                break;
+
+	                            case 'comment_count':
+	                                $args['orderby'] = 'comment_count';
+	                                $args['order'] = 'DESC';
+
+	                                break;
+	                        }
+
+		                    // locked content
+		                    $locked_only = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','locked_only' );
+		                    if ( defined('TD_SUBSCRIPTION') && !empty( $locked_only ) ) {
+			                    $args['meta_key'] = 'tds_lock_content';
+		                    }
+
+	                        // get the cat wp_query
+	                        $wp_query_content = new WP_Query( $args );
+
+		                    $tdb_state_category->set_tax();
+	                        $tdb_state_category->set_wp_query( $wp_query_content );
+
+						});
+
+                        break;
 
                     case 'category':
 
@@ -106,6 +268,18 @@ class tdb_state_loader {
                             $args['post__not_in'] = $posts_not_in;
                         }
 
+                        // get post types from att
+                        $installed_post_types = tdb_util::get_shortcode_att($tem_content, 'tdb_loop', 'installed_post_types');
+                        if (!empty($installed_post_types)) {
+                            $array_selected_post_types = array();
+                            $expl_installed_post_types = explode(',', $installed_post_types);
+                            foreach ($expl_installed_post_types as $val_this_post_type) {
+                                if (trim($val_this_post_type) != '') {
+                                    $array_selected_post_types[] = trim($val_this_post_type);
+                                }
+                            }
+                            $args['post_type'] = $array_selected_post_types;//$installed_post_types;
+                        }
 
                         // sort posts
                         $sort = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','sort' );
@@ -164,6 +338,11 @@ class tdb_state_loader {
                                 break;
                         }
 
+	                    // locked content
+	                    $locked_only = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','locked_only' );
+	                    if ( defined('TD_SUBSCRIPTION') && !empty( $locked_only ) ) {
+		                    $args['meta_key'] = 'tds_lock_content';
+	                    }
 
                         // get the cat wp_query
                         $wp_query_content = new WP_Query( $args );
@@ -217,6 +396,20 @@ class tdb_state_loader {
                             $args['post__not_in'] = $posts_not_in;
                         }
 
+                        // get post types from att
+                        $installed_post_types = tdb_util::get_shortcode_att($tem_content, 'tdb_loop', 'installed_post_types');
+                        if (!empty($installed_post_types)) {
+                            $array_selected_post_types = array();
+                            $expl_installed_post_types = explode(',', $installed_post_types);
+
+                            foreach ($expl_installed_post_types as $val_this_post_type) {
+                                if (trim($val_this_post_type) != '') {
+                                    $array_selected_post_types[] = trim($val_this_post_type);
+                                }
+                            }
+
+                            $args['post_type'] = $array_selected_post_types;//$installed_post_types;
+                        }
 
                         // sort posts
                         $sort = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','sort' );
@@ -270,6 +463,11 @@ class tdb_state_loader {
                                 break;
                         }
 
+	                    // locked content
+	                    $locked_only = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','locked_only' );
+	                    if ( defined('TD_SUBSCRIPTION') && !empty( $locked_only ) ) {
+		                    $args['meta_key'] = 'tds_lock_content';
+	                    }
 
                         // get the author wp_query
                         $wp_query_content = new WP_Query( $args );
@@ -311,7 +509,7 @@ class tdb_state_loader {
 
                         $args = array(
                             's' => $tdbLoadDataFromId,
-                            'posts_per_page' => tdb_util::get_shortcode_att($tem_content, 'tdb_loop', 'limit'),
+                            'posts_per_page' => tdb_util::get_shortcode_att( $tem_content, 'tdb_loop', 'limit' ),
                             'offset' => tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','offset' ),
                         );
 
@@ -324,10 +522,24 @@ class tdb_state_loader {
                             $args['orderby'] = 'post__in';
                         }
 
-                        if ( !empty($posts_not_in) && is_array($posts_not_in) ) {
+                        if ( !empty( $posts_not_in ) && is_array( $posts_not_in ) ) {
                             $args['post__not_in'] = $posts_not_in;
                         }
 
+                        // get post types from att
+                        $installed_post_types = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop', 'installed_post_types' );
+                        if ( !empty( $installed_post_types ) ) {
+                            $array_selected_post_types = array();
+                            $expl_installed_post_types = explode(',', $installed_post_types );
+
+                            foreach ( $expl_installed_post_types as $val_this_post_type ) {
+                                if ( trim( $val_this_post_type ) != '' ) {
+                                    $array_selected_post_types[] = trim($val_this_post_type);
+                                }
+                            }
+
+                            $args['post_type'] = $array_selected_post_types; // $installed_post_types;
+                        }
 
                         // sort posts
                         $sort = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','sort' );
@@ -386,10 +598,17 @@ class tdb_state_loader {
                                 break;
                         }
 
+	                    // locked content
+	                    $locked_only = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','locked_only' );
+	                    if ( defined('TD_SUBSCRIPTION') && !empty( $locked_only ) ) {
+		                    $args['meta_key'] = 'tds_lock_content';
+	                    }
+
                         // get the search wp_query
                         $wp_query_content = new WP_Query( $args );
 
                         $tdb_state_search->set_wp_query($wp_query_content);
+
                     break;
 
                     case 'date':
@@ -444,6 +663,20 @@ class tdb_state_loader {
                             $args['post__not_in'] = $posts_not_in;
                         }
 
+                        // get post types from att
+                        $installed_post_types = tdb_util::get_shortcode_att($tem_content, 'tdb_loop', 'installed_post_types');
+                        if (!empty($installed_post_types)) {
+                            $array_selected_post_types = array();
+                            $expl_installed_post_types = explode(',', $installed_post_types);
+
+                            foreach ($expl_installed_post_types as $val_this_post_type) {
+                                if (trim($val_this_post_type) != '') {
+                                    $array_selected_post_types[] = trim($val_this_post_type);
+                                }
+                            }
+
+                            $args['post_type'] = $array_selected_post_types;//$installed_post_types;
+                        }
 
                         // sort posts
                         $sort = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','sort' );
@@ -502,6 +735,11 @@ class tdb_state_loader {
                                 break;
                         }
 
+	                    // locked content
+	                    $locked_only = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','locked_only' );
+	                    if ( defined('TD_SUBSCRIPTION') && !empty( $locked_only ) ) {
+		                    $args['meta_key'] = 'tds_lock_content';
+	                    }
 
                         // get the date wp_query
                         $wp_query_content = new WP_Query( $args );
@@ -557,6 +795,20 @@ class tdb_state_loader {
                             $args['post__not_in'] = $posts_not_in;
                         }
 
+                        // get post types from att
+                        $installed_post_types = tdb_util::get_shortcode_att($tem_content, 'tdb_loop', 'installed_post_types');
+                        if (!empty($installed_post_types)) {
+                            $array_selected_post_types = array();
+                            $expl_installed_post_types = explode(',', $installed_post_types);
+
+                            foreach ($expl_installed_post_types as $val_this_post_type) {
+                                if (trim($val_this_post_type) != '') {
+                                    $array_selected_post_types[] = trim($val_this_post_type);
+                                }
+                            }
+
+                            $args['post_type'] = $array_selected_post_types;//$installed_post_types;
+                        }
 
                         // sort posts
                         $sort = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','sort' );
@@ -615,6 +867,12 @@ class tdb_state_loader {
                                 break;
                         }
 
+	                    // locked content
+	                    $locked_only = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','locked_only' );
+	                    if ( defined('TD_SUBSCRIPTION') && !empty( $locked_only ) ) {
+		                    $args['meta_key'] = 'tds_lock_content';
+	                    }
+
                         // get the tag wp_query
                         $wp_query_content = new WP_Query( $args );
 
@@ -631,7 +889,6 @@ class tdb_state_loader {
                 $tem_content = '';
 
                 $tdb_state_single_page->set_page_obj( get_post($post_id) );
-
 
                 if ( tdc_state::is_live_editor_ajax() ) {
                     $tem_content = stripcslashes($_POST['shortcode']);
@@ -730,6 +987,11 @@ class tdb_state_loader {
                         break;
                 }
 
+	            // locked content
+	            $locked_only = tdb_util::get_shortcode_att( $tem_content, 'tdb_loop','locked_only' );
+	            if ( defined('TD_SUBSCRIPTION') && !empty( $locked_only ) ) {
+		            $args['meta_key'] = 'tds_lock_content';
+	            }
 
                 $wp_query_content = new WP_Query( $args );
 
@@ -752,6 +1014,19 @@ class tdb_state_loader {
 
         global $wp_query, $tdb_state_single_page, $tdb_state_single, $tdb_state_category, $tdb_state_author, $tdb_state_search, $tdb_state_date, $tdb_state_tag, $tdb_state_attachment;
 
+        $cpts = td_util::get_cpts();
+        $td_cpt = td_util::get_option('td_cpt');
+
+
+        // we are on the front end on a custom post type
+        foreach ($cpts as $cpt) {
+            // removed global check to allow individual cloud template on cpt
+            if ( is_singular(array( $cpt->name )) ) {
+	            $tdb_state_single->set_wp_query( $wp_query );
+	            break;
+            }
+        }
+
         // we are on the front end on a post
         if ( is_singular( array( 'post' ) ) ) {
             $tdb_state_single->set_wp_query($wp_query);
@@ -760,7 +1035,6 @@ class tdb_state_loader {
         // we are on the front end on a page
         if ( is_singular( array( 'page' ) ) ) {
             $tdb_state_single_page->set_page_obj(get_queried_object());
-
             $tdb_state_single_page->set_wp_query($wp_query);
         }
 
@@ -775,28 +1049,34 @@ class tdb_state_loader {
         }
 
         // we are on the front end on a category page
-        if ( is_category() ) {
+        if ( is_category()) {
+        	$tdb_state_category->set_wp_query($wp_query);
+        }
+
+        // we are on the front end on a taxonomy page
+        if ( is_tax()) {
+        	$tdb_state_category->set_tax();
             $tdb_state_category->set_wp_query($wp_query);
         }
 
         // we are on the front end on a author page
-         if ( is_author() ) {
+        if ( is_author() ) {
             $tdb_state_author->set_wp_query($wp_query);
         }
 
         // we are on the front end on a search page
-         if ( is_search() ) {
+        if ( is_search() ) {
             $tdb_state_search->set_wp_query($wp_query);
         }
 
         // we are on the front end on a date archive page
-         if ( is_date() ) {
-             $tdb_state_date->set_wp_query($wp_query);
+        if ( is_date() ) {
+            $tdb_state_date->set_wp_query($wp_query);
         }
 
         // we are on the front end on a tag page
-         if ( is_tag() ) {
-             $tdb_state_tag->set_wp_query($wp_query);
+        if ( is_tag() ) {
+            $tdb_state_tag->set_wp_query($wp_query);
         }
     }
 

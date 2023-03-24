@@ -9,7 +9,7 @@
 class td_config_helper {
 
 	// fonts atts
-	static function get_map_block_font_array( $param_name, $font_header = false, $font_title = '', $group = '', $index_style = '' ) {
+	static function get_map_block_font_array( $param_name, $font_header = false, $font_title = '', $group = '', $index_style = '', $class = '', $info_img = '', $info_descr = '', $toggle_enabled_by = '' ) {
 
 		$params = td_fonts::get_block_font_params();
 
@@ -17,7 +17,8 @@ class td_config_helper {
 				"param_name" => "font_settings",
 				"type" => "font_settings",
 				"value" => '',
-				"class" => '',
+				"class" => $class,
+                "toggle_enabled_by" => $toggle_enabled_by
 			)
 		);
 
@@ -26,7 +27,10 @@ class td_config_helper {
 					"param_name" => "font_title",
 					"type" => "font_title",
 					"value" => $font_title,
-					"class" => '',
+					"class" => $class,
+                    "info_img" => $info_img,
+                    "description" => $info_descr,
+                    "toggle_enabled_by" => $toggle_enabled_by
 				)
 			);
 		}
@@ -36,7 +40,8 @@ class td_config_helper {
 					"param_name" => "font_header",
 					"type" => "font_header",
 					"value" => '',
-					"class" => '',
+					"class" => $class,
+                    "toggle_enabled_by" => $toggle_enabled_by
 				)
 			);
 		}
@@ -51,57 +56,70 @@ class td_config_helper {
 			if ( ! empty( $index_style ) ) {
 				$param['param_name'] .= '-' . $index_style;
 			}
+
+            if ( ! empty( $class ) ) {
+                $param['class'] .= ' ' . $class;
+            }
+
+            if ( ! empty( $toggle_enabled_by ) ) {
+                $param['toggle_enabled_by'] =  $toggle_enabled_by;
+            }
 		}
 		return $params;
 	}
 
 
-	static function get_map_block_shadow_array( $param_name, $shadow_title, $shadow_size, $shadow_offset_h, $shadow_offset_v, $group = '', $index_style = '', $shadow_spread = 0, $shadow_header = true ) {
+	static function get_map_block_shadow_array( $param_name, $shadow_title, $shadow_size, $shadow_offset_h, $shadow_offset_v, $group = '', $index_style = '', $shadow_spread = 0, $shadow_header = true, $class = '', $info_img = '', $info_descr = '', $toggle_enabled_by = '' ) {
 		$params = array(
 		    array(
                 "param_name" => "shadow_size",
                 "type" => "textfield-responsive",
                 "value" => '',
                 "heading" => '',
-                'class' => 'tdc-shadow-contr-textfield',
+                'class' => 'tdc-shadow-contr-textfield ' . $class,
                 'description' => 'Change shadow size',
                 'placeholder' => '',
+                "toggle_enabled_by" => $toggle_enabled_by
             ),
             array(
                 "param_name" => "shadow_offset_horizontal",
                 "type" => "textfield-responsive",
                 "value" => '',
                 "heading" => '',
-                'class' => 'tdc-shadow-contr-textfield',
+                'class' => 'tdc-shadow-contr-textfield ' . $class,
                 'description' => 'Change shadow horizontal offset',
                 'placeholder' => '',
+                "toggle_enabled_by" => $toggle_enabled_by
             ),
             array(
                 "param_name" => "shadow_offset_vertical",
                 "type" => "textfield-responsive",
                 "value" => '',
                 "heading" => '',
-                'class' => 'tdc-shadow-contr-textfield',
+                'class' => 'tdc-shadow-contr-textfield ' . $class,
                 'description' => 'Change shadow vertical offset',
                 'placeholder' => '',
+                "toggle_enabled_by" => $toggle_enabled_by
             ),
             array(
                 "param_name" => "shadow_spread",
                 "type" => "textfield-responsive",
                 "value" => '',
                 "heading" => '',
-                'class' => 'tdc-shadow-contr-textfield',
+                'class' => 'tdc-shadow-contr-textfield td-shadow-contr-spread ' . $class,
                 'description' => 'Change shadow spread',
                 'placeholder' => '',
+                "toggle_enabled_by" => $toggle_enabled_by
             ),
             array(
                 "param_name" => "shadow_color",
                 "type" => "colorpicker",
                 "holder" => "div",
-                "class" => "tdc-shadow-contr-color",
+                "class" => "tdc-shadow-contr-color " . $class,
                 "heading" => '',
                 "value" => '',
                 "description" => 'Change shadow color',
+                "toggle_enabled_by" => $toggle_enabled_by
             ),
         );
 
@@ -109,7 +127,10 @@ class td_config_helper {
                 "param_name" => "shadow_title",
                 "type" => "shadow_title",
                 "value" => $shadow_title,
-                "class" => '',
+                "class" => $class,
+                "info_img" => $info_img,
+                "description" => $info_descr,
+                "toggle_enabled_by" => $toggle_enabled_by
             )
         );
 
@@ -120,7 +141,8 @@ class td_config_helper {
                     "param_name" => "shadow_header",
                     "type" => "shadow_header",
                     "value" => '',
-                    "class" => '',
+                    "class" => $class,
+                    "toggle_enabled_by" => $toggle_enabled_by
                 )
             );
         }
@@ -146,6 +168,14 @@ class td_config_helper {
 		        $param['param_name'] .= '-' . $index_style;
 	        }
 
+            if ( ! empty( $class ) ) {
+                $param['class'] .= ' ' . $class;
+            }
+
+            if ( ! empty( $toggle_enabled_by ) ) {
+                $param['toggle_enabled_by'] =  $toggle_enabled_by;
+            }
+
         }
         return $params;
 	}
@@ -164,9 +194,9 @@ class td_config_helper {
 					"group" => 'Style',
 				)
 			),
-			self::get_map_block_font_array( 'f_header', true, 'Block header', 'Style' ),
-			self::get_map_block_font_array( 'f_ajax', false, 'Ajax categories', 'Style' ),
-			self::get_map_block_font_array( 'f_more', false, 'Load more button', 'Style' )
+			self::get_map_block_font_array( 'f_header', true, 'Block header', 'Style', '', '', 'https://cloud.tagdiv.com/help/module_font_block_header.png', '' ),
+			self::get_map_block_font_array( 'f_ajax', false, 'Ajax categories', 'Style', '', '', 'https://cloud.tagdiv.com/help/module_font_ajax.png', '' ),
+			self::get_map_block_font_array( 'f_more', false, 'Load more button', 'Style', '', '', 'https://cloud.tagdiv.com/help/module_font_load_more.png', '' )
 		);
 	}
 
@@ -184,9 +214,9 @@ class td_config_helper {
                     "group" => 'Style',
                 )
             ),
-            self::get_map_block_font_array( 'msf_title', true, 'Article title', 'Style' ),
-            self::get_map_block_font_array( 'msf_cat', false, 'Article category tag', 'Style' ),
-            self::get_map_block_font_array( 'msf_meta', false, 'Article meta info', 'Style' )
+            self::get_map_block_font_array( 'msf_title', true, 'Article title', 'Style', '', '', 'https://cloud.tagdiv.com/help/module_font_article_title.png', '' ),
+            self::get_map_block_font_array( 'msf_cat', false, 'Article category tag', 'Style', '', '', 'https://cloud.tagdiv.com/help/module_font_article_cat.png', '' ),
+            self::get_map_block_font_array( 'msf_meta', false, 'Article meta info', 'Style', '', '', 'https://cloud.tagdiv.com/help/module_font_article_meta.png', '' )
         );
     }
 
@@ -210,6 +240,7 @@ class td_config_helper {
                 "value"      => "",
                 "class"      => "tdc-blend",
                 "group"      => $group,
+                "info_img" => "https://cloud.tagdiv.com/help/module_blend.png",
             ),
             array (
                 'param_name' => 'mix_type',
@@ -246,6 +277,7 @@ class td_config_helper {
                 'range_max' => '3',
                 'range_step' => '0.1',
                 'group' => $group,
+                "info_img" => "https://cloud.tagdiv.com/help/module_blend_brightness.png",
             ),
             array(
                 'param_name' => 'fe_contrast',
@@ -258,6 +290,7 @@ class td_config_helper {
                 'range_max' => '3',
                 'range_step' => '0.1',
                 'group' => $group,
+                "info_img" => "https://cloud.tagdiv.com/help/module_blend_contrast.png",
             ),
             array(
                 'param_name' => 'fe_saturate',
@@ -270,6 +303,7 @@ class td_config_helper {
                 'range_max' => '3',
                 'range_step' => '0.1',
                 'group' => $group,
+                "info_img" => "https://cloud.tagdiv.com/help/module_blend_saturate.png",
             ),
         );
     }
@@ -293,6 +327,7 @@ class td_config_helper {
                 "value"      => "",
                 "class"      => "tdc-blend",
                 "group"      => $group,
+                "info_img" => "https://cloud.tagdiv.com/help/module_blend.png",
             ),
             array (
                 'param_name' => 'mix_type_h',
@@ -323,12 +358,13 @@ class td_config_helper {
                 'type' => 'range',
                 'value' => '1',
                 'heading' => 'Brightness',
-                'description' => '',
+                'description' => 'Lorem ipsum dolor sit amet',
                 'class' => 'tdc-textfield-small',
                 'range_min' => '0',
                 'range_max' => '3',
                 'range_step' => '0.1',
                 'group' => $group,
+                "info_img" => "https://cloud.tagdiv.com/help/module_blend_brightness.png",
             ),
             array(
                 'param_name' => 'fe_contrast_h',
@@ -341,6 +377,7 @@ class td_config_helper {
                 'range_max' => '3',
                 'range_step' => '0.1',
                 'group' => $group,
+                "info_img" => "https://cloud.tagdiv.com/help/module_blend_contrast.png",
             ),
             array(
                 'param_name' => 'fe_saturate_h',
@@ -353,6 +390,7 @@ class td_config_helper {
                 'range_max' => '3',
                 'range_step' => '0.1',
                 'group' => $group,
+                "info_img" => "https://cloud.tagdiv.com/help/module_blend_saturate.png",
             ),
         );
     }

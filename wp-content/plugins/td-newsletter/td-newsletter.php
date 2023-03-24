@@ -4,13 +4,13 @@ Plugin Name: tagDiv Newsletter
 Plugin URI: http://tagdiv.com
 Description: Easily add newsletter subscription fields for your visitors with the tagDiv Newsletter plugin for WordPress. It brings you 8 beautiful styles to choose from.
 Author: tagDiv
-Version: 1.5 | built on 22.02.2021 13:59
+Version: 1.8 | built on 15.02.2023 13:25
 Author URI: http://tagdiv.com
 */
 
 
 //hash
-define('TD_NEWSLETTER', '3602c97a3e9cfdc6b89f5466e4b86eca');
+define('TD_NEWSLETTER', 'b5d024fc3d2d7d1186882b920dc0e8be');
 
 require_once('td_newsletter_version_check.php');
 
@@ -36,6 +36,7 @@ class td_api_newsletter {
 
     var $group_params = array();
 
+	static $img_attaches = array();
     static $typography_settings_list;
 
     function __construct() {
@@ -90,11 +91,10 @@ class td_api_newsletter {
                 'meta_value' => $image_key,
             ) );
 
-            if ( empty( $attaches ) || ! count( $attaches ) ) {
+            if ( empty( $attaches ) || !count( $attaches ) ) {
                 preg_match( '/[^\?]+\.(jpe?g|jpe|gif|png)\b/i', $image_name, $matches );
-                //var_dump($matches);
 
-                $upload_image_path = $upload_dir['basedir'] . '/' . $image_key . '.' . $matches[1] ;
+                $upload_image_path = $upload_dir['basedir'] . '/' . $image_key . '.' . $matches[1];
 
                 if ( copy( $ref_path . $image_name, $upload_image_path ) ) {
 
@@ -122,23 +122,54 @@ class td_api_newsletter {
                     // Generate the metadata for the attachment, and update the database record.
                     $attach_data = wp_generate_attachment_metadata( $attach_id, $upload_image_path );
                     wp_update_attachment_metadata( $attach_id, $attach_data );
+
+                    // Add to images array
+	                self::$img_attaches[$attach_id] = $image_key;
+
                 }
+
+            }  elseif ( is_array($attaches) && count($attaches) ) {
+
+	            // Add to images array
+	            self::$img_attaches[$attaches[0]->ID] = get_post_meta( $attaches[0]->ID, 'tdn_pic', true );
+
             }
         }
+
     }
 
 
     static function tdn_get_image( $value ) {
         $attach_id = null;
-        $attaches = get_posts( array(
-            'post_type' => 'attachment',
-            'meta_key'   => 'tdn_pic',
-            'meta_value' => $value,
-        ) );
 
-        if ( ! empty( $attaches ) && is_array( $attaches ) && count( $attaches ) ) {
-            $attach_id = $attaches[0]->ID;
+        /*
+         * self::$img_attaches:
+			Array
+			(
+                img attachment id => tdn_pic key
+			    [37758] => tdn_pic_1
+			    [37759] => tdn_pic_2
+			    [37760] => tdn_pic_3
+			)
+         *
+         */
+
+        if ( !empty( self::$img_attaches ) ) {
+	        $value_key = array_search( $value, self::$img_attaches );
+	        if ( $value_key !== false )
+		        $attach_id = $value_key;
+        } else {
+	        $attaches = get_posts( array(
+		        'post_type' => 'attachment',
+		        'meta_key'   => 'tdn_pic',
+		        'meta_value' => $value,
+	        ) );
+
+	        if ( !empty( $attaches ) && is_array( $attaches ) && count( $attaches ) ) {
+		        $attach_id = $attaches[0]->ID;
+	        }
         }
+
         return $attach_id;
     }
 
@@ -289,6 +320,22 @@ class td_api_newsletter {
                                 'class' => 'tdc-textfield-extrabig',
                             ),
                             array(
+                                "param_name" => "title_tag",
+                                "type" => "dropdown",
+                                "value" => array(
+                                    'Default - H3' => '',
+                                    'H1' => 'h1',
+                                    'H2' => 'h2',
+                                    'H4' => 'h4',
+                                    'Div' => 'div'
+                                ),
+                                "heading" => 'Title tag (SEO)',
+                                "description" => "",
+                                "holder" => "div",
+                                "class" => "tdc-dropdown-big",
+                                "info_img" => "https://cloud.tagdiv.com/help/title_seo.png",
+                            ),
+                            array(
                                 "param_name" => "title_space",
                                 "type" => "textfield-responsive",
                                 "value" => '',
@@ -339,7 +386,7 @@ class td_api_newsletter {
                                     'MailChimp '  => 'mailchimp',
 //                                    'AWeber'      => 'aweber',
                                     'Mailer Lite' => 'mailerlite',
-                                    'Feedburner'  => 'feedburner'
+                                    'Feedburner(deprecated)'  => 'feedburner'
                                 ),
                                 "heading" => 'Newsletter Provider',
                                 "description" => "Chose the Newsletter service provider that you are using.",
@@ -1361,5 +1408,6 @@ class td_api_newsletter {
 
 
     }
+
 }
 

@@ -27,9 +27,19 @@ class tdc_state {
 	private static $is_live_editor_ajax;
 
 
+	/**
+	 * @var bool
+	 */
+	private static $is_td_block_ajax = false;
+
+
 	private static $customized_settings;
 	private static $customized_menu_settings;
 	private static $customized_page_settings;
+
+	private static $start_composer_for_mobile = false;
+
+	private static $is_mobile_template = false;
 
 
 	/**
@@ -78,6 +88,21 @@ class tdc_state {
 	}
 
 
+	/**
+	 * @param $new_state
+	 */
+	public static function set_is_td_block_ajax( $new_state ) {
+		self::$is_td_block_ajax = $new_state;
+	}
+
+
+	/**
+	 * return true if we are in an ajax block request.
+	 * @return bool
+	 */
+	public static function is_td_block_ajax() {
+		return self::$is_td_block_ajax;
+	}
 
 
 	/**
@@ -160,5 +185,25 @@ class tdc_state {
 			return self::$customized_page_settings;
 		}
 		return false;
+	}
+
+
+	// how the composer was started
+	public static function set_start_composer_for_mobile($start_composer_for_mobile) {
+		self::$start_composer_for_mobile = $start_composer_for_mobile;
+	}
+
+	public static function get_start_composer_for_mobile() {
+		return self::$start_composer_for_mobile;
+	}
+
+
+	// is the current template mobile or not
+	public static function set_is_mobile_template($is_mobile_template) {
+		self::$is_mobile_template = $is_mobile_template;
+	}
+
+	public static function is_mobile_template() {
+		return self::$is_mobile_template;
 	}
 }

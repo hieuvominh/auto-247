@@ -76,7 +76,7 @@
 
 		$categories_array = array();
 
-		foreach ( td_util::get_category2id_array() as $cat_name => $cat_id ) {
+		foreach ( td_util::get_category2id_array(true, false) as $cat_name => $cat_id ) {
 			$categories_array[] = array(
 			    'text' => $cat_name , 'val' => $cat_id
             );
@@ -144,7 +144,12 @@
 <div class="td-box-row">
     <div class="td-box-description">
         <span class="td-box-title">Offset posts:</span>
-        <p>Start the count with an offset. If you set the grid to show 5 posts, you can make the latest articles section to start from the 6'th post (by using offset 5).</p>
+        <p>The offset will apply only when the Grid is set to "Latest".</p>
+        <?php td_util::tooltip_html('
+                             <p>Start the count with an offset. If you set the grid to show 5 posts, you can make the latest articles section to start from the 6\'th post (by using offset 5). </p>
+                          ', 'right') ?>
+
+
     </div>
     <div class="td-box-control-full">
 		<?php

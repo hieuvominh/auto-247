@@ -31,6 +31,79 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
 /* responsive landscape tablet */
 /* responsive portrait tablet */
 /* responsive portrait phone */
+.tdb-s-notif {
+  position: relative;
+  padding: 25px;
+  border-radius: 3px;
+}
+.tdb-s-notif,
+.tdb-s-notif *:not(.tdb-s-btn) {
+  font-size: 1em;
+  line-height: 1.4;
+}
+.tdb-s-notif b {
+  font-weight: 600;
+}
+.tdb-s-notif-descr:not(:last-child) {
+  margin-bottom: 6px;
+}
+.tdb-s-notif-list {
+  list-style-type: none;
+  margin: 0;
+}
+.tdb-s-notif-list:not(:last-child) {
+  margin: 0 0 10px;
+}
+.tdb-s-notif-list li {
+  margin-left: 0 !important;
+}
+.tdb-s-notif-list li:not(:last-child) {
+  margin-bottom: 6px;
+}
+.tdb-s-notif-list li:last-child {
+  margin-bottom: 0;
+}
+.tdb-s-notif-info,
+.tdb-s-notif-notice {
+  background-color: rgba(89, 98, 107, 0.08);
+  color: #59626B;
+}
+.tdb-s-notif-success {
+  background-color: rgba(38, 98, 28, 0.1);
+  color: #26621c;
+}
+.tdb-s-notif-warning {
+  background-color: rgba(215, 133, 0, 0.12);
+  color: #d78500;
+}
+.tdb-s-notif-error {
+  background-color: rgba(255, 56, 56, 0.12);
+  color: #ff3838;
+}
+.tdb-s-notif-xsm {
+  padding: 10px 15px;
+}
+.tdb-s-notif-xsm,
+.tdb-s-notif-xsm *:not(.tdb-s-btn) {
+  font-size: .929em;
+  line-height: 1.4;
+}
+.tdb-s-notif-sm {
+  padding: 18px;
+}
+.tdb-s-notif-sm,
+.tdb-s-notif-sm *:not(.tdb-s-btn) {
+  font-size: .929em;
+  line-height: 1.4;
+}
+.tdb-s-notif-xxsm {
+  padding: 5px 10px 6px;
+}
+.tdb-s-notif-xxsm,
+.tdb-s-notif-xxsm *:not(.tdb-s-btn) {
+  font-size: .857em;
+  line-height: 1.3;
+}
 [class*="tdc-ico-tdb_"] {
   background: url('../../../td-cloud-library/assets/images/pagebuilder/tdc-icons.png') !important;
   background-position: -5px -5px !important;
@@ -42,7 +115,8 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
   width: 40px;
   height: 24px;
 }
-.tdc-ico-tdb_single_categories {
+.tdc-ico-tdb_single_categories,
+.tdc-ico-tdb_single_taxonomies {
   background-position: -5px -73px !important;
   width: 40px;
   height: 24px;
@@ -104,7 +178,8 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
   width: 40px;
   height: 24px;
 }
-.tdc-ico-tdb_single_tags {
+.tdc-ico-tdb_single_tags,
+.tdc-ico-tdb_single_ctags {
   background-position: -55px -175px !important;
   width: 40px;
   height: 24px;
@@ -145,12 +220,16 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
   width: 40px;
   height: 24px;
 }
-.tdc-ico-tdb_single_review_overview {
+.tdc-ico-tdb_single_review_overview,
+.tdc-ico-tdb_single_user_reviews_list,
+.tdc-ico-tdb_single_user_review_replies_list {
   background-position: -105px -107px !important;
   width: 40px;
   height: 24px;
 }
-.tdc-ico-tdb_single_review_overall {
+.tdc-ico-tdb_single_review_overall,
+.tdc-ico-tdb_single_user_reviews_overall,
+.tdc-ico-tdb_single_user_review_ratings {
   background-position: -105px -141px !important;
   width: 40px;
   height: 24px;
@@ -175,7 +254,8 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
   width: 40px;
   height: 24px;
 }
-.tdc-ico-tdb_loop {
+.tdc-ico-tdb_loop,
+.tdc-ico-tdb_filters_loop {
   background-position: -105px -277px !important;
   width: 40px;
   height: 24px;
@@ -373,6 +453,100 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
   width: 40px;
   height: 24px;
 }
+.tdc-ico-tdb_single_current_post {
+  background-position: -355px -39px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_woo_menu_cart {
+  background-position: -355px -73px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_single_reading_time {
+  background-position: -355px -107px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_single_reading_progress {
+  background-position: -355px -141px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_single_custom_field {
+  background-position: -355px -175px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_location_finder {
+  background-position: -355px -209px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_single_location_display {
+  background-position: -355px -243px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_filters {
+  background-position: -355px -277px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_filters_list {
+  background-position: -405px -5px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_single_user_reviews_form,
+.tdc-ico-tdb_single_user_review_reply_form {
+  background-position: -405px -39px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_posts_list {
+  background-position: -405px -73px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_form_taxonomies {
+  background-position: -405px -107px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_form_file_upload {
+  background-position: -405px -141px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_form_content {
+  background-position: -405px -175px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_form_input,
+.tdc-ico-tdb_form_link_post,
+.tdc-ico-tdb_form_title {
+  background-position: -405px -209px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_form_submit,
+.tdc-ico-tdb_user_form_submit {
+  background-position: -405px -243px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_filters_loop_sorting_options {
+  background-position: -405px -277px !important;
+  width: 40px;
+  height: 24px;
+}
+.tdc-ico-tdb_single_toc {
+  background-position: -455px -5px !important;
+  width: 40px;
+  height: 24px;
+}
 .tdb-loading-templates {
   position: fixed;
   display: table;
@@ -479,7 +653,8 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
   background-position: -248px -196px;
 }
 /* template import css */
-.tdb_templates_open #tdb-modal {
+.tdb_templates_open #tdb-modal,
+.tdb_templates_open #tdb-modal-view {
   display: block !important;
   position: fixed;
   z-index: 9999;
@@ -494,8 +669,9 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
   box-sizing: border-box;
   /* index */
 }
-.tdb_templates_open #tdb-modal .tdb-index {
-  font-family: 'Open Sans', arial, sans-serif;
+.tdb_templates_open #tdb-modal .tdb-index,
+.tdb_templates_open #tdb-modal-view .tdb-index {
+  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
   font-size: 14px;
   color: #fff;
   line-height: 1;
@@ -506,7 +682,8 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
   width: 100%;
   height: 100%;
 }
-.tdb_templates_open #tdb-modal .tdb-index a {
+.tdb_templates_open #tdb-modal .tdb-index a,
+.tdb_templates_open #tdb-modal-view .tdb-index a {
   text-decoration: none;
   outline: none;
 }
@@ -546,7 +723,8 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
   -webkit-transform: translateZ(0);
   -moz-transform: translateZ(0);
 }
-#tdb-modal * {
+#tdb-modal *,
+#tdb-modal-view * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
@@ -612,6 +790,7 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
 }
 .tdb-error-wrap {
   position: relative;
+  margin-bottom: 15px;
   font-size: 13px;
 }
 .tdb-error-wrap span {
@@ -624,6 +803,10 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
 }
 .tdb-error-wrap .tdb-error-open-extra:hover {
   cursor: pointer;
+}
+.tdb-error-wrap .tdb-error-message a {
+  color: inherit;
+  text-decoration: underline !important;
 }
 .tdb-error-extra {
   max-height: 700px;
@@ -661,6 +844,34 @@ This file is loaded on all the wp-admin pages - including the TD composer wrappe
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   -moz-transform: translateZ(0);
+}
+.tdb-hide-mobile {
+  display: none;
+}
+.tdb-is-mobile {
+  display: inline-block;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 99;
+  background-color: #ff003e;
+  padding: 6px 9px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  -webkit-box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.2);
+}
+.tdb-is-not-mobile {
+  display: none !important;
+}
+.tdb-is-not-mobile-invert .tdb-template-wrap.tdb-is-not-mobile {
+  display: inline-block !important;
+}
+.tdb-is-not-mobile-invert .tdb-template-wrap:not(.tdb-is-not-mobile) {
+  display: none !important;
 }
 .tdb-template-wrap {
   display: inline-block;
@@ -1187,7 +1398,7 @@ button.tdb-btn.tdb-btn-add-section {
 }
 #tdb-template-type .tdb-category-wrap {
   display: inline-block;
-  padding: 0 200px;
+  padding: 0 320px 0 0;
   width: 100%;
   /* responsive */
 }
@@ -1206,6 +1417,71 @@ button.tdb-btn.tdb-btn-add-section {
   content: '';
   display: table;
   clear: both;
+}
+#tdb-template-type #tdb-mobile {
+  position: absolute;
+  right: 205px;
+  top: 4px;
+}
+#tdb-template-type #tdb-mobile .tdb-form-check {
+  line-height: 1;
+}
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='radio'],
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='checkbox'] {
+  display: none;
+}
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='radio'] + label,
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='checkbox'] + label {
+  display: inline-block;
+  margin-bottom: 0;
+  cursor: pointer;
+}
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='radio'] + label .tdb-check,
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='checkbox'] + label .tdb-check {
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: #fff;
+  cursor: pointer;
+  vertical-align: middle;
+  top: -1px;
+  border-radius: 3px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+}
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='radio'] + label .tdb-check:after,
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='checkbox'] + label .tdb-check:after {
+  content: '\e9db';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: auto;
+  font-family: 'newspaper';
+  font-size: 9px;
+  line-height: 1;
+  color: #fff;
+  opacity: 0;
+  transition: all .3s ease;
+  pointer-events: none;
+}
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='radio'] + label .tdb-check-title,
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='checkbox'] + label .tdb-check-title {
+  position: relative;
+  padding-left: 5px;
+  user-select: none;
+  -webkit-user-select: none;
+  font-size: 11px;
+  color: #bfbfc3;
+}
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='radio']:checked + label .tdb-check,
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='checkbox']:checked + label .tdb-check {
+  background-color: #5d6e9e;
+}
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='radio']:checked + label .tdb-check:after,
+#tdb-template-type #tdb-mobile .tdb-form-check input[type='checkbox']:checked + label .tdb-check:after {
+  opacity: 1;
 }
 .tdb-category-name {
   position: relative;
@@ -1246,15 +1522,18 @@ button.tdb-btn.tdb-btn-add-section {
 .tdc-tab-content-wrap .tdb-settings-author,
 .tdc-tab-content-wrap .tdb-settings-search,
 .tdc-tab-content-wrap .tdb-settings-tag,
-.tdc-tab-content-wrap .tdb-settings-attachment {
+.tdc-tab-content-wrap .tdb-settings-attachment,
+.tdc-tab-content-wrap .tdb-settings-page {
   display: none;
 }
 .tdb-template-type-single .tdb-settings-post,
+.tdb-template-type-cpt .tdb-settings-cpt,
 .tdb-template-type-category .tdb-settings-category,
 .tdb-template-type-author .tdb-settings-author,
 .tdb-template-type-search .tdb-settings-search,
 .tdb-template-type-tag .tdb-settings-tag,
-.tdb-template-type-attachment .tdb-settings-attachment {
+.tdb-template-type-attachment .tdb-settings-attachment,
+.tdb-template-type-page .tdb-settings-page {
   display: table;
 }
 .tdc-spot-header {
@@ -1276,28 +1555,42 @@ button.tdb-btn.tdb-btn-add-section {
   line-height: 17px;
   font-weight: 700;
 }
-.tdc-spot-header .tdc-inline-spot-header-title {
-  width: 132px;
-}
 .tdc-spot-header .tdc-spot-header-title {
   width: 228px;
-}
-.tdc-spot-header .tdc-inline-spot-header-paragraph {
-  width: 32px;
-  text-align: center;
 }
 .tdc-spot-header [class*='spot-header-color'] {
   width: 45px;
 }
+.tdc-spot-header [class*='spot-header-paragraph'] {
+  width: 32px;
+  text-align: center;
+}
 .tdc-spot-header .tdc-spot-header-color {
   text-align: right;
 }
-.tdc-spot-header .tdc-inline-spot-header-color {
+.tdc-spot-header .tdc-inline-spot-header-color,
+.tdc-spot-header .tdc-loop-spot-header-color {
   text-align: center;
+}
+.tdc-spot-header .tdc-inline-spot-header-title {
+  width: 132px;
 }
 .tdc-spot-header .tdc-inline-spot-header-align {
   width: 54px;
   padding-left: 7px;
+}
+.tdc-spot-header .tdc-inline-spot-header-paragraph {
+  width: 32px;
+}
+.tdc-spot-header .tdc-loop-spot-header-title {
+  width: 158px;
+}
+.tdc-spot-header .tdc-loop-spot-header-paragraph {
+  width: 45px;
+}
+.tdc-spot-header .tdc-loop-spot-header-full {
+  width: 25px;
+  text-align: right;
 }
 .tdc-tab-content-wrap .tdc-spot-controller {
   display: inline-block;
@@ -1317,7 +1610,7 @@ button.tdb-btn.tdb-btn-add-section {
   width: 100%;
 }
 .tdc-tab-content-wrap .tdc-spot-controller[class*='spot-title'],
-.tdc-tab-content-wrap .tdc-spot-controller.tdc-inline-spot-paragraph,
+.tdc-tab-content-wrap .tdc-spot-controller[class*='spot-paragraph'],
 .tdc-tab-content-wrap .tdc-spot-controller.tdc-inline-spot-align {
   margin-top: 2px;
 }
@@ -1330,11 +1623,17 @@ button.tdb-btn.tdb-btn-add-section {
 .tdc-tab-content-wrap .tdc-spot-controller.tdc-inline-spot-title {
   width: 132px;
 }
+.tdc-tab-content-wrap .tdc-spot-controller.tdc-loop-spot-title {
+  width: 158px;
+}
+.tdc-tab-content-wrap .tdc-spot-controller[class*='spot-paragraph'] input[type=text] {
+  text-align: center;
+}
 .tdc-tab-content-wrap .tdc-spot-controller.tdc-inline-spot-paragraph {
   width: 32px;
 }
-.tdc-tab-content-wrap .tdc-spot-controller.tdc-inline-spot-paragraph input[type=text] {
-  text-align: center;
+.tdc-tab-content-wrap .tdc-spot-controller.tdc-loop-spot-paragraph {
+  width: 45px;
 }
 .tdc-tab-content-wrap .tdc-spot-controller[class*='spot-color'] {
   width: 45px;
@@ -1346,9 +1645,102 @@ button.tdb-btn.tdb-btn-add-section {
 .tdc-tab-content-wrap .tdc-spot-controller.tdc-spot-color .tdc-colorpicker-wrap {
   margin: 2px 0 0 auto;
 }
-.tdc-tab-content-wrap .tdc-spot-controller.tdc-inline-spot-color .tdc-colorpicker-wrap {
+.tdc-tab-content-wrap .tdc-spot-controller.tdc-inline-spot-color .tdc-colorpicker-wrap,
+.tdc-tab-content-wrap .tdc-spot-controller.tdc-loop-spot-color .tdc-colorpicker-wrap {
   margin: 2px auto 0;
 }
 .tdc-tab-content-wrap .tdc-spot-controller.tdc-inline-spot-align {
   width: 64px;
+}
+.tdc-tab-content-wrap .tdc-spot-controller.tdc-loop-spot-full {
+  width: 25px;
+  margin-top: 3px;
+  margin-bottom: 7px;
+  text-align: right;
+}
+.tdc-dummy-mobile-header {
+  padding: 12px 0 48px;
+  /* responsive portrait phone */
+}
+@media (max-width: 767px) {
+  .tdc-dummy-mobile-header {
+    padding: 12px 20px 38px;
+  }
+}
+.tdc-dummy-mobile-header .tdc-dummy-mobile-header-inner {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 22px 20px 15px 41px;
+  background-color: #fff;
+  font-size: 12px;
+  color: #777;
+  transition: all 0.5s ease;
+  border-radius: 3px;
+  box-shadow: 0 3px 12px -1px rgba(10, 13, 25, 0.23), 0 22px 27px -20px rgba(10, 13, 25, 0.23);
+  user-select: none;
+  -webkit-user-select: none;
+  /* responsive portrait phone */
+}
+@media (max-width: 767px) {
+  .tdc-dummy-mobile-header .tdc-dummy-mobile-header-inner {
+    padding: 17px 16px 11px 31px;
+  }
+}
+.tdc-dummy-mobile-header .tdc-dummy-mobile-header-inner:before {
+  content: '';
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #ffc10a;
+  background: -moz-linear-gradient(45deg, #f9c100 0%, #ffe500 100%);
+  background: -webkit-linear-gradient(45deg, #f9c100 0%, #ffe500 100%);
+  background: linear-gradient(45deg, #f9c100 0%, #ffe500 100%);
+  border-radius: 3px 3px 0 0;
+}
+.tdc-dummy-mobile-header .tdc-dmh-icon {
+  position: absolute;
+  top: calc(50% + 2px);
+  transform: translateY(-50%);
+  left: -18px;
+  padding: 7px;
+  background: #ffc10a;
+  border-radius: 50px;
+  box-shadow: 0 3px 12px -1px rgba(249, 193, 0, 0.4), 0 22px 27px -20px rgba(249, 193, 0, 0.4);
+  /* responsive portrait phone */
+}
+@media (max-width: 767px) {
+  .tdc-dummy-mobile-header .tdc-dmh-icon {
+    width: 36px;
+  }
+}
+.tdc-dummy-mobile-header .tdc-dmh-icon img {
+  position: relative;
+  top: -1px;
+  display: block;
+}
+.tdc-dummy-mobile-header .tdc-dmh-txt {
+  position: relative;
+  top: -2px;
+  /* responsive portrait phone */
+}
+@media (max-width: 767px) {
+  .tdc-dummy-mobile-header .tdc-dmh-txt {
+    font-size: 11px;
+    line-height: 17px;
+  }
+}
+body:not(.tdc-yoast-active) .tdc-show-if-yoast {
+  display: none;
+}
+.tdb-global-font [title="Font weight"],
+.tdb-global-font [title="Font style"],
+.tdb-global-font .tdc-font-weight,
+.tdb-global-font .tdc-font-style {
+  opacity: 0;
+  pointer-events: none;
 }

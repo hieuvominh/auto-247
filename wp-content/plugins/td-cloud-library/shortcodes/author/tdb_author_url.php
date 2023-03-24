@@ -9,13 +9,39 @@ class tdb_author_url extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_author_url */
+                .tdb_author_url {
+                  margin-bottom: 6px;
+                  font-size: 11px;
+                  line-height: 21px;
+                }
+                .tdb_author_url .tdb-author-url {
+                  display: block;
+                  font-style: italic;
+                  color: #444;
+                }
+                .tdb_author_url .tdb-author-url:hover {
+                  color: #4db2ec;
+                }
+                
+                
                 /* @make_inline */
                 .$unique_block_class {
                     display: inline-block;
@@ -70,6 +96,8 @@ class tdb_author_url extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_author_url', 1 );
+
         // make inline
         $res_ctx->load_settings_raw( 'make_inline', $res_ctx->get_shortcode_att('make_inline') );
 
@@ -119,6 +147,12 @@ class tdb_author_url extends td_block {
             $td_target = ' target="_blank" ';
         }
 
+        //set rel attribute on logo url
+        $td_link_rel = '';
+        if ('' !== $this->get_att('url_rel')) {
+            $td_link_rel = ' rel="' . $this->get_att('url_rel') . '" ';
+        }
+
 
         $buffy = ''; //output buffer
 
@@ -142,7 +176,7 @@ class tdb_author_url extends td_block {
                     $buffy .= '<span class="tdb-add-text">' . $this->get_att('add_text') . '</span>';
                 }
 
-                $buffy .= '<a href="' . $author_url_data['url'] . '" ' . $td_target . ' class="tdb-author-url">' . $author_url_data['url'] . '</a>';
+                $buffy .= '<a href="' . $author_url_data['url'] . '" ' . $td_target . $td_link_rel . ' class="tdb-author-url">' . $author_url_data['url'] . '</a>';
 
             $buffy .= '</div>';
 

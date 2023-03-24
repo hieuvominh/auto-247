@@ -7,13 +7,14 @@
  * @property tdb_method menu
  * @property tdb_method page_breadcrumbs
  * @property tdb_method title
+ * @property tdb_method page_socials
+ * @property tdb_method page_custom_field
  *
  *
  */
 class tdb_state_single_page extends tdb_state_base {
 
     private $page_obj;
-
 
     /**
      * set the page wp_query
@@ -36,15 +37,37 @@ class tdb_state_single_page extends tdb_state_base {
         // latest posts loop
         $this->loop = function ( $atts ) {
 
-            // previous text icon class
-            $prev_class = 'td-icon-menu-left';
+            $svg_list = td_global::$svg_theme_font_list;
+
+            // previous text icon
+            $prev_icon_html = '<i class="page-nav-icon td-icon-menu-left"></i>';
             if( isset( $atts['prev_tdicon'] ) ) {
-                $prev_class = $atts['prev_tdicon'];
+                $prev_icon = $atts['prev_tdicon'];
+                $prev_icon_data = '';
+                if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+                    $prev_icon_data = 'data-td-svg-icon="' . $prev_icon . '"';
+                }
+
+                if( array_key_exists( $prev_icon, $svg_list ) ) {
+                    $prev_icon_html = '<div class="page-nav-icon page-nav-icon-svg" ' . $prev_icon_data . '>' . base64_decode( $svg_list[$prev_icon] ) . '</div>';
+                } else {
+                    $prev_icon_html = '<i class="page-nav-icon ' . $prev_icon . '"></i>';
+                }
             }
-            // next text icon class
-            $next_class = 'td-icon-menu-right';
+            // next text icon
+            $next_icon_html = '<i class="page-nav-icon td-icon-menu-right"></i>';
             if( isset( $atts['next_tdicon'] ) ) {
-                $next_class = $atts['next_tdicon'];
+                $next_icon = $atts['next_tdicon'];
+                $next_icon_data = '';
+                if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+                    $next_icon_data = 'data-td-svg-icon="' . $next_icon . '"';
+                }
+
+                if( array_key_exists( $next_icon, $svg_list ) ) {
+                    $next_icon_html = '<div class="page-nav-icon page-nav-icon-svg" ' . $next_icon_data . '>' . base64_decode( $svg_list[$next_icon] ) . '</div>';
+                } else {
+                    $next_icon_html = '<i class="page-nav-icon ' . $next_icon . '"></i>';
+                }
             }
 
             // pagination options
@@ -54,8 +77,8 @@ class tdb_state_single_page extends tdb_state_base {
                 'page_text'     => '%PAGE_NUMBER%',
                 'first_text'    => __td( '1' ),
                 'last_text'     => __td( '%TOTAL_PAGES%' ),
-                'next_text'     => '<i class="' . $next_class . '"></i>',
-                'prev_text'     => '<i class="' . $prev_class . '"></i>',
+                'next_text'     => $next_icon_html,
+                'prev_text'     => $prev_icon_html,
                 'dotright_text' => __td( '...' ),
                 'dotleft_text'  => __td( '...' ),
                 'num_pages'     => 3,
@@ -70,8 +93,8 @@ class tdb_state_single_page extends tdb_state_base {
                 'start_page' => 1,
                 'end_page' => 3,
                 'pages_to_show' => 3,
-                'previous_posts_link' => '<a href="#"><i class="' . $prev_class . '"></i></a>',
-                'next_posts_link' => '<a href="#"><i class="' . $next_class . '"></i></a>'
+                'previous_posts_link' => '<a href="#">' . $prev_icon_html . '</a>',
+                'next_posts_link' => '<a href="#">' . $next_icon_html . '</a>'
             );
 
             // posts limit - by default get the global wp loop posts limit setting
@@ -138,8 +161,12 @@ class tdb_state_single_page extends tdb_state_base {
                 'posts_per_page' => $limit,
                 'offset' => $offset,
                 'paged' => $paged,
-                'main_query_offset' => true //fix the pagination on offset, see tdb_functions.php
+                'main_query_offset' => true // fix the pagination on offset, see tdb_functions.php
             );
+
+            if ( td_unique_posts::$unique_articles_enabled == true ) {
+                $args['post__not_in'] = td_unique_posts::$rendered_posts_ids;
+            }
 
             $post_ids = isset( $atts['post_ids'] ) ? $atts['post_ids'] : '';
 
@@ -179,6 +206,22 @@ class tdb_state_single_page extends tdb_state_base {
                     }
                 }
 
+            }
+
+            // set post type
+            $installed_post_types = isset( $atts['installed_post_types'] ) ? $atts['installed_post_types'] : '';
+
+            if (!empty($installed_post_types)) {
+                $array_selected_post_types = array();
+                $expl_installed_post_types = explode(',', $installed_post_types);
+
+                foreach ($expl_installed_post_types as $val_this_post_type) {
+                    if (trim($val_this_post_type) != '') {
+                        $array_selected_post_types[] = trim($val_this_post_type);
+                    }
+                }
+
+                $args['post_type'] = $array_selected_post_types ;
             }
 
             // sort posts
@@ -230,6 +273,11 @@ class tdb_state_single_page extends tdb_state_base {
                 }
             }
 
+	        // locked content
+	        $locked_only = $atts['locked_only'] ?? '';
+	        if ( defined('TD_SUBSCRIPTION') && !empty( $locked_only ) ) {
+		        $args['meta_key'] = 'tds_lock_content';
+	        }
 
             $wp_query_loop = new WP_Query($args);
 
@@ -311,9 +359,71 @@ class tdb_state_single_page extends tdb_state_base {
 
             return $data_array;
         };
+        $this->page_socials = function ($atts) {
+
+            if ( !$this->has_wp_query() ) {
+                return array(
+                    'post_permalink' => '#',
+                    'is_amp'         => false,
+                    'is_tdb_block'   => true,
+                    'services'       => array(
+                        'facebook',
+                        'twitter',
+                        'pinterest',
+                        'whatsapp',
+                        'linkedin',
+                        'reddit',
+                        'mail',
+//                        'print',
+                        'tumblr',
+                        'telegram',
+                        'stumbleupon',
+                        'vk',
+                        'digg',
+                        'line',
+                        'viber',
+                    ),
+                    'share_text_show' => 'yes',
+                    'style' => $atts['like_share_style']
+                );
+            }
+
+            // print doesn't work properly on pages
+            $enabled_socials = td_api_social_sharing_styles::_helper_get_enabled_socials();
+            foreach ( $enabled_socials as $index=>$enabled_social ) {
+                if ( $enabled_social === 'print' ) {
+                    unset($enabled_socials[$index]);
+                }
+            }
+
+            return array(
+                'is_tdb_block' => true,
+                'is_amp' => false,
+                'post_id' => $this->get_page_obj()->ID,
+                'post_permalink' => esc_url( get_permalink( $this->get_page_obj()->ID ) ),
+                'services' => $enabled_socials,
+                'style' => $atts['like_share_style'],
+                'share_text_show' => $atts['like_share_text'] !== 'yes',
+                'social_rel' => ( $atts['social_rel'] !== '' ) ? ' rel="' . $atts['social_rel'] . '" ' : '',
+                'el_class' => ''
+            );
+
+        };
 
         // page breadcrumbs
-        $this->page_breadcrumbs = function ( ) {
+        $this->page_breadcrumbs = function ( $atts ) {
+
+            $dummy_data_array = array(
+                array(
+                    'title_attribute' => '',
+                    'url' => '',
+                    'display_name' => 'Sample Page'
+                )
+            );
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_data_array;
+            }
 
             $data_array = array(
                 array(
@@ -322,6 +432,28 @@ class tdb_state_single_page extends tdb_state_base {
                     'display_name' => ucfirst( $this->get_page_obj()->post_title )
                 )
             );
+
+            if ( isset($atts['show_parent_page']) && $atts['show_parent_page'] == 'yes' && has_post_parent($this->get_page_obj()) ) {
+
+                $parents = get_post_ancestors ($this->get_page_obj());
+
+                if (!empty($parents)) {
+                    foreach ($parents as $parent_id) {
+                        array_unshift (
+                            $data_array,
+                            array (
+                                'title_attribute' => get_the_title($parent_id),
+                                'url' => esc_url(get_permalink($parent_id)),
+                                'display_name' =>  ucfirst(get_the_title($parent_id))
+                            )
+                        );
+                    }
+
+                }
+
+            }
+
+
             return $data_array;
 
         };
@@ -329,18 +461,127 @@ class tdb_state_single_page extends tdb_state_base {
         // page title
         $this->title = function ( $atts ) {
 
+            $dummy_data_array = array(
+                'title' => 'Sample Page Title',
+                'page_number' => '1',
+                'class' => 'tdb-page-title'
+            );
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_data_array;
+            }
+
             $page_number = intval( $this->get_wp_query()->query_vars['paged'] );
 
             $data_array = array(
                 'title' => $this->get_page_obj()->post_title,
                 'page_number' => $page_number ? $page_number : 1,
-                'class' => 'tdb-tag-title'
+                'class' => 'tdb-page-title'
             );
 
             return $data_array;
 
         };
 
+        // menu
+        $this->menu = function ( $atts ) {
+
+            // if we don't have a menu get the theme header menu
+            $menu_id = ( isset( $atts['menu_id'] ) and $atts['menu_id'] != '' ) ? $atts['menu_id'] : ( ! empty(get_theme_mod('nav_menu_locations')['header-menu'] ) ? get_theme_mod('nav_menu_locations')['header-menu'] : '' );
+
+            if ( !$this->has_wp_query() ) {
+                $tdb_menu_instance = tdb_menu::get_instance( $atts );
+                add_filter( 'wp_nav_menu_objects', array ( $tdb_menu_instance, 'hook_wp_nav_menu_objects' ), 10, 2 );
+                $wp_nav_menu = wp_nav_menu(
+                    array(
+                        'menu' => $menu_id,
+                        'menu_id' => '',
+                        'container' => false,
+                        'menu_class'=> 'tdb-block-menu tdb-menu tdb-menu-items-visible',
+                        'walker' => new tdb_tagdiv_walker_nav_menu($atts),
+                        'echo' => false,
+                        'fallback_cb' => function(){
+                            return 'No menu items!';
+                        }
+                    )
+                );
+                remove_filter( 'wp_nav_menu_objects', array ( $tdb_menu_instance, 'hook_wp_nav_menu_objects' ) );
+                return $wp_nav_menu;
+            }
+
+            global $wp_query;
+            $template_wp_query = $wp_query;
+            $wp_query = $this->get_wp_query();
+
+            $tdb_menu_instance = tdb_menu::get_instance( $atts );
+            add_filter( 'wp_nav_menu_objects', array ( $tdb_menu_instance, 'hook_wp_nav_menu_objects' ), 10, 2 );
+            $wp_nav_menu = wp_nav_menu(
+                array(
+                    'menu' => $menu_id,
+                    'menu_id' => '',
+                    'container' => false,
+                    'menu_class'=> 'tdb-block-menu tdb-menu tdb-menu-items-visible',
+                    'walker' => new tdb_tagdiv_walker_nav_menu($atts),
+                    'echo' => false,
+                    'fallback_cb' => function(){
+                        return 'No menu items!';
+                    }
+                )
+            );
+            remove_filter( 'wp_nav_menu_objects', array ( $tdb_menu_instance, 'hook_wp_nav_menu_objects' ) );
+
+            $wp_query = $template_wp_query;
+
+            return $wp_nav_menu;
+        };
+
+
+        // page custom field
+        $this->page_custom_field = function ($atts) {
+            $dummy_field_data = array(
+                'value' => 'Sample field data',
+                'type' => 'text',
+            );
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_field_data;
+            }
+
+            $page_obj = $this->page_obj;
+            $page_id = $page_obj->ID;
+
+            $field_data = array(
+                'value' => '',
+                'type' => '',
+                'meta_exists' => false,
+            );
+
+            $field_name = '';
+            if( isset( $atts['wp_field'] ) ) {
+                $field_name = $atts['wp_field'];
+            } else if( isset( $atts['acf_field'] ) ) {
+                $field_name = $atts['acf_field'];
+            }
+
+            if( $field_name != '' ) {
+                $field_data = td_util::get_acf_field_data($field_name, $page_obj);
+
+                if( !$field_data['meta_exists'] ) {
+                    if( metadata_exists('post', $page_id, $field_name) ) {
+                        $field_data['value'] = get_post_meta($page_id, $field_name, true);
+                        $field_data['type'] = 'text';
+                        $field_data['meta_exists'] = true;
+                    }
+                }
+            }
+
+
+            if( empty($field_data['value']) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) ) {
+                return $dummy_field_data;
+            }
+
+            return $field_data;
+        };
 
         parent::lock_state_definition();
     }

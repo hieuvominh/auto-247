@@ -9,13 +9,57 @@ class tdb_author_socials extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_author_socials */
+                .tdb_author_socials {
+                  margin-bottom: 0;
+                }
+                .tdb_author_socials .tdb-social-item {
+                  position: relative;
+                  display: inline-block;
+                  -webkit-transition: all 0.2s;
+                  transition: all 0.2s;
+                  -webkit-transform: translateZ(0);
+                  transform: translateZ(0);
+                }
+                .tdb_author_socials .tdb-social-item:last-child {
+                  margin-right: 0 !important;
+                }
+                .tdb_author_socials .tdb-social-item i,
+                .tdb_author_socials .tdb-social-item .tdb-social-text {
+                  vertical-align: middle;
+                  color: #000;
+                  -webkit-transition: all 0.2s;
+                  transition: all 0.2s;
+                }
+                .tdb_author_socials .tdb-social-item i {
+                  text-align: center;
+                }
+                .tdb_author_socials .tdb-social-item:hover i {
+                  color: #000;
+                }
+                .tdb_author_socials .tdb-social-item .tdb-social-text {
+                  display: none;
+                  font-size: 13px;
+                }
+                
+                
                 /* @make_inline */
                 .$unique_block_class {
                     display: inline-block;
@@ -134,6 +178,8 @@ class tdb_author_socials extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_author_socials', 1 );
 
         // make inline
         $res_ctx->load_settings_raw( 'make_inline', $res_ctx->get_shortcode_att('make_inline') );
@@ -255,6 +301,11 @@ class tdb_author_socials extends td_block {
         global $tdb_state_author;
         $author_socials_data = $tdb_state_author->socials->__invoke( $atts );
 
+        //set rel on social links
+        $td_social_rel = '';
+        if ('' !== $this->get_att('social_rel')) {
+            $td_social_rel = ' rel="' . $this->get_att('social_rel') . '" ';
+        }
 
         $buffy = ''; //output buffer
 
@@ -277,7 +328,7 @@ class tdb_author_socials extends td_block {
                 $buffy .= '<div class="tdb-author-socials">';
                     if ( !empty( $author_socials_data['social_icons'] ) ) {
                         foreach ( $author_socials_data['social_icons'] as $author_socials_data ) {
-                            $buffy .= '<a href="' . $author_socials_data['social_link'] . '" target="_blank" title="' . $author_socials_data['social_id'] . '" class="tdb-social-item">';
+                            $buffy .= '<a href="' . $author_socials_data['social_link'] . '"' . $td_social_rel . ' target="_blank" title="' . $author_socials_data['social_id'] . '" class="tdb-social-item">';
                                 $buffy .= '<i class="td-icon-font td-icon-' . $author_socials_data['social_id'] . '"></i>';
                                 $buffy .= '<span class="tdb-social-text">' . $author_socials_data['social_id'] . '</span>';
                             $buffy .= '</a>';

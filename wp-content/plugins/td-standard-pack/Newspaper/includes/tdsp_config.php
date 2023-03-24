@@ -828,7 +828,8 @@ class tdsp_config {
                 'crop' => array('center', 'top'),
                 'post_format_icon_size' => 'normal',
                 'used_on' => array(
-                    'Big grid 1, 3, 7'
+                    'Big grid 1, 3, 7',
+                    'Module M1 (Mobile Theme)'
                 ),
                 'no_image_path' => TDSP_THEME_URL . '/assets',
                 'b64_encoded' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQkAAADGAQMAAAD7b+fyAAAAA1BMVEWurq51dlI4AAAAAXRSTlMmkutdmwAAAB1JREFUWMPtwQENAAAAwiD7p7bHBwwAAAAAAADSDhsSAAGoWlW2AAAAAElFTkSuQmCC',
@@ -958,7 +959,8 @@ class tdsp_config {
                 'post_format_icon_size' => 'normal',
                 'used_on' => array(
                     'Module MX9',
-                    'Big grid 2'
+                    'Big grid 2',
+                    'Big grid (Mobile Theme)'
                 ),
                 'no_image_path' => TDSP_THEME_URL . '/assets',
                 'b64_encoded' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAuUAAAHmAQMAAADuiGKOAAAAA1BMVEWurq51dlI4AAAAAXRSTlMmkutdmwAAAENJREFUeNrtwYEAAAAAw6D7Ux9gCtUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIgDsnQAAavKUH8AAAAASUVORK5CYII=',
@@ -1780,23 +1782,6 @@ class tdsp_config {
                 'enabled_on_more_articles_box' => false,
                 'enabled_on_loops' => false,
                 'uses_columns' => false,
-                'category_label' => true,
-                'class' => 'td-animation-stack',
-                'group' => '' // '' - main theme, 'mob' - mobile theme, 'woo' - woo theme
-            )
-        );
-
-        td_api_module::add('td_module_mega_menu',
-            array(
-                'file' => TDSP_THEME_PATH . '/includes/modules/td_module_mega_menu.php',
-                'text' => 'Mega menu module',
-                'img' => '',
-                'used_on_blocks' => array('td_block_mega_menu'),
-                'excerpt_title' => '12',
-                'excerpt_content' => '',
-                'enabled_on_more_articles_box' => false,
-                'enabled_on_loops' => false,
-                'uses_columns' => false,                      // if the module uses columns on the page template + loop
                 'category_label' => true,
                 'class' => 'td-animation-stack',
                 'group' => '' // '' - main theme, 'mob' - mobile theme, 'woo' - woo theme
@@ -4990,18 +4975,6 @@ class tdsp_config {
         /**
          * misc blocs
          */
-        td_api_block::add('td_block_mega_menu',
-            array(
-                'map_in_visual_composer' => false,
-                'file' => TDSP_THEME_PATH  . '/includes/shortcodes/td_block_mega_menu.php',
-
-                // key added to supply 'show_child_cat' differently for each theme
-                'render_atts' => array(
-                    'show_child_cat' => 30,
-                )
-            )
-        );
-
         td_api_block::add('td_block_related_posts',
             array(
                 'map_in_visual_composer' => false,
@@ -5029,6 +5002,36 @@ class tdsp_config {
         /**
          * ad areas
          */
+        td_api_ad::add('smart_list_6',
+            array(
+                'text' => 'Smart list 6',
+                'ad_type' => 'ajax',
+                'fields' => array(
+                    'ad_field_position_content' => false,
+                    'ad_field_after_paragraph' => false,
+                ),
+            )
+        );
+        td_api_ad::add('smart_list_7',
+            array(
+                'text' => 'Smart list 7',
+                'ad_type' => 'ajax',
+                'fields' => array(
+                    'ad_field_position_content' => false,
+                    'ad_field_after_paragraph' => false,
+                ),
+            )
+        );
+        td_api_ad::add('smart_list_8',
+            array(
+                'text' => 'Smart list 8',
+                'ad_type' => 'ajax',
+                'fields' => array(
+                    'ad_field_position_content' => false,
+                    'ad_field_after_paragraph' => false,
+                ),
+            )
+        );
         td_api_ad::add('post_style_1',
             array(
                 'text' => 'Post template style 1',

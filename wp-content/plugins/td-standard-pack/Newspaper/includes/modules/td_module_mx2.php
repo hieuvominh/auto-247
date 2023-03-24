@@ -11,6 +11,9 @@ class td_module_mx2 extends td_module {
         ob_start();
         $title_length = $this->get_shortcode_att('mx2_tl');
         $modified_date = $this->get_shortcode_att('show_modified_date');
+        $time_ago = $this->get_shortcode_att('time_ago');
+        $time_ago_add_txt = $this->get_shortcode_att('time_ago_add_txt');
+        $time_ago_txt_pos = $this->get_shortcode_att('time_ago_txt_pos');
         ?>
 
         <div class="<?php echo $this->get_module_classes();?>">
@@ -22,7 +25,7 @@ class td_module_mx2 extends td_module {
                 <div class="td-module-meta-info">
                     <?php if (td_util::get_option('tds_category_module_mx2') == 'yes') { echo $this->get_category(); }?>
                     <?php //echo $this->get_author();?>
-                    <?php echo $this->get_date($modified_date);?>
+                    <?php echo $this->get_date($modified_date, false, $time_ago, $time_ago_add_txt, $time_ago_txt_pos);?>
                     <?php //echo $this->get_comments();?>
                 </div>
             </div>

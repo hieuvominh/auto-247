@@ -1,5 +1,5 @@
-<div class="td-menu-background"></div>
-<div id="td-mobile-nav">
+<div class="td-menu-background" style="visibility:hidden"></div>
+<div id="td-mobile-nav" style="visibility:hidden">
     <div class="td-mobile-container">
         <!-- mobile menu top section -->
         <div class="td-menu-socials-wrap">
@@ -20,7 +20,7 @@
             </div>
             <!-- close button -->
             <div class="td-mobile-close">
-                <a href="#"><i class="td-icon-close-mobile"></i></a>
+                <span><i class="td-icon-close-mobile"></i></span>
             </div>
         </div>
 
@@ -73,9 +73,11 @@
     </div>
 
     <!-- register/login section -->
-    <?php //if (td_util::get_option('tds_login_sign_in_widget') == 'show') { ?>
+    <?php if (td_util::get_option('tds_login_sign_in_widget') == 'show') { ?>
         <div id="login-form-mobile" class="td-register-section">
-            <?php require_once('register.php'); ?>
+            <?php if ( !is_user_logged_in() ) {
+                require_once('register.php');
+            } ?>
         </div>
-    <?php //} ?>
+    <?php } ?>
 </div>

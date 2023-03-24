@@ -8,13 +8,44 @@ class tdb_single_post_views extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer';
+            }
+        }
+        $general_block_class = $unique_block_class_prefix ? '.' . $unique_block_class_prefix : '';
+        $unique_block_class = ( $unique_block_class_prefix ? $unique_block_class_prefix . ' .' : '' ) . ( $in_composer ? 'tdc-column .' : '' ) . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_post_views */
+                $general_block_class .tdb_single_post_views {
+                  line-height: 30px;
+                }
+                $general_block_class .tdb_single_post_views a {
+                  vertical-align: middle;
+                }
+                $general_block_class .tdb_single_post_views .tdb-views-icon-svg {
+                  position: relative;
+                  line-height: 0;
+                }
+                $general_block_class .tdb_single_post_views svg {
+                  height: auto;
+                }
+                $general_block_class .tdb_single_post_views svg,
+                $general_block_class .tdb_single_post_views svg * {
+                  fill: #444;
+                }
+
+                
                 /* @make_inline */
                 .$unique_block_class {
                     display: inline-block;
@@ -37,12 +68,16 @@ class tdb_single_post_views extends td_block {
                 .$unique_block_class i {
                     font-size: @icon_size;
                 }
+                /* @icon_svg_size */
+                .$unique_block_class svg {
+                    width: @icon_svg_size;
+                }
                 /* @icon_space */
-                .$unique_block_class i {
+                .$unique_block_class .tdb-views-icon {
                     margin-right: @icon_space;
                 }
 				/* @icon_align */
-				.$unique_block_class i {
+				.$unique_block_class .tdb-views-icon {
 					position: relative;
 					top: @icon_align;
 				}
@@ -51,9 +86,17 @@ class tdb_single_post_views extends td_block {
 				.$unique_block_class {
 					color: @views_color;
 				}
+				.$unique_block_class svg,
+				.$unique_block_class svg * {
+					fill: @views_color;
+				}
                 /* @icon_color */
 				.$unique_block_class i {
 					color: @icon_color;
+				}
+				.$unique_block_class svg,
+				.$unique_block_class svg * {
+					fill: @icon_color;
 				}
 				
 				/* @f_views */
@@ -72,6 +115,9 @@ class tdb_single_post_views extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_post_meta', 1 );
+        $res_ctx->load_settings_raw( 'style_general_post_views', 1 );
 
         // make inline
         $res_ctx->load_settings_raw( 'make_inline', $res_ctx->get_shortcode_att('make_inline') );
@@ -98,15 +144,27 @@ class tdb_single_post_views extends td_block {
 
 
         /*-- ICON -- */
+        $icon = $res_ctx->get_icon_att('tdicon');
         // icon size
         $icon_size = $res_ctx->get_shortcode_att('icon_size');
-        $res_ctx->load_settings_raw( 'icon_size', $icon_size );
-        if( $icon_size != '' ) {
-            if( is_numeric( $icon_size ) ) {
-                $res_ctx->load_settings_raw( 'icon_size', $icon_size . 'px' );
+        if( base64_encode( base64_decode( $icon ) ) == $icon ) {
+            $res_ctx->load_settings_raw( 'icon_size', $icon_size );
+            if( $icon_size != '' ) {
+                if( is_numeric( $icon_size ) ) {
+                    $res_ctx->load_settings_raw( 'icon_svg_size', $icon_size . 'px' );
+                }
+            } else {
+                $res_ctx->load_settings_raw( 'icon_svg_size', '14px' );
             }
         } else {
-            $res_ctx->load_settings_raw( 'icon_size', '14px' );
+            $res_ctx->load_settings_raw( 'icon_size', $icon_size );
+            if( $icon_size != '' ) {
+                if( is_numeric( $icon_size ) ) {
+                    $res_ctx->load_settings_raw( 'icon_size', $icon_size . 'px' );
+                }
+            } else {
+                $res_ctx->load_settings_raw( 'icon_size', '14px' );
+            }
         }
 
         // icon space
@@ -159,7 +217,19 @@ class tdb_single_post_views extends td_block {
         $add_text_pos = $this->get_att( 'add_text_pos' );
 
         // views icon
-        $views_icon = $this->get_att( 'tdicon' );
+        $views_icon = $this->get_icon_att( 'tdicon' );
+        $views_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $views_icon_data = 'data-td-svg-icon="' . $this->get_att('tdicon') . '"';
+        }
+        $views_icon_html = '';
+        if ( $views_icon != '' ) {
+            if( base64_encode( base64_decode( $views_icon ) ) == $views_icon ) {
+                $views_icon_html = '<span class="tdb-views-icon tdb-views-icon-svg" ' . $views_icon_data . '>' . base64_decode( $views_icon ) . '</span>';
+            } else {
+                $views_icon_html = '<i class="tdb-views-icon ' . $views_icon . '"></i>';
+            }
+        }
 
 
         $buffy = ''; //output buffer
@@ -174,9 +244,7 @@ class tdb_single_post_views extends td_block {
 
 
             $buffy .= '<div class="tdb-block-inner td-fix-index">';
-                if( $views_icon != '' ) {
-                    $buffy .= '<i class="' . $views_icon . '"></i>';
-                }
+                $buffy .= $views_icon_html;
 
                 if( $add_text != '' && $add_text_pos == '' ) {
                     $buffy .= $add_text;

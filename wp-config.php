@@ -1,6 +1,6 @@
 <?php
-define('WP_HOME', 'https://xedep.herokuapp.com/');
-// define('WP_SITEURL', 'https://xedep.herokuapp.com/');
+// define('WP_HOME', 'https://xedep.herokuapp.com');
+// define('WP_SITEURL', 'https://xedep.herokuapp.com');
 define('WP_CACHE', true);
 /**
  * The base configuration for WordPress
@@ -23,27 +23,27 @@ define('WP_CACHE', true);
 
 // ** Database settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
-// define('DB_NAME', 'auto247');
+define('DB_NAME', 'auto247');
 
-// define('DB_USER', 'root');
+define('DB_USER', 'root');
 
-// define('DB_PASSWORD', '');
+define('DB_PASSWORD', '');
 
-// define('DB_HOST', 'localhost');
-
-// define('DB_CHARSET', 'utf8mb4');
-define('DB_COLLATE', '');
-
-
-define('DB_NAME', 'sd9dsvn2h1q6ojjt');
-
-define('DB_USER', 'd8gxiihd37kmxydi');
-
-define('DB_PASSWORD', 'cqo5gcavqsn4o8v9');
-
-define('DB_HOST', 'q0h7yf5pynynaq54.cbetxkdyhwsb.us-east-1.rds.amazonaws.com');
+define('DB_HOST', 'localhost');
 
 define('DB_CHARSET', 'utf8mb4');
+// define('DB_COLLATE', '');
+
+define('WP_MEMORY_LIMIT', '256M');
+// define('DB_NAME', 'sd9dsvn2h1q6ojjt');
+
+// define('DB_USER', 'd8gxiihd37kmxydi');
+
+// define('DB_PASSWORD', 'cqo5gcavqsn4o8v9');
+
+// define('DB_HOST', 'q0h7yf5pynynaq54.cbetxkdyhwsb.us-east-1.rds.amazonaws.com');
+
+// define('DB_CHARSET', 'utf8mb4');
 
 
 

@@ -20,8 +20,9 @@ if ( td_global::is_tdb_registered() ) {
         foreach ( $wp_query_templates->posts as $post ) {
 
             $tdb_template_type = get_post_meta( $post->ID, 'tdb_template_type', true );
+            $meta_is_mobile_template = get_post_meta($post->ID, 'tdc_is_mobile_template', true);
 
-            if ( $tdb_template_type === 'header' ) {
+            if ( $tdb_template_type === 'header' && (empty($meta_is_mobile_template) || '0' === $meta_is_mobile_template)) {
                 $tdb_header_templates[] = array(
                     'text' => $post->post_title,
                     'val' => 'tdb_template_' . $post->ID
@@ -45,15 +46,27 @@ if ( td_global::is_tdb_registered() ) {
     <div class="td-box-row">
     <div class="td-box-description">
         <span class="td-box-title">Cloud Library Template</span>
-        <p>Set a <a href="<?php echo admin_url( 'edit.php?post_type=tdb_templates&meta_key=tdb_template_type&meta_value=header#/' ) ?>" target="_blank">Cloud Library</a> header template for all website.</p>
+        <p>Set a <a href="<?php echo admin_url( 'admin.php?page=tdb_cloud_templates' ) ?>" target="_blank">Cloud Library</a> header template for all website.</p>
     </div>
     <div class="td-box-control-full">
 
         <?php
 
+        $option_id = 'tdb_header_template';
+        if (class_exists('SitePress', false)) {
+	        global $sitepress;
+	        $sitepress_settings = $sitepress->get_settings();
+	        if ( isset($sitepress_settings['custom_posts_sync_option'][ 'tdb_templates']) ) {
+	            $translation_mode = (int)$sitepress_settings['custom_posts_sync_option']['tdb_templates'];
+	            if (1 === $translation_mode) {
+	                $option_id .= $sitepress->get_current_language();
+	            }
+	        }
+	    }
+
         echo td_panel_generator::dropdown(array(
             'ds' => 'td_option',
-            'option_id' => 'tdb_header_template',
+            'option_id' => $option_id,
             'values' => array_merge(
                 array(
                     array('text' => '- No Template -' , 'val' => ''),
@@ -626,6 +639,24 @@ if( 'Newsmag' == TD_THEME_NAME || ( 'Newspaper' == TD_THEME_NAME && defined('TD_
 			?>
 		</div>
 	</div>
+
+    <div class="td-box-row">
+        <div class="td-box-description">
+            <span class="td-box-title">Logo H1 on pages </span>
+            <p>Enable/disable H1 tag on logo shortcode on all pages except the frontpage. If it is disabled, the h1 tag will be removed no matter what settings are on the Header Logo shortcode.</p>
+            <p>On the frontpage, it can be disabled from Header Logo shortcode.</p>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::checkbox(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_logo_h1_pages',
+                'true_value' => '',
+                'false_value' => 'false'
+            ));
+            ?>
+        </div>
+    </div>
 
 <?php } ?>
 

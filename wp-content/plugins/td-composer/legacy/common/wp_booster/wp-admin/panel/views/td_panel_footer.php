@@ -44,15 +44,27 @@ if ( td_global::is_tdb_registered() ) {
     <div class="td-box-row">
     <div class="td-box-description">
         <span class="td-box-title">Cloud Library Template</span>
-        <p>Set a <a href="<?php echo admin_url( 'edit.php?post_type=tdb_templates&meta_key=tdb_template_type&meta_value=footer#/' ) ?>" target="_blank">Cloud Library</a> footer template for all website.</p>
+        <p>Set a <a href="<?php echo admin_url( 'admin.php?page=tdb_cloud_templates' ) ?>" target="_blank">Cloud Library</a> footer template for all website.</p>
     </div>
     <div class="td-box-control-full">
 
         <?php
 
+        $option_id = 'tdb_footer_template';
+        if (class_exists('SitePress', false)) {
+	        global $sitepress;
+	        $sitepress_settings = $sitepress->get_settings();
+	        if ( isset($sitepress_settings['custom_posts_sync_option'][ 'tdb_templates']) ) {
+	            $translation_mode = (int)$sitepress_settings['custom_posts_sync_option']['tdb_templates'];
+	            if (1 === $translation_mode) {
+	                $option_id .= $sitepress->get_current_language();
+	            }
+	        }
+	    }
+
         echo td_panel_generator::dropdown(array(
             'ds' => 'td_option',
-            'option_id' => 'tdb_footer_template',
+            'option_id' => $option_id,
             'values' => array_merge(
                 array(
                     array('text' => '- No Template -' , 'val' => ''),
@@ -236,6 +248,24 @@ if( 'Newsmag' == TD_THEME_NAME || ( 'Newspaper' == TD_THEME_NAME && defined('TD_
             ?>
         </div>
     </div>
+
+    <div class="td-box-row">
+        <div class="td-box-description">
+            <span class="td-box-title">USE BUSINESS ACCOUNT</span>
+            <p>Enable / Disable the business account for Footer Instagram. Add also the Instagram ID</p>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::checkbox(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_footer_instagram_business',
+                'true_value' => 'show',
+                'false_value' => ''
+            ));
+            ?>
+        </div>
+    </div>
+
 <?php if (TD_DEPLOY_MODE === 'dev' || TD_DEPLOY_MODE === 'demo') { ?>
     <div class="td-box-row">
         <div class="td-box-description">
@@ -297,6 +327,29 @@ if( 'Newsmag' == TD_THEME_NAME || ( 'Newspaper' == TD_THEME_NAME && defined('TD_
                     array('text' => '3', 'val' => 3),
                     array('text' => '4', 'val' => 4),
                     array('text' => '5', 'val' => 5)
+                )
+            ));
+            ?>
+        </div>
+    </div>
+
+    <!-- size of images -->
+    <div class="td-box-row">
+        <div class="td-box-description">
+            <span class="td-box-title">Image size:</span>
+            <p>Set the size of the images ( by default the full image size will be used )</p>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::dropdown(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_footer_instagram_image_size',
+                'values' => array(
+                    array('text' => '- Default - Full -', 'val' => ''),
+                    array('text' => 'Small - 150px', 'val' => 'td_150x0'),
+                    array('text' => 'Small - 300px', 'val' => 'td_300x0'),
+                    array('text' => 'Medium - 696px', 'val' => 'td_696x0'),
+                    array('text' => 'Large - 1068px', 'val' => 'td_1068x0')
                 )
             ));
             ?>

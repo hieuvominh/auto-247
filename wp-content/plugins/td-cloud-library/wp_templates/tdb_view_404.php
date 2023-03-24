@@ -7,8 +7,11 @@
 get_header();
 global $wp_query;
 
-    // set the global wp_query as the template one
-    $wp_query = tdb_state_template::get_wp_query();
+// save main query to have is_404 after this view template - the plugins use it
+$template_wp_query = $wp_query;
+
+// set the global wp_query as the template one
+$wp_query = tdb_state_template::get_wp_query();
 
 if ( have_posts() ) {
 
@@ -27,12 +30,15 @@ if ( have_posts() ) {
 
 } else {
 
+
     /**
      * no posts to display. This function generates the __td('No posts to display').
      * the text can be overwritten by the template using the global @see td_global::$custom_no_posts_message
      */
     echo td_page_generator::no_posts();
 }
+
+$wp_query = $template_wp_query;
 
 
 get_footer();

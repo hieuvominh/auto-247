@@ -9,12 +9,38 @@ class tdb_author_comments_count extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+
+                /* @style_general_author_comments_count */
+                .tdb-author-counters {
+                  margin-bottom: 12px;
+                  font-size: 0;
+                }
+                .tdb-author-count {
+                  vertical-align: top;
+                  background-color: #222;
+                  font-family: 'Roboto', sans-serif;
+                  font-size: 11px;
+                  font-weight: 700;
+                  line-height: 1;
+                  color: #fff;
+                }
+
 
                 /* @make_inline */
                 .$unique_block_class {
@@ -70,6 +96,8 @@ class tdb_author_comments_count extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_author_comments_count', 1 );
 
         // make inline
         $res_ctx->load_settings_raw( 'make_inline', $res_ctx->get_shortcode_att('make_inline') );

@@ -55,7 +55,7 @@ if (!empty($td_post_featured_image)) {
 
                     <div class="td-module-meta-info">
                         <?php echo $td_mod_single->get_author();?>
-                        <?php echo $td_mod_single->get_date(false);?>
+                        <?php echo $td_mod_single->get_date(false, false);?>
                         <?php echo $td_mod_single->get_views();?>
                         <?php echo $td_mod_single->get_comments();?>
                     </div>

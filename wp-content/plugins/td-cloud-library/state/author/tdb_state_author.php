@@ -3,6 +3,7 @@
 
 /**
  * Class tdb_state_author
+ * @property tdb_method author_id
  * @property tdb_method title
  * @property tdb_method image
  * @property tdb_method posts_count
@@ -13,6 +14,7 @@
  * @property tdb_method box
  * @property tdb_method author_breadcrumbs
  * @property tdb_method loop
+ * @property tdb_method author_custom_field
  *
  */
 class tdb_state_author extends tdb_state_base {
@@ -64,18 +66,47 @@ class tdb_state_author extends tdb_state_base {
 
     public function __construct() {
 
+        // author id
+        $this->author_id = function () {
+
+            return $this->author_obj->ID;
+
+        };
+
         // author posts loop
         $this->loop = function ( $atts ) {
 
-            // previous text icon class
-            $prev_class = 'td-icon-menu-left';
+            $svg_list = td_global::$svg_theme_font_list;
+
+            // previous text icon
+            $prev_icon_html = '<i class="page-nav-icon td-icon-menu-left"></i>';
             if( isset( $atts['prev_tdicon'] ) ) {
-                $prev_class = $atts['prev_tdicon'];
+                $prev_icon = $atts['prev_tdicon'];
+                $prev_icon_data = '';
+                if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+                    $prev_icon_data = 'data-td-svg-icon="' . $prev_icon . '"';
+                }
+
+                if( array_key_exists( $prev_icon, $svg_list ) ) {
+                    $prev_icon_html = '<div class="page-nav-icon page-nav-icon-svg" ' . $prev_icon_data . '>' . base64_decode( $svg_list[$prev_icon] ) . '</div>';
+                } else {
+                    $prev_icon_html = '<i class="page-nav-icon ' . $prev_icon . '"></i>';
+                }
             }
-            // next text icon class
-            $next_class = 'td-icon-menu-right';
+            // next text icon
+            $next_icon_html = '<i class="page-nav-icon td-icon-menu-right"></i>';
             if( isset( $atts['next_tdicon'] ) ) {
-                $next_class = $atts['next_tdicon'];
+                $next_icon = $atts['next_tdicon'];
+                $next_icon_data = '';
+                if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+                    $next_icon_data = 'data-td-svg-icon="' . $next_icon . '"';
+                }
+
+                if( array_key_exists( $next_icon, $svg_list ) ) {
+                    $next_icon_html = '<div class="page-nav-icon page-nav-icon-svg" ' . $next_icon_data . '>' . base64_decode( $svg_list[$next_icon] ) . '</div>';
+                } else {
+                    $next_icon_html = '<i class="page-nav-icon ' . $next_icon . '"></i>';
+                }
             }
 
             // pagination options
@@ -85,8 +116,8 @@ class tdb_state_author extends tdb_state_base {
                 'page_text'     => '%PAGE_NUMBER%',
                 'first_text'    => __td( '1' ),
                 'last_text'     => __td( '%TOTAL_PAGES%' ),
-                'next_text'     => '<i class="' . $next_class . '"></i>',
-                'prev_text'     => '<i class="' . $prev_class . '"></i>',
+                'next_text'     => $next_icon_html,
+                'prev_text'     => $prev_icon_html,
                 'dotright_text' => __td( '...' ),
                 'dotleft_text'  => __td( '...' ),
                 'num_pages'     => 3,
@@ -101,8 +132,8 @@ class tdb_state_author extends tdb_state_base {
                 'start_page' => 1,
                 'end_page' => 3,
                 'pages_to_show' => 3,
-                'previous_posts_link' => '<a href="#"><i class="' . $prev_class . '"></i></a>',
-                'next_posts_link' => '<a href="#"><i class="' . $next_class . '"></i></a>'
+                'previous_posts_link' => '<a href="#">' . $prev_icon_html . '</a>',
+                'next_posts_link' => '<a href="#">' . $next_icon_html . '</a>'
             );
 
             // posts limit - by default get the global wp loop posts limit setting
@@ -253,7 +284,7 @@ class tdb_state_author extends tdb_state_base {
             $page_number = intval( $this->get_wp_query()->query_vars['paged'] );
 
             $data_array = array(
-                'title' => $this->author_obj->display_name,
+                'title' => get_the_author_meta('display_name', $this->author_obj->ID),
                 'page_number' => $page_number ? $page_number : 1,
                 'class' => 'tdb-author-title'
             );
@@ -367,9 +398,9 @@ class tdb_state_author extends tdb_state_base {
 			        return $dummy_data_array;
 		        }
 	        }
-
+//var_dump($this->author_obj->ID);
             $data_array = array(
-                'description' => $this->author_obj->description
+                'description' => get_the_author_meta('description', $this->author_obj->ID)
             );
 
             return $data_array;
@@ -488,7 +519,7 @@ class tdb_state_author extends tdb_state_base {
                 'posts-count'    => count_user_posts( $this->author_obj->ID ),
                 'comments-count' => $comments_count,
                 'url'            => esc_url( $this->author_obj->user_url ),
-                'description'    => $this->author_obj->description,
+                'description'    => get_the_author_meta('description', $this->author_obj->ID),
                 'social_icons'   => array()
             );
 
@@ -573,6 +604,72 @@ class tdb_state_author extends tdb_state_base {
 
             return $data_array;
 
+        };
+
+        // author acf field
+        $this->author_custom_field = function ($atts) {
+            $dummy_field_data = array(
+                'value' => 'Sample field data',
+                'type' => 'text',
+            );
+
+            if ( !$this->has_wp_query() ) {
+                return $dummy_field_data;
+            }
+
+            $author_object = $this->author_obj;
+            $author_id = $author_object->ID;
+
+            $field_data = array(
+                'value' => '',
+                'type' => '',
+                'meta_exists' => false,
+            );
+
+            $field_name = '';
+            if( isset( $atts['wp_field'] ) ) {
+                $field_name = $atts['wp_field'];
+            } else if( isset( $atts['acf_field'] ) ) {
+                $field_name = $atts['acf_field'];
+            }
+
+            if( $field_name != '' ) {
+                switch ( $field_name ) {
+                    case 'user_email':
+                        $field_data['value'] = $author_object->data->user_email;
+                        $field_data['type'] = 'text';
+                        $field_data['meta_exists'] = true;
+
+                        break;
+
+                    case 'user_url':
+                        $field_data['value'] = $author_object->data->user_url;
+                        $field_data['type'] = 'text';
+                        $field_data['meta_exists'] = true;
+
+                        break;
+
+                    default:
+                        $field_data = td_util::get_acf_field_data($field_name, $author_object);
+
+                        if( !$field_data['meta_exists'] ) {
+                            if( metadata_exists('user', $author_id, $field_name) ) {
+                                $field_data['value'] = get_user_meta($author_id, $field_name, true);
+                                $field_data['type'] = 'text';
+                                $field_data['meta_exists'] = true;
+                            }
+                        }
+
+                        break;
+                }
+            }
+
+
+            if( empty($field_data['value']) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() ) ) {
+                return $dummy_field_data;
+            }
+
+            return $field_data;
         };
 
 

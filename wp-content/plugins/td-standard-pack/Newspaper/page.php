@@ -77,7 +77,7 @@ if ($td_use_page_builder) {
     ?>
 
 
-<div class="td-main-content-wrap td-container-wrap">
+<div class="td-main-content-wrap td-container-wrap <?php echo td_util::get_option('tds_page_layout_size'); ?>">
     <div class="td-container tdc-content-wrap <?php echo esc_attr($td_sidebar_position) ?>">
         <div class="td-crumb-container">
             <?php echo td_page_generator::get_page_breadcrumbs(get_the_title()); ?>

@@ -15,9 +15,22 @@ class tdb_module_related_sample extends tdb_module {
         $category_position = $this->get_shortcode_att('modules_category');
         $btn_title = $this->get_shortcode_att('btn_title');
         $title_length = $this->get_shortcode_att('mc1_tl');
+        $title_tag = $this->get_shortcode_att('mc1_title_tag');
         $author_photo = $this->get_shortcode_att('author_photo');
         $excerpt_length = $this->get_shortcode_att('mc1_el');
         $excerpt_position = $this->get_shortcode_att('excerpt_middle');
+
+        $video_popup = $this->get_shortcode_att('video_popup');
+        $video_ad_code = rawurldecode( base64_decode( strip_tags(  $this->get_shortcode_att('video_rec') ) ) );
+        $video_ad_title = $this->get_shortcode_att('video_rec_title');
+
+        $video_popup_params = array(
+            'visible' => $video_popup != '' ? true : false,
+            'ad' => array(
+                'code' => $video_ad_code,
+                'title' => $video_ad_title
+            )
+        );
 
         if (empty($image_size)) {
             $image_size = 'td_696x0';
@@ -33,18 +46,18 @@ class tdb_module_related_sample extends tdb_module {
         ?>
 
         <div class="<?php echo $this->get_module_classes();?>">
-            <div class="td-module-container td-category-pos-<?php echo $category_position; ?>">
+            <div class="td-module-container td-category-pos-<?php echo esc_attr($category_position) ?>">
                 <?php if( $hide_image == '' ) { ?>
                     <div class="td-image-container">
                         <?php if ($category_position == 'image') { echo $this->get_category(); }?>
-                        <?php echo $this->get_image($image_size);?>
+                        <?php echo $this->get_image($image_size, $video_popup_params);?>
                     </div>
                 <?php } ?>
 
                 <div class="td-module-meta-info">
                     <?php if ($category_position == 'above') { echo $this->get_category(); }?>
 
-                    <?php echo $this->get_title($title_length);?>
+                    <?php echo $this->get_title($title_length, $title_tag);?>
 
                     <?php if ($excerpt_position == 'yes') { echo $excerpt; } ?>
 

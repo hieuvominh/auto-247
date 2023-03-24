@@ -8,13 +8,34 @@ class tdb_attachment_description extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_attachment_description */
+                .tdb_attachment_description {
+                  margin-bottom: 21px;
+                }
+                .tdb_attachment_description span {
+                  color: #444;
+                  font-size: 11px;
+                  font-style: italic;
+                  line-height: 17px;
+                }
+                
                 /* @descr_color */
 				.$unique_block_class span {
 					color: @descr_color;
@@ -50,6 +71,8 @@ class tdb_attachment_description extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_attachment_description', 1 );
 
         // description color
         $res_ctx->load_settings_raw( 'descr_color', $res_ctx->get_shortcode_att( 'descr_color' ) );

@@ -40,11 +40,6 @@ class td_module_single_mob extends td_module_single_base {
         $buffy = '';
 
         $buffy .= '<div class="td-post-sharing-top">';
-            if( td_util::get_option('tds_top_like_show') == 'show' ) {
-                $buffy .= '<div class="td-post-sharing-classic">';
-                    $buffy .= '<iframe frameBorder="0" src="' . td_global::$http_or_https . '://www.facebook.com/plugins/like.php?href=' . $this->href . '&amp;layout=button_count&amp;show_faces=false&amp;width=105&amp;action=like&amp;colorscheme=light&amp;height=21" style="border:none; overflow:hidden; width:105px; height:21px; background-color:transparent;"></iframe>';
-                $buffy .= '</div>';
-            }
 
             if (td_util::get_option('tds_top_social_show') != 'hide') {
                 $share_text_show = false;
@@ -80,11 +75,6 @@ class td_module_single_mob extends td_module_single_base {
         $buffy = '';
 
         $buffy .= '<div class="td-post-sharing-bottom">';
-            if( td_util::get_option('tds_bottom_like_show') != 'hide' ) {
-                $buffy .= '<div class="td-post-sharing-classic">';
-                    $buffy .= '<iframe frameBorder="0" src="' . td_global::$http_or_https . '://www.facebook.com/plugins/like.php?href=' . $this->href . '&amp;layout=button_count&amp;show_faces=false&amp;width=105&amp;action=like&amp;colorscheme=light&amp;height=21" style="border:none; overflow:hidden; width:105px; height:21px; background-color:transparent;"></iframe>';
-                $buffy .= '</div>';
-            }
 
             if (td_util::get_option('tds_bottom_social_show') != 'hide') {
                 $share_text_show = false;
@@ -178,9 +168,32 @@ class td_module_single_mob extends td_module_single_base {
          */
         //$td_smart_list = get_post_meta($this->post->ID, 'td_smart_list', true);
         $td_smart_list = td_util::get_post_meta_array($this->post->ID, 'td_post_theme_settings');
-        if (!empty($td_smart_list['smart_list_template'])) {
+
+        $is_tdb_smartlist = false;
+
+        if( !empty ($td_smart_list['td_post_template']) ) {
+
+            //if tdb template, search after smartlist shortcode
+            if ( td_global::is_tdb_registered() && td_global::is_tdb_template($td_smart_list['td_post_template'], true) ) {
+                $td_template_id = td_global::tdb_get_template_id($td_smart_list['td_post_template']);
+                $td_template_content = get_post_field('post_content', $td_template_id);
+                $is_tdb_smartlist = tdb_util::get_shortcode($td_template_content, 'tdb_single_smartlist');
+            }
+            
+        } elseif ( td_global::is_tdb_registered() && td_global::is_tdb_template(td_util::get_option( 'td_default_site_post_template' ), true) ) {
+                $td_template_id = td_global::tdb_get_template_id(td_util::get_option( 'td_default_site_post_template' ), true);
+                $td_template_content = get_post_field('post_content', $td_template_id);
+                $is_tdb_smartlist = tdb_util::get_shortcode($td_template_content, 'tdb_single_smartlist');
+        }
+
+
+        if (!empty($td_smart_list['smart_list_template']) || $is_tdb_smartlist) {
 
             $td_smart_list_class = td_util::is_amp() ? 'td_smart_list_amp_1' : 'td_smart_list_mob_1';
+
+            if (td_util::get_option('tdm_smartlist_2') == 'yes' ) {
+                $td_smart_list_class = td_util::is_amp() ? 'td_smart_list_amp_2' : 'td_smart_list_mob_2';
+            }
 
             if (class_exists($td_smart_list_class)) {
                 /**

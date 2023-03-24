@@ -9,13 +9,95 @@ class tdb_single_categories extends td_block {
 
 	public function get_custom_css() {
 		// $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-		$unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
 
-		$compiled_css = '';
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
+
+        $compiled_css = '';
 
 		$raw_css =
 			"<style>
 
+                /* @style_general_single_categories */
+                .tdb_single_categories {
+                  margin: 0 0 10px 0;
+                  line-height: 1;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                }
+                .tdb_single_categories a {
+                  pointer-events: auto;
+                  font-size: 10px;
+                  display: inline-block;
+                  margin: 0 5px 5px 0;
+                  line-height: 1;
+                  color: #fff;
+                  padding: 3px 6px 4px 6px;
+                  white-space: nowrap;
+                  position: relative;
+                  vertical-align: middle;
+                }
+                .tdb_single_categories a:hover .tdb-cat-bg {
+                  opacity: 0.9;
+                }
+                .tdb_single_categories a:hover .tdb-cat-bg:before {
+                  opacity: 1;
+                }
+                .tdb-category i:last-of-type {
+                  display: none;
+                }
+                .tdb-cat-text {
+                  display: inline-block;
+                  vertical-align: middle;
+                  margin-right: 10px;
+                }
+                .tdb-cat-sep {
+                  font-size: 14px;
+                  vertical-align: middle;
+                  position: relative;
+                }
+                .tdb-cat-sep-svg {
+                  line-height: 0;
+                }
+                .tdb-cat-sep-svg svg {
+                  width: 14px;
+                  height: auto;
+                }
+                .tdb-cat-bg {
+                  position: absolute;
+                  background-color: #222;
+                  border: 1px solid #222;
+                  width: 100%;
+                  height: 100%;
+                  top: 0;
+                  left: 0;
+                  z-index: -1;
+                }
+                .tdb-cat-bg:before {
+                  content: '';
+                  width: 100%;
+                  height: 100%;
+                  left: 0;
+                  top: 0;
+                  position: absolute;
+                  z-index: -1;
+                  opacity: 0;
+                  -webkit-transition: opacity 0.3s ease;
+                  transition: opacity 0.3s ease;
+                }
+                .tdb-cat-style2 .tdb-cat-bg {
+                  background-color: rgba(34, 34, 34, 0.85);
+                }
+
+                
+                
                 /* @cat_padding */
 				.$unique_block_class .tdb-entry-category {
 					padding: @cat_padding;
@@ -93,6 +175,10 @@ class tdb_single_categories extends td_block {
 				.$unique_block_class .tdb-cat-sep {
 					font-size: @icon_size;
 				}
+                /* @icon_svg_size */
+				.$unique_block_class .tdb-cat-sep-svg svg {
+					width: @icon_svg_size;
+				}
                 /* @icon_space */
 				.$unique_block_class .tdb-cat-sep {
 					margin: 0 @icon_space;
@@ -104,6 +190,10 @@ class tdb_single_categories extends td_block {
                 /* @i_color */
 				.$unique_block_class .tdb-cat-sep {
 					color: @i_color;
+				}
+				.$unique_block_class .tdb-cat-sep-svg svg,
+				.$unique_block_class .tdb-cat-sep-svg svg * {
+					fill: @i_color;
 				}
                 /* @txt_color */
 				.$unique_block_class .tdb-cat-text {
@@ -145,6 +235,8 @@ class tdb_single_categories extends td_block {
 	}
 
 	static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_single_categories', 1 );
 
 		// cat_padding
 		$cat_padding = $res_ctx->get_shortcode_att('cat_padding');
@@ -255,10 +347,18 @@ class tdb_single_categories extends td_block {
 
 		// tdicon
 		$tdicon_html = '';
-		$tdicon = $this->get_att( 'tdicon' );
-		if( $tdicon != '' ) {
-			$tdicon_html = '<i class="' . $tdicon . ' tdb-cat-sep"></i>';
-		}
+        $tdicon = $this->get_icon_att( 'tdicon' );
+        $tdicon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $tdicon_data = 'data-td-svg-icon="' . $this->get_att('tdicon') . '"';
+        }
+        if( $tdicon != '' ) {
+            if( base64_encode( base64_decode( $tdicon ) ) == $tdicon ) {
+                $tdicon_html = '<span class="tdb-cat-sep tdb-cat-sep-svg" ' . $tdicon_data . '>' . base64_decode( $tdicon ) . '</span>';
+            } else {
+                $tdicon_html = '<i class="tdb-cat-sep ' . $tdicon . '"></i>';
+            }
+        }
 
 		// cat_style
 		$cat_text_color = '';

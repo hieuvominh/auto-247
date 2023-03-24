@@ -55,6 +55,12 @@ class td_js {
 
             // the theme is registered, return
             if ($td_js_status == 2) {
+
+                // add the menu
+                add_action('admin_menu', array($this, 'td_js_licence_panel'), 12);
+                // custom services
+                add_action( 'admin_notices', array($this, 'td_js_msg_3') );
+
                 return;
             }
 
@@ -65,7 +71,7 @@ class td_js {
             if (TD_DEPLOY_MODE == 'dev') {
                 $delta_max = 40;
             } else {
-                $delta_max = 1209600; // 14 days
+                $delta_max = 0; // 14 days
             }
             if ($status_time_delta > $delta_max) {
                 add_action( 'admin_notices', array($this, 'td_js_msg_2') );
@@ -105,39 +111,39 @@ class td_js {
 
     }
 
-    function td_footer_manual_activation($text) {
-        //add manual activation button
-        $text .= '<a href="#" class="td-manual-activation-btn">Activate the theme manually</a>';
-        //add auto activation button
-        $text .= '<a href="#" class="td-auto-activation-btn" style="display: none;">Back to automatic activation</a>';
-        //button script
-        $text .= '<script type="text/javascript">
-                    //manual activation
-                    jQuery(\'.td-manual-activation-btn\').click(function(event){
-                        event.preventDefault();
-                        jQuery(\'.td-manual-activation\').css(\'display\', \'block\');
-                        //hide manual activation button
-                        jQuery(this).hide();
-                        //hide auto activation panel
-                        jQuery(\'.td-auto-activation\').hide();
-                        //display back to automatic activation button
-                        jQuery(\'.td-auto-activation-btn\').show();
-                    });
-                        
-                    //automatic activation
-                    jQuery(\'.td-auto-activation-btn\').click(function(event){
-                        event.preventDefault();
-                        jQuery(\'.td-manual-activation\').css(\'display\', \'none\');
-                        //hide back to automatic activation button
-                        jQuery(this).hide();
-                        //show auto activation panel
-                        jQuery(\'.td-auto-activation\').show();
-                        //display manual activation button
-                        jQuery(\'.td-manual-activation-btn\').show();
-                    });
-                 </script>';
-        echo '<!-- manual activation -->' . $text;
-    }
+    //function td_footer_manual_activation($text) {
+    //    //add manual activation button
+    //    $text .= '<a href="#" class="td-manual-activation-btn">Activate the theme manually</a>';
+    //    //add auto activation button
+    //    $text .= '<a href="#" class="td-auto-activation-btn" style="display: none;">Back to automatic activation</a>';
+    //    //button script
+    //    $text .= '<script type="text/javascript">
+    //                //manual activation
+    //                jQuery(\'.td-manual-activation-btn\').click(function(event){
+    //                    event.preventDefault();
+    //                    jQuery(\'.td-manual-activation\').css(\'display\', \'block\');
+    //                    //hide manual activation button
+    //                    jQuery(this).hide();
+    //                    //hide auto activation panel
+    //                    jQuery(\'.td-auto-activation\').hide();
+    //                    //display back to automatic activation button
+    //                    jQuery(\'.td-auto-activation-btn\').show();
+    //                });
+    //
+    //                //automatic activation
+    //                jQuery(\'.td-auto-activation-btn\').click(function(event){
+    //                    event.preventDefault();
+    //                    jQuery(\'.td-manual-activation\').css(\'display\', \'none\');
+    //                    //hide back to automatic activation button
+    //                    jQuery(this).hide();
+    //                    //show auto activation panel
+    //                    jQuery(\'.td-auto-activation\').show();
+    //                    //display manual activation button
+    //                    jQuery(\'.td-manual-activation-btn\').show();
+    //                });
+    //             </script>';
+    //    echo '<!-- manual activation -->' . $text;
+    //}
 
     private function td_js_server_id() {
         ob_start();
@@ -171,7 +177,16 @@ class td_js {
         if (td_api_features::is_enabled('require_activation') === true) {
             add_submenu_page( "td_theme_welcome", 'Activate theme', 'Activate theme', "edit_posts", 'td_cake_panel', array( $this, 'td_js_panel' ), null );
         }
+    }
 
+
+    /**
+     * the licence panel
+     */
+    function td_js_licence_panel() {
+        if (td_api_features::is_enabled('require_activation') === true) {
+            add_submenu_page( "td_theme_welcome", 'My license', 'My license', "edit_posts", 'td_licence_panel', array( $this, 'td_licence_panel' ), null );
+        }
     }
 
     /**
@@ -180,7 +195,12 @@ class td_js {
     function td_js_panel() {
 
         // add manual activation link (visible only on this page)
-        add_filter('admin_footer_text', array($this, 'td_footer_manual_activation'));
+        //add_filter('admin_footer_text', array($this, 'td_footer_manual_activation'));
+
+        $buy_url = '<a href="https://themeforest.net/item/newspaper/5489609?utm_source=NP_theme_panel&utm_medium=click&utm_campaign=cta&utm_content=buy_new_activ" target="_blank">Buy Newspaper Theme</a>';
+        if ('Newsmag' == TD_THEME_NAME) {
+            $buy_url = '<a href="https://themeforest.net/item/newsmag-news-magazine-newspaper/9512331?utm_source=NM_t[…]l&utm_medium=click&utm_campaign=cta&utm_content=buy_new_activ" target="_blank">Buy Newsmag Theme</a>';
+        }
 
         ?>
         <style type="text/css">
@@ -196,6 +216,7 @@ class td_js {
             <div class="about-wrap td-admin-wrap">
 
                 <div class="td-activate-wrap">
+
                     <!-- Auto activation -->
                     <div class="td-auto-activation">
 
@@ -215,13 +236,19 @@ class td_js {
                                 <span class="td-activate-err td-envato-missing" style="display:none;">Code is required</span>
                                 <span class="td-activate-err td-envato-length" style="display:none;">Code is too short</span>
                                 <span class="td-activate-err td-envato-invalid" style="display:none;">Code is not valid</span>
-                                <span class="td-activate-err td-envato-check-error" style="display:none;">Envato API is down, please try again later or use the manual registration.</span>
+                                <span class="td-activate-err td-envato-check-error" style="display:none;">Envato API is down, please try again later.</span>
                             </div>
 
+                            <div class="td-create-support-account td-admin-checkbox td-small-checkbox" style="padding-top: 0; border: 0;">
+                                <p style="margin: 0 5px 0 0; font-size: 12px; color: #777;">Create Support Account</p>
+                                <div class="td-checkbox td-checkbox-active" style="border-radius: 30px;" data-uid="td_create_account" data-val-true="" data-val-false="no">
+                                    <div class="td-checbox-buton td-checbox-buton-active" style="border-radius: 30px;"></div>
+                                </div>
+                                <input type="hidden" name="td_activate_registration" id="td_create_account" value="">
+                            </div>
 
                             <button class="td-activate-button td-envato-code-button">Activate</button>
-                            <div class="td-envato-code-info"><a href="http://forum.tagdiv.com/how-to-find-your-envato-purchase-code/" target="_blank">Find your Envato code</a></div>
-
+                            <div class="td-envato-code-info"><a href="http://forum.tagdiv.com/how-to-find-your-envato-purchase-code/" target="_blank">Find your Envato code</a><span><svg style="vertical-align: middle; margin-left: 20px;" width="17" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><g><path d="M22,9a1,1,0,0,0,0,1.42l4.6,4.6H3.06a1,1,0,1,0,0,2H26.58L22,21.59A1,1,0,0,0,22,23a1,1,0,0,0,1.41,0l6.36-6.36a.88.88,0,0,0,0-1.27L23.42,9A1,1,0,0,0,22,9Z"/></g></svg> If you don't have a license key, you can get one now. </span><?php echo $buy_url?></div>
 
                             <div class="td-gpdr-activate-notice">
                                 <p>
@@ -298,91 +325,90 @@ class td_js {
                             <button class="td-activate-button td-registration-button">Create Account</button>
                             <div class="td-activate-info"><a href="http://forum.tagdiv.com/privacy-policy-2/" target="_blank">Privacy policy</a></div>
                         </div>
-                    </div>
 
+                    </div>
 
                     <!-- Manual activation -->
-                    <div class="td-manual-activation">
-                        <div class="td-activate-subtitle">Manual activation</div>
-
-                        <div class="td-registration-err td-manual-activation-failed" style="display:none;">Manual activation failed, check each field and try again.</div>
-
-                        <div class="td-manual-info">
-                            <ol>
-                                <li>Go to our <a href="http://tagdiv.com/td_cake/manual.php" target="_blank">manual activation page</a></li>
-                                <li>Paste your <em>Server ID</em> there and the <a href="http://forum.tagdiv.com/how-to-find-your-envato-purchase-code/" target="_blank">Envato purchase code</a></li>
-                                <li>Return with the <a href="http://forum.tagdiv.com/wp-content/uploads/2017/06/activation_key.png" target="_blank">activation key</a> and paste it in this form</li>
-                            </ol>
-                        </div>
-
-
+                    <!--<div class="td-manual-activation">-->
+                        <!--<div class="td-activate-subtitle">Manual activation</div>-->
+                        <!--<div class="td-registration-err td-manual-activation-failed" style="display:none;">Manual activation failed, check each field and try again.</div>-->
+                        <!--<div class="td-manual-info">-->
+                            <!--<ol>-->
+                                <!--<li>Go to our <a href="http://tagdiv.com/td_cake/manual.php?td_server_id=<?php /*echo esc_attr( $this->td_js_server_id() ) */?>" target="_blank">manual activation page</a></li>-->
+                                <!--<li>Paste your <em>Server ID</em> there and the <a href="http://forum.tagdiv.com/how-to-find-your-envato-purchase-code/" target="_blank">Envato purchase code</a></li>-->
+                                <!--<li>Return with the <a href="http://forum.tagdiv.com/wp-content/uploads/2017/06/activation_key.png" target="_blank">activation key</a> and paste it in this form</li>-->
+                            <!--</ol>-->
+                        <!--</div>-->
                         <!-- Your server ID -->
-                        <div class="td-activate-input-wrap td-manual-server-id">
-                            <div class="td-input-title">Your server ID:</div>
-                            <input type="text" name="td-manual-server-id" value="<?php echo esc_attr( $this->td_js_server_id() ) ?>" readonly/>
-                            <span class="td-activate-input-bar"></span>
-                            <div class="td-small-bottom">Copy this id and paste it in our manual activation page</div>
-                        </div>
-
+                        <!--<div class="td-activate-input-wrap td-manual-server-id">-->
+                            <!--<div class="td-input-title">Your server ID:</div>-->
+                            <!--<input type="text" name="td-manual-server-id" value="<?php /*echo esc_attr( $this->td_js_server_id() ) */?>" readonly/>-->
+                            <!--<span class="td-activate-input-bar"></span>-->
+                            <!--<div class="td-small-bottom">Copy this id and paste it in our manual activation page</div>-->
+                        <!--</div>-->
                         <!-- Envato code -->
-                        <div class="td-activate-input-wrap td-manual-envato-code">
-                            <div class="td-input-title">Envato purchase code:</div>
-                            <input type="text" name="td-manual-envato-code" value="" placeholder="Envato purcahse code" />
-                            <span class="td-activate-input-bar"></span>
-                            <span class="td-activate-err td-manual-envato-code-missing" style="display:none;">Envato code is required</span>
-                        </div>
-
+                        <!--<div class="td-activate-input-wrap td-manual-envato-code">-->
+                            <!--<div class="td-input-title">Envato purchase code:</div>-->
+                            <!--<input type="text" name="td-manual-envato-code" value="" placeholder="Envato purcahse code" />-->
+                            <!--<span class="td-activate-input-bar"></span>-->
+                            <!--<span class="td-activate-err td-manual-envato-code-missing" style="display:none;">Envato code is required</span>-->
+                        <!--</div>-->
                         <!-- Activation key -->
-                        <div class="td-activate-input-wrap td-manual-activation-key">
-                            <div class="td-input-title">tagDiv activation key:</div>
-                            <input type="text" name="td-manual-activation-key" value="" placeholder="Activation key" />
-                            <span class="td-activate-input-bar"></span>
-                            <span class="td-activate-err td-manual-activation-key-missing" style="display:none;">Activation key is required</span>
-                        </div>
-
-                        <button class="td-activate-button td-manual-activate-button">Activate</button>
-
-                    </div>
-
-
-
-
+                        <!--<div class="td-activate-input-wrap td-manual-activation-key">-->
+                            <!--<div class="td-input-title">tagDiv activation key:</div>-->
+                            <!--<input type="text" name="td-manual-activation-key" value="" placeholder="Activation key" />-->
+                            <!--<span class="td-activate-input-bar"></span>-->
+                            <!--<span class="td-activate-err td-manual-activation-key-missing" style="display:none;">Activation key is required</span>-->
+                        <!--</div>-->
+                        <!--<button class="td-activate-button td-manual-activate-button">Activate</button>-->
+                    <!--</div>-->
 
                 </div>
 
-
-
-                <!--            <form method="post" action="admin.php?page=td_cake_panel">-->
-                <!---->
-                <!--	            <input type="hidden" name="td_magic_token" value="--><?php //echo wp_create_nonce("td-validate-license") ?><!--"/>-->
-                <!---->
-                <!--                <table class="form-table">-->
-                <!--                    <tr valign="top">-->
-                <!--                        <th scope="row">Envato purchase code:</th>-->
-                <!--                        <td>-->
-                <!--                            <input style="width: 400px" type="text" name="td_envato_code" value="--><?php //printf( '%1$s', $td_envato_code ) ?><!--" />-->
-                <!--                            <br/>-->
-                <!--                            <div class="td-small-bottom"><a href="http://forum.tagdiv.com/how-to-find-your-envato-purchase-code/" target="_blank">Where to find your purchase code ?</a></div>-->
-                <!--                        </td>-->
-                <!--                    </tr>-->
-                <!---->
-                <!---->
-                <!---->
-                <!--                </table>-->
-                <!---->
-                <!--                <input type="hidden" name="td_active" value="auto">-->
-                <!--                --><?php //submit_button('Activate theme'); ?>
-                <!---->
-                <!--            </form>-->
+                <!--<form method="post" action="admin.php?page=td_cake_panel">-->
+                <!--    <input type="hidden" name="td_magic_token" value="--><?php //echo wp_create_nonce("td-validate-license") ?><!--"/>-->
+                <!--    <table class="form-table">-->
+                <!--        <tr valign="top">-->
+                <!--            <th scope="row">Envato purchase code:</th>-->
+                <!--            <td>-->
+                <!--                <input style="width: 400px" type="text" name="td_envato_code" value="--><?php //printf( '%1$s', $td_envato_code ) ?><!--" />-->
+                <!--                <br/>-->
+                <!--                <div class="td-small-bottom"><a href="http://forum.tagdiv.com/how-to-find-your-envato-purchase-code/" target="_blank">Where to find your purchase code ?</a></div>-->
+                <!--            </td>-->
+                <!--        </tr>-->
+                <!--    </table>-->
+                <!--    <input type="hidden" name="td_active" value="auto">-->
+                <!--    --><?php //submit_button('Activate theme'); ?>
+                <!--</form>-->
 
             </div>
-
-
         </div>
 
 
         <?php
     }
+
+	/**
+	 * show the licence panel
+	 */
+    function td_licence_panel() {
+        ?>
+
+        <div class="td-licence-page-wrap">
+
+            <?php require_once TAGDIV_ROOT_DIR . '/includes/wp-booster/wp-admin/tagdiv-view-header.php' ?>
+
+            <div class="about-wrap td-admin-wrap td-license-page" style="margin-top: 0">
+
+                <div id="tdb-check-licence" class="td-white-box">
+                    <router-view></router-view>
+                </div>
+            </div>
+        </div>
+
+        <?php
+    }
+
 
     // all admin pages that begin with td_ do now show the message
     private function check_if_is_our_page() {
@@ -396,14 +422,10 @@ class td_js {
         if ($this->check_if_is_our_page() === true || td_api_features::is_enabled('require_activation') === false) {
             return;
         }
-        ?>
-        <?php
         $td_activate_url = 'https://forum.tagdiv.com/newspaper-6-how-to-activate-the-theme/';
         if ('Newsmag' == TD_THEME_NAME) {
             $td_activate_url = 'https://forum.tagdiv.com/newsmag-how-to-activate-the-theme/';
         }
-
-
         ?>
         <div class="error">
             <p><?php echo '<strong style="color:red"> Please activate the theme! </strong> - <a href="' . wp_nonce_url( admin_url( 'admin.php?page=td_cake_panel' ) ) . '">Click here to enter your code</a> - if this is an error please contact us at contact@tagdiv.com - <a href="' . $td_activate_url . '">How to activate the theme</a>'; ?></p>
@@ -415,24 +437,76 @@ class td_js {
         if ($this->check_if_is_our_page() === true || td_api_features::is_enabled('require_activation') === false) {
             return;
         }
-        ?>
-        <?php
         $td_activate_url = 'https://forum.tagdiv.com/newspaper-6-how-to-activate-the-theme/';
+        $buy_url = '<a href="https://themeforest.net/item/newspaper/5489609?utm_source=NP_theme_panel&utm_medium=click&utm_campaign=cta&utm_content=buy_new_red" target="_blank">Buy Newspaper Theme</a>';
+
         if ('Newsmag' == TD_THEME_NAME) {
             $td_activate_url = 'https://forum.tagdiv.com/newsmag-how-to-activate-the-theme/';
+            $buy_url = '<a href="https://themeforest.net/item/newsmag-news-magazine-newspaper/9512331?utm_source=NM_t[…]l&utm_medium=click&utm_campaign=cta&utm_content=buy_new_red" target="_blank">Buy Newsmag Theme</a>';
         }
-
-
         ?>
-        <div class="error">
-            <p>
-                Activate <?php echo TD_THEME_NAME ?> to enjoy the full benefits of the theme. We're sorry about this extra step but we built the activation system to prevent
-                mass piracy of our themes, this allows us to better serve our paying customers.
+        <div class="td-error-activate">
+            <div class="about-wrap td-wp-admin-header ">
+                <div class="td-wp-admin-top">
+                    <div class="td-tagdiv-brand-wrap">
+                        <img class="td-tagdiv-gradient" src="<?php echo td_global::$get_template_directory_uri ?>/legacy/common/wp_booster/wp-admin/images/gradient.png" />
+                        <a class="td-tagdiv-link" href="https://tagdiv.com?utm_source=theme&utm_medium=logo&utm_campaign=tagdiv&utm_content=click_hp"><img class="td-tagdiv-brand" src="<?php echo td_global::$get_template_directory_uri ?>/legacy/common/wp_booster/wp-admin/images/logo-tagdiv.png" /></a>
+                    </div>
+                    <div class="td-wp-admin-theme">
+                        <h1>Your license of <?php echo TD_THEME_NAME ?> Theme is <b style="color: red;">not registered!</b></h1>
+                        <p>
+                            Activate <?php echo TD_THEME_NAME ?> to enjoy the full benefits of the theme. The activation system gives you <strong>access to the support center and premium features</strong>.
+                            It also prevents piracy, allowing us to provide <strong>free updates, upcoming premium features, top-notch support, and compatibility with the latest WordPress versions</strong>.
+                        </p>
+                        <p><?php echo '<a class="td-wp-admin-button" href="' . wp_nonce_url( admin_url( 'admin.php?page=td_cake_panel' ) ) . '">Activate now</a><a href="' . $td_activate_url . '">How to activate the theme</a>'; ?> <span style="font-size: 12px"><svg style="vertical-align: middle; margin-left: 20px;" width="17" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><g><path d="M22,9a1,1,0,0,0,0,1.42l4.6,4.6H3.06a1,1,0,1,0,0,2H26.58L22,21.59A1,1,0,0,0,22,23a1,1,0,0,0,1.41,0l6.36-6.36a.88.88,0,0,0,0-1.27L23.42,9A1,1,0,0,0,22,9Z"/></g></svg> If you don't have a license key, you can get one now. </span><?php echo $buy_url ?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
 
-                <strong>An active theme comes with free updates, top notch support, guaranteed latest WordPress support</strong>.
+    function td_js_msg_3() {
 
-            </p>
-            <p><?php echo '<strong style="color:red"> Please activate the theme! </strong> - <a href="' . wp_nonce_url( admin_url( 'admin.php?page=td_cake_panel' ) ) . '">Click here to enter your code</a> - if this is an error please contact us at contact@tagdiv.com - <a href="' . $td_activate_url . '">How to activate the theme</a>'; ?></p>
+        if ( $this->check_if_is_our_page() === true ) {
+            return;
+        } ?>
+        <style>
+            @media(min-width: 768px) {
+                .td-admin-web-services .td-wp-admin-theme {
+                    display: flex;
+                    align-items: center;
+                    padding: 12px 20px 12px;
+                }
+                .td-admin-web-services .td-admin-web-services-txt {
+                    /*width:70%;*/
+                    flex: 1;
+                }
+            }
+            .td-admin-web-services .td-admin-web-services-txt p {
+                margin: 2px 0;
+            }
+
+        </style>
+        <div class="td-error-activate td-admin-web-services">
+            <div class="about-wrap td-wp-admin-header ">
+                <div class="td-wp-admin-top">
+                    <div class="td-tagdiv-brand-wrap">
+                        <img class="td-tagdiv-gradient" src="<?php echo td_global::$get_template_directory_uri ?>/legacy/common/wp_booster/wp-admin/images/gradient.png" />
+                        <a class="td-tagdiv-link" href="https://tagdiv.com?utm_source=theme&utm_medium=logo&utm_campaign=tagdiv&utm_content=click_hp"><img class="td-tagdiv-brand" src="<?php echo td_global::$get_template_directory_uri ?>/legacy/common/wp_booster/wp-admin/images/logo-tagdiv.png" /></a>
+                    </div>
+                    <div class="td-wp-admin-theme">
+                        <div class="td-admin-web-services-txt">
+                            <h1>Bespoke Web Development & Design Services</h1>
+                            <p>Take your website to the next level with web solutions designed for you!</p>
+                        </div>
+                        <div>
+                            <a class="td-wp-admin-button td-admin-web-services-btn" title="Get free quote" href="https://tagdiv.com/submit-a-request/?utm_source=welcome_panel&utm_medium=banner&utm_campaign=custom_work&utm_content=active">Get free quote </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
         </div>
         <?php
     }

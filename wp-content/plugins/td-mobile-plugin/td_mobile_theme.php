@@ -170,6 +170,11 @@ class td_mobile_theme {
 	 * The priority must be higher than any other previous settings, to overwrite them.
 	 */
 	private static function set_mobile_theme() {
+	    // 'stylesheet_directory' has been added here to solve theme.json issue for mobile theme. Without this it is trying to find
+        // the json file NOT inside of main theme directory path
+	    add_action('stylesheet_directory', array(__CLASS__, 'mobile_stylesheet_directory'), 10, 3);
+        add_action('template_directory', array(__CLASS__, 'mobile_stylesheet_directory'), 10, 3);
+
 		add_action('setup_theme', array(__CLASS__, 'mobile_theme_setup'), 999);
 		add_filter('theme_root', array(__CLASS__, 'mobile_theme_root'), 999, 1);
 		add_filter('theme_root_uri', array(__CLASS__, 'mobile_theme_root_uri'), 999, 1);
@@ -177,33 +182,36 @@ class td_mobile_theme {
 		/**
 		 * hook here to check the post mobile theme status
 		 */
-		add_action('setup_theme', function (){
+		add_action( 'setup_theme', function () {
+
 			global $_SERVER;
-
-			$req_scheme = 'http';
-			if(is_ssl()){
-				$req_scheme = 'https';
-			}
-
+			$req_scheme = is_ssl() ? 'https' : 'http';
 			$post_id = url_to_postid( $req_scheme . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
 
 			// get the mob theme status from post meta
 			$status = get_post_meta( $post_id, 'tdm_status', true );
 
 			// if the mobile theme is disabled for this post remove the mobile theme setup actions/filters
-			if ( $status && $status === 'disabled' ) {
-				remove_action('setup_theme', array(__CLASS__, 'mobile_theme_setup'), 999);
-				remove_filter('theme_root', array(__CLASS__, 'mobile_theme_root'), 999, 1);
-				remove_filter('theme_root_uri', array(__CLASS__, 'mobile_theme_root_uri'), 999, 1);
+			if ( $status === 'disabled' ) {
+
+                //remove AMP when MT is disabled on specific post
+                add_filter( 'amp_skip_post', '__return_true' );
+
+                remove_action('setup_theme', array(__CLASS__, 'mobile_theme_setup'), 999);
+				remove_filter('theme_root', array(__CLASS__, 'mobile_theme_root'), 999);
+				remove_filter('theme_root_uri', array(__CLASS__, 'mobile_theme_root_uri'), 999);
 				remove_filter('the_content', 'td_mobile_get_the_content_for_vc', 9);
-			}
+                remove_action('stylesheet_directory', array(__CLASS__, 'mobile_stylesheet_directory'));
+            } else {
+                remove_action('template_directory', array(__CLASS__, 'mobile_stylesheet_directory'));
+            }
 
 		}, 998);
 	}
 
 	/**
 	 * IF amp options are enabled from panel this function sets the paired mode and loads the mobile theme accordingly
-	 * IF amp options are disable, this sets and loads the mobile theme settings, on mobile devices
+	 * IF amp options are disabled, this sets and loads the mobile theme settings, on mobile devices
 	 */
 	static function set_the_theme() {
 
@@ -228,6 +236,7 @@ class td_mobile_theme {
 						remove_filter( 'dashboard_glance_items', 'AMP_Validated_URL_Post_Type::filter_dashboard_glance_items');
 						remove_action( 'rightnow_end', 'AMP_Validated_URL_Post_Type::print_dashboard_glance_styles');
 
+                        // this will remove AMP enable/disable toggle
 						remove_action( 'enqueue_block_editor_assets', 'AMP_Validation_Manager::enqueue_block_validation');
 						remove_action( 'admin_bar_menu', 'AMP_Validation_Manager::add_admin_bar_menu_items', 101);
 
@@ -345,13 +354,21 @@ class td_mobile_theme {
 		} else {
 
 			// this function disables amp if the default wp amp plugin is used with the mobile theme plugin and amp settings are disabled in the mobile theme
-			if ( self::is_amp_plugin_installed() ) {
-				add_action( 'after_setup_theme', function (){
-					add_filter( 'amp_is_enabled', '__return_false' );
-				}, 4);
-			}
+			add_filter( 'amp_is_enabled', function ( $is_enabled ) {
+				if (  self::is_amp_plugin_installed()  ) {
+					$is_enabled = false;
+				}
+				return $is_enabled;
+			} );
 
-			if ( self::is_mobile(true) && ! is_admin() ) {
+			// deprecated
+            //if ( self::is_amp_plugin_installed() ) {
+            //    add_action( 'after_setup_theme', function (){
+            //        add_filter( 'amp_is_enabled', '__return_false' );
+            //    }, 4);
+            //}
+
+			if ( self::is_mobile(true) && !is_admin() && !wp_is_json_request() ) {
 				self::set_mobile_theme();
 			}
 		}
@@ -384,11 +401,25 @@ class td_mobile_theme {
 	 * @return mixed
 	 */
 	static function mobile($theme) {
-		return apply_filters('td_mobile', '', $theme);
+	    return apply_filters('td_mobile', '', $theme);
 	}
 
-	static function mobile_stylesheet_directory_uri($path) {
-		return rtrim($path, '/');
+	static function mobile_stylesheet_directory_uri($stylesheet_dir_uri, $stylesheet, $theme_root_uri) {
+	    return rtrim($stylesheet_dir_uri, '/');
+	}
+
+	static function mobile_stylesheet_directory($stylesheet_dir, $stylesheet, $theme_root) {
+	    $main_theme = wp_get_theme();
+		$main_dir_path = $main_theme->get_template_directory();
+        if ( td_mobile_theme::get_option('tdm_is_multisite') === 'yes' && is_multisite() ) {
+            $main_dir_path = $main_theme->theme_root . '/themes' . get_template_directory();
+        }
+		$mobile_dir_path = TDC_PATH  . self::$mobile_dir;
+
+        if ( file_exists( $mobile_dir_path ) ) {
+	        return $main_dir_path;
+        }
+	    return $stylesheet_dir;
 	}
 
 	/**
@@ -399,7 +430,7 @@ class td_mobile_theme {
 	 * @return string
 	 */
 	static function mobile_theme_root($theme_root) {
-		return self::$mobile_dir_path;
+	    return self::$mobile_dir_path;
 	}
 
 	/**
@@ -429,6 +460,9 @@ class td_mobile_theme {
 	static function mobile_theme_setup() {
 		$main_theme = wp_get_theme();
 		$main_dir_path = $main_theme->get_template_directory();
+        if ( td_mobile_theme::get_option('tdm_is_multisite') === 'yes' && is_multisite() ) {
+            $main_dir_path = $main_theme->theme_root . '/themes' . get_template_directory();
+        }
 		$mobile_dir_path = TDC_PATH  . self::$mobile_dir;
 
 		if ( file_exists( $mobile_dir_path ) ) {
@@ -461,6 +495,6 @@ class td_mobile_theme {
 		add_action('option_template', array(__CLASS__, 'mobile'));
 		add_action('option_stylesheet', array(__CLASS__, 'mobile'));
 
-		add_action('stylesheet_directory_uri', array(__CLASS__, 'mobile_stylesheet_directory_uri'));
+		add_action('stylesheet_directory_uri', array(__CLASS__, 'mobile_stylesheet_directory_uri'), 10, 3);
 	}
 }

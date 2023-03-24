@@ -8,214 +8,336 @@ class tdb_single_comments extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
-            "<style>
-                
-                /* @auth_color */
-                .$unique_block_class cite,
-                .$unique_block_class cite a {
-                    color: @auth_color;
-                }
-                /* @auth_h_color */
-                .$unique_block_class cite a:hover {
-                    color: @auth_h_color;
-                }
-                /* @meta_color */
-                .$unique_block_class .comment-link {
-                    color: @meta_color;
-                }
-                /* @meta_h_color */
-                .$unique_block_class .comment-link:hover {
-                    color: @meta_h_color;
-                }
-                /* @meta_show */
-                .$unique_block_class .comment-link {
-                    display: @meta_show;
-                }
-                /* @descr_color */
-                .$unique_block_class .comment-content {
-                    color: @descr_color;
-                }
-                /* @reply_color */
-                .$unique_block_class .comment-reply-link {
-                    color: @reply_color;
-                }
-                /* @edit_color */
-                .$unique_block_class .comment-edit-link {
-                    color: @edit_color;
-                }
-                /* @edit_h_color */
-                .$unique_block_class .comment-edit-link:hover {
-                    color: @edit_h_color;
-                }
-                /* @reply_h_color */
-                .$unique_block_class .comment-reply-link:hover,
-                .$unique_block_class #cancel-comment-reply-link:hover,
-                .$unique_block_class .logged-in-as a:hover {
-                    color: @reply_h_color;
-                }
-                /* @sep_size */
-                .$unique_block_class .comment {
-                    border-bottom-width: @sep_size;
-                }
-                .$unique_block_class .comment .children {
-                    border-top-width: @sep_size;
-                }
-                /* @sep_style */
-                .$unique_block_class .comment {
-                    border-bottom-style: @sep_style;
-                }
-                .$unique_block_class .comment .children {
-                    border-top-style: @sep_style;
-                }
-                /* @sep_color */
-                .$unique_block_class .comment {
-                    border-bottom-color: @sep_color;
-                }
-                .$unique_block_class .comment .children {
-                    border-top-color: @sep_color;
-                }
-                
-                
-                
-                /* @form_title_color */
-                .$unique_block_class .comment-reply-title {
-                    color: @form_title_color;
-                }
-                /* @form_agree_color */
-                .$unique_block_class .comment-form-cookies-consent label,
-                .$unique_block_class .logged-in-as,
-                .$unique_block_class .logged-in-as a {
-                    color: @form_agree_color;
-                }
-                /* @bg_color */
-                .$unique_block_class input[type=text],
-                .$unique_block_class textarea {
-                    background-color: @bg_color;
-                }
-                /* @bg_f_color */
-                .$unique_block_class input[type=text]:active,
-                .$unique_block_class textarea:active,
-                 .$unique_block_class input[type=text]:focus,
-                .$unique_block_class textarea:focus {
-                    background-color: @bg_f_color;
-                }
-                /* @input_color */
-                .$unique_block_class input[type=text],
-                .$unique_block_class textarea {
-                    color: @input_color;
-                }
-                /* @placeholder_color */
-                .$unique_block_class input[type=text]::placeholder,
-                .$unique_block_class textarea::placeholder {
-                    color: @placeholder_color;
-                }
-                .$unique_block_class input[type=text]:-ms-input-placeholder,
-                .$unique_block_class textarea:-ms-input-placeholder {
-                    color: @placeholder_color !important;
-                }
-                /* @input_border_size */
-                .$unique_block_class input,
-                .$unique_block_class textarea {
-                    border-width: @input_border_size !important;
-                }
-                /* @input_border_color */
-                .$unique_block_class input,
-                .$unique_block_class textarea {
-                    border-color: @input_border_color !important;
-                }
-                /* @input_border_f_color */
-                .$unique_block_class input[type=text]:focus,
-                .$unique_block_class textarea:focus {
-                    border-color: @input_border_f_color !important;
-                }
-                /* @input_border_radius */
-                .$unique_block_class input,
-                .$unique_block_class textarea {
-                    border-radius: @input_border_radius;
-                }
-                /* @btn_txt_color */
-                .$unique_block_class .comment-form .submit {
-                    color: @btn_txt_color;
-                }
-                /* @btn_bg_color */
-                .$unique_block_class .comment-form .submit {
-                    background-color: @btn_bg_color;
-                }
-                /* @btn_txt_h_color */
-                .$unique_block_class .comment-form .submit:hover {
-                    color: @btn_txt_h_color;
-                }
-                /* @btn_bg_h_color */
-                .$unique_block_class .comment-form .submit:hover {
-                    background-color: @btn_bg_h_color;
-                }
-				/* @btn_radius */
-				.$unique_block_class .comment-form .submit {
-					border-radius: @btn_radius;
-				}
-				/* @avatar_radius */
-				.$unique_block_class .avatar {
-					border-radius: @avatar_radius;
-				}
-				/* @btn_padding */
-				.$unique_block_class .comment-form .submit {
-					padding: @btn_padding;
-				}
-				/* @btn_horiz_align */
-				.$unique_block_class .comment-form .form-submit {
-					text-align: @btn_horiz_align;
-				}
-				
-
-
-				/* @f_header */
-				.$unique_block_class .td-block-title a,
-				.$unique_block_class .td-block-title span {
-					@f_header
-				}
-				/* @f_auth */
-				.$unique_block_class cite {
-					@f_auth
-				}
-				/* @f_meta */
-				.$unique_block_class .comment-link,
-				.$unique_block_class .comment-edit-link {
-					@f_meta
-				}
-				/* @f_descr */
-				.$unique_block_class .comment-content p {
-					@f_descr
-				}
-				/* @f_reply */
-				.$unique_block_class .comment-reply-link {
-					@f_reply
-				}
-				/* @f_frm_title */
-				.$unique_block_class .comment-reply-title {
-					@f_frm_title
-				}
-				/* @f_input */
-				.$unique_block_class input[type=text],
-                .$unique_block_class textarea {
-					@f_input
-				}
-				/* @f_btn */
-				.$unique_block_class .comment-form .submit {
-					@f_btn
-				}
-				/* @f_agreement */
-				.$unique_block_class .comment-form-cookies-consent label,
-                .$unique_block_class .logged-in-as,
-                .$unique_block_class .logged-in-as a {
-					@f_agreement
-				}
-				
-			</style>";
+    "<style>
+                    
+        /* @general_single_comments */
+        .tdb_single_comments input[type=text] {
+          min-height: 34px;
+          height: auto;
+        }
+        .tdb_single_comments .comments,
+        .tdb_single_comments .comment-respond:last-child,
+        .tdb_single_comments .form-submit {
+          margin-bottom: 0;
+        }
+        .is-visually-hidden {
+          border: 0;
+          clip: rect(0 0 0 0);
+          height: 1px;
+          margin: -1px;
+          overflow: hidden;
+          padding: 0;
+          position: absolute;
+          width: 1px;
+        }
+        .tdb-comm-layout3 form,
+        .tdb-comm-layout5 form {
+          display: flex;
+          flex-wrap: wrap;
+        }
+        .tdb-comm-layout3 .td-form-comment,
+        .tdb-comm-layout5 .td-form-comment,
+        .tdb-comm-layout3 .form-submit,
+        .tdb-comm-layout5 .form-submit {
+          flex: 0 0 100%;
+          order: 1;
+        }
+        .tdb-comm-layout3 .td-form-author,
+        .tdb-comm-layout3 .td-form-email,
+        .tdb-comm-layout3 .td-form-url {
+          flex: 0 0 32%;
+        }
+        .tdb-comm-layout5 .td-form-author,
+        .tdb-comm-layout5 .td-form-email {
+          flex: 0 0 49%;
+        }
+        .tdb-comm-layout5 .td-form-url {
+          flex: 0 0 100%;
+        }
+        @media (min-width: 767px) {
+          .tdb-comm-layout2 form,
+          .tdb-comm-layout4 form {
+            margin: 0 -10px;
+          }
+          .tdb-comm-layout2 .logged-in-as,
+          .tdb-comm-layout4 .logged-in-as,
+          .tdb-comm-layout2 .comment-form-input-wrap,
+          .tdb-comm-layout4 .comment-form-input-wrap,
+          .tdb-comm-layout2 .form-submit,
+          .tdb-comm-layout4 .form-submit,
+          .tdb-comm-layout2 .comment-respond p,
+          .tdb-comm-layout4 .comment-respond p {
+            padding: 0 10px;
+          }
+          .tdb-comm-layout2 .td-form-author,
+          .tdb-comm-layout2 .td-form-email {
+            float: left;
+            width: 33.3333%;
+          }
+          .tdb-comm-layout2 .td-form-url {
+            width: 33.3333%;
+          }
+          .tdb-comm-layout2 .td-form-url {
+            float: left;
+          }
+          .tdb-comm-layout4 .td-form-author,
+          .tdb-comm-layout4 .td-form-email {
+            float: left;
+            width: 50%;
+          }
+          .tdb-comm-layout3 .td-form-author,
+          .tdb-comm-layout5 .td-form-author,
+          .tdb-comm-layout3 .td-form-email {
+            margin-right: 2%;
+          }
+        }
+        @media (max-width: 767px) {
+          .tdb-comm-layout3 .td-form-author,
+          .tdb-comm-layout3 .td-form-email,
+          .tdb-comm-layout3 .td-form-url,
+          .tdb-comm-layout5 .td-form-author,
+          .tdb-comm-layout5 .td-form-email {
+            flex: 0 0 100%;
+          }
+        }
+        
+        .tdb-comm-leave_reply_top .comments {
+            display: flex;
+            flex-direction: column;
+        }
+        .tdb-comm-leave_reply_top .td-comments-title {
+            order: 0;
+            margin-bottom: 14px;
+        }
+        .tdb-comm-leave_reply_top .comment-respond .form-submit {
+            order: 1;
+            margin-bottom: 21px;
+        }
+        .tdb-comm-leave_reply_top .comment-list {
+            order: 2;
+        }
+        .tdb-comm-leave_reply_top .comment-pagination {
+            order: 3;
+        }
+    
+                    
+        /* @auth_color */
+        .$unique_block_class cite,
+        .$unique_block_class cite a {
+            color: @auth_color;
+        }
+        /* @auth_h_color */
+        .$unique_block_class cite a:hover {
+            color: @auth_h_color;
+        }
+        /* @meta_color */
+        .$unique_block_class .comment-link {
+            color: @meta_color;
+        }
+        /* @meta_h_color */
+        .$unique_block_class .comment-link:hover {
+            color: @meta_h_color;
+        }
+        /* @meta_show */
+        .$unique_block_class .comment-link {
+            display: @meta_show;
+        }
+        /* @descr_color */
+        .$unique_block_class .comment-content {
+            color: @descr_color;
+        }
+        /* @reply_color */
+        .$unique_block_class .comment-reply-link {
+            color: @reply_color;
+        }
+        /* @edit_color */
+        .$unique_block_class .comment-edit-link {
+            color: @edit_color;
+        }
+        /* @edit_h_color */
+        .$unique_block_class .comment-edit-link:hover {
+            color: @edit_h_color;
+        }
+        /* @reply_h_color */
+        .$unique_block_class .comment-reply-link:hover,
+        .$unique_block_class #cancel-comment-reply-link:hover,
+        .$unique_block_class .logged-in-as a:hover {
+            color: @reply_h_color;
+        }
+        /* @sep_size */
+        .$unique_block_class .comment {
+            border-bottom-width: @sep_size;
+        }
+        .$unique_block_class .comment .children {
+            border-top-width: @sep_size;
+        }
+        /* @sep_style */
+        .$unique_block_class .comment {
+            border-bottom-style: @sep_style;
+        }
+        .$unique_block_class .comment .children {
+            border-top-style: @sep_style;
+        }
+        /* @sep_color */
+        .$unique_block_class .comment {
+            border-bottom-color: @sep_color;
+        }
+        .$unique_block_class .comment .children {
+            border-top-color: @sep_color;
+        }
+        
+        
+        
+        /* @form_title_color */
+        .$unique_block_class .comment-reply-title {
+            color: @form_title_color;
+        }
+        /* @form_agree_color */
+        .$unique_block_class .comment-form-cookies-consent label,
+        .$unique_block_class .logged-in-as,
+        .$unique_block_class .logged-in-as a {
+            color: @form_agree_color;
+        }
+        /* @bg_color */
+        .$unique_block_class input[type=text],
+        .$unique_block_class textarea {
+            background-color: @bg_color;
+        }
+        /* @bg_f_color */
+        .$unique_block_class input[type=text]:active,
+        .$unique_block_class textarea:active,
+         .$unique_block_class input[type=text]:focus,
+        .$unique_block_class textarea:focus {
+            background-color: @bg_f_color;
+        }
+        /* @input_color */
+        .$unique_block_class input[type=text],
+        .$unique_block_class textarea {
+            color: @input_color;
+        }
+        /* @placeholder_color */
+        .$unique_block_class input[type=text]::placeholder,
+        .$unique_block_class textarea::placeholder {
+            color: @placeholder_color;
+        }
+        .$unique_block_class input[type=text]:-ms-input-placeholder,
+        .$unique_block_class textarea:-ms-input-placeholder {
+            color: @placeholder_color !important;
+        }
+        /* @input_border_size */
+        .$unique_block_class input,
+        .$unique_block_class textarea {
+            border-width: @input_border_size !important;
+        }
+        /* @input_border_color */
+        .$unique_block_class input,
+        .$unique_block_class textarea {
+            border-color: @input_border_color !important;
+        }
+        /* @input_border_f_color */
+        .$unique_block_class input[type=text]:focus,
+        .$unique_block_class textarea:focus {
+            border-color: @input_border_f_color !important;
+        }
+        /* @input_border_radius */
+        .$unique_block_class input,
+        .$unique_block_class textarea {
+            border-radius: @input_border_radius;
+        }
+        /* @btn_txt_color */
+        .$unique_block_class .comment-form .submit {
+            color: @btn_txt_color;
+        }
+        /* @btn_bg_color */
+        .$unique_block_class .comment-form .submit {
+            background-color: @btn_bg_color;
+        }
+        /* @btn_txt_h_color */
+        .$unique_block_class .comment-form .submit:hover {
+            color: @btn_txt_h_color;
+        }
+        /* @btn_bg_h_color */
+        .$unique_block_class .comment-form .submit:hover {
+            background-color: @btn_bg_h_color;
+        }
+        /* @btn_radius */
+        .$unique_block_class .comment-form .submit {
+            border-radius: @btn_radius;
+        }
+        /* @avatar_radius */
+        .$unique_block_class .avatar {
+            border-radius: @avatar_radius;
+        }
+        /* @btn_padding */
+        .$unique_block_class .comment-form .submit {
+            padding: @btn_padding;
+        }
+        /* @btn_horiz_align */
+        .$unique_block_class .comment-form .form-submit {
+            text-align: @btn_horiz_align;
+        }
+        
+    
+    
+        /* @f_header */
+        .$unique_block_class .td-comments-title a,
+        .$unique_block_class .td-comments-title span {
+            @f_header
+        }
+        /* @f_auth */
+        .$unique_block_class cite {
+            @f_auth
+        }
+        /* @f_meta */
+        .$unique_block_class .comment-link,
+        .$unique_block_class .comment-edit-link {
+            @f_meta
+        }
+        /* @f_descr */
+        .$unique_block_class .comment-content p {
+            @f_descr
+        }
+        /* @f_reply */
+        .$unique_block_class .comment-reply-link {
+            @f_reply
+        }
+        /* @f_frm_title */
+        .$unique_block_class .comment-reply-title {
+            @f_frm_title
+        }
+        /* @f_input */
+        .$unique_block_class input[type=text],
+        .$unique_block_class textarea {
+            @f_input
+        }
+        /* @f_btn */
+        .$unique_block_class .comment-form .submit {
+            @f_btn
+        }
+        /* @f_agreement */
+        .$unique_block_class .comment-form-cookies-consent label,
+        .$unique_block_class .logged-in-as,
+        .$unique_block_class .logged-in-as a,
+        .$unique_block_class .td-closed-comments{
+            @f_agreement
+        }
+        
+    </style>";
 
 
         $td_css_res_compiler = new td_css_res_compiler( $raw_css );
@@ -226,6 +348,8 @@ class tdb_single_comments extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'general_single_comments', 1 );
 
         /*-- COMMENTS -- */
         $res_ctx->load_settings_raw( 'auth_color', $res_ctx->get_shortcode_att('auth_color') );
@@ -351,8 +475,21 @@ class tdb_single_comments extends td_block {
         if( !empty( $form_layout ) ) {
             $additional_classes[] = 'tdb-comm-layout' . $form_layout;
         }
+        $leave_reply_top = $this->get_att('leave_reply_top');
+        if( !empty( $leave_reply_top ) ) {
+            $additional_classes[] = 'tdb-comm-leave_reply_top';
+        }
+
+        if ( ! td_util::tdc_is_live_editor_ajax() && get_option( 'comment_registration' ) && ! is_user_logged_in() ) {
+            // load the login modal structure
+            require_once TDB_TEMPLATE_BUILDER_DIR . '/parts/tdb-login-modal.php';
+        }
 
         $buffy = ''; //output buffer
+
+        $buffy .= "\n\n" .'<script>' . "\n";
+        $buffy .= "\n" .'var tdb_login_sing_in_shortcode=' . json_encode('on') . ';' . "\n";
+        $buffy .= "\n" .'</script>' . "\n\n";
 
         $buffy .= '<div class="' . $this->get_block_classes($additional_classes) . '" ' . $this->get_block_html_atts() . '>';
 
@@ -378,6 +515,13 @@ class tdb_single_comments extends td_block {
                     $td_css_cls_block_title = 'block-title';
                 }
 
+                $title_tag = 'h4';
+
+                $block_title_tag = $this->get_att( 'title_tag' );
+                if ( $block_title_tag != '' ) {
+                    $title_tag = $block_title_tag ;
+                }
+
                 $buffy .= '<div class="comments" id="comments">';
 
 				    if ( $this->get_att('hide_header_template') === '' ) {
@@ -390,7 +534,7 @@ class tdb_single_comments extends td_block {
 						    }
 
 						    $buffy .= '<div class="td-comments-title-wrap ' . $global_block_template_id . '">';
-						    $buffy .= '<h4 class="td-comments-title ' . $td_css_cls_block_title . '"><span>' . $post_comments_no_text . '</span></h4>';
+						    $buffy .= '<' . $title_tag . ' class="td-comments-title ' . $td_css_cls_block_title . '"><span>' . $post_comments_no_text . '</span></' . $title_tag . '>';
 						    $buffy .= '</div>';
 
 					    }

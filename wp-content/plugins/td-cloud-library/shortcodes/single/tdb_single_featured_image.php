@@ -9,13 +9,73 @@ class tdb_single_featured_image extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
     
+                /* @style_general_featured_image */
+                .tdb_single_featured_image {
+                  margin-bottom: 26px;
+                }
+                .tdb_single_featured_image.tdb-sfi-stretch {
+                  opacity: 0;
+                }
+                .tdb_single_featured_image.tdb-sfi-stretch,
+                .tdb_single_featured_image .tdb-block-inner {
+                  -webkit-transition: all 0.3s ease-in-out;
+                  transition: all 0.3s ease-in-out;
+                }
+                .tdb_single_featured_image img {
+                  display: block;
+                  width: 100%;
+                }
+                .tdb_single_featured_image video {
+                  max-width: 100%;
+                }
+                .tdb_single_featured_image .tdb-caption-text {
+                  z-index: 1;
+                  text-align: left;
+                  font-size: 11px;
+                  font-style: italic;
+                  font-weight: normal;
+                  line-height: 17px;
+                  color: #444;
+                }
+                .tdb_single_featured_image.tdb-content-horiz-center .tdb-caption-text {
+                  text-align: center;
+                  left: 0;
+                  right: 0;
+                  margin-left: auto;
+                  margin-right: auto;
+                }
+                .tdb_single_featured_image.tdb-content-horiz-right .tdb-caption-text {
+                  text-align: right;
+                  left:  auto;
+                  right: 0;
+                }
+                .tdb-no-featured-img {
+                  background-color: #f1f1f1;
+                  width: 100%;
+                  height: 500px;
+                }
+                .tdb-no-featured-audio {
+                  height: 59px;
+                }
+
+                
                 /* @hide_img */
                 .$unique_block_class {
                     display: none;
@@ -47,6 +107,10 @@ class tdb_single_featured_image extends td_block {
                     height: 100%;
                     @overlay_gradient
                     pointer-events: none;
+                }
+                /* @radius */
+                .$unique_block_class img {
+                    border-radius: @radius;
                 }
                 /* @caption_margin */
                 .$unique_block_class .tdb-caption-text {
@@ -185,6 +249,7 @@ class tdb_single_featured_image extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_featured_image', 1 );
 
         global $tdb_state_single;
         $post_featured_image_data = $tdb_state_single->post_featured_image->__invoke( $res_ctx->get_atts() );
@@ -194,13 +259,22 @@ class tdb_single_featured_image extends td_block {
 
         // audio player size
         $audio_size = $res_ctx->get_shortcode_att('audio_size');
-        $res_ctx->load_settings_raw( 'audio_size', 10 + $audio_size/0.5 . 'px' );
-
+        if ( is_numeric( $audio_size ) ) {
+            $res_ctx->load_settings_raw('audio_size', 10 + $audio_size / 0.5 . 'px');
+        }
         // overlay color
         $res_ctx->load_color_settings( 'overlay', 'overlay_color', 'overlay_gradient', '', '' );
 
 
         if( $post_featured_image_data['featured_image_info']['src'] != '' ) {
+            // image radius
+            $radius = $res_ctx->get_shortcode_att( 'radius' );
+            $res_ctx->load_settings_raw( 'radius', $radius );
+            if( $radius != '' && is_numeric( $radius ) ) {
+                $res_ctx->load_settings_raw( 'radius', $radius . 'px' );
+            }
+
+
             /*-- CAPTION -- */
             // caption margin
             $caption_margin = $res_ctx->get_shortcode_att( 'caption_margin' );
@@ -219,6 +293,10 @@ class tdb_single_featured_image extends td_block {
             if( $caption_padding != '' && is_numeric( $caption_padding ) ) {
                 $res_ctx->load_settings_raw( 'caption_padding', $caption_padding . 'px' );
             }
+
+            // caption position
+            $caption_position = $res_ctx->get_shortcode_att( 'caption_pos' );
+            $res_ctx->load_settings_raw('caption_pos', $caption_position);
 
             // caption color
             $res_ctx->load_settings_raw( 'caption_color', $res_ctx->get_shortcode_att( 'caption_color' ) );
@@ -378,6 +456,10 @@ class tdb_single_featured_image extends td_block {
                             $post_featured_image_full_size_src = $post_featured_image_data['featured_image_full_size_src']['src'];
                         }
 
+                        if ( TD_DEPLOY_MODE == 'demo' && empty($post_featured_image_info['alt']) ) {
+                            $post_featured_image_info['alt'] = $post_featured_image_info['title'];
+                        }
+
                         if ( $show_td_modal_image === 'yes' ) {
                             $image_html = '
                                     <a 
@@ -438,7 +520,7 @@ class tdb_single_featured_image extends td_block {
             ob_start();
             ?>
             <script>
-                jQuery(window).load(function () {
+                jQuery(window).on( 'load', function () {
                     var block = jQuery('.<?php echo $this->block_uid; ?>'),
                         blockClass = '.<?php echo $this->block_uid; ?>',
                         blockInner = block.find('.tdb-block-inner'),

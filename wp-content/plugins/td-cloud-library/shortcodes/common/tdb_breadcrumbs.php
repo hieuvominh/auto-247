@@ -7,16 +7,66 @@ class tdb_breadcrumbs extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_breadcrumbs */
+                .tdb-breadcrumbs {
+                  margin-bottom: 11px;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 12px;
+                  color: #747474;
+                  line-height: 18px;
+                }
+                .tdb-breadcrumbs a {
+                  color: #747474;
+                }
+                .tdb-breadcrumbs a:hover {
+                  color: #000;
+                }
+                .tdb-breadcrumbs .tdb-bread-sep {
+                  line-height: 1;
+                  vertical-align: middle;
+                }
+                .tdb-breadcrumbs .tdb-bread-sep-svg svg {
+                  height: auto;
+                }
+                .tdb-breadcrumbs .tdb-bread-sep-svg svg,
+                .tdb-breadcrumbs .tdb-bread-sep-svg svg * {
+                  fill: #c3c3c3;
+                }
+                .single-tdb_templates.author-template .tdb_breadcrumbs {
+                  margin-bottom: 2px;
+                }
+                .tdb_category_breadcrumbs {
+                  margin: 21px 0 9px;
+                }
+                .search-results .tdb_breadcrumbs {
+                  margin-bottom: 2px;
+                }
+
+                
                 /* @icon_size */
                 .$unique_block_class .tdb-bread-sep {
                     font-size: @icon_size;
+                }
+                /* @icon_svg_size */
+                .$unique_block_class .tdb-bread-sep-svg svg {
+                    width: @icon_svg_size;
                 }
                 /* @icon_space */
                 .$unique_block_class .tdb-bread-sep {
@@ -27,6 +77,10 @@ class tdb_breadcrumbs extends td_block {
 				.$unique_block_class a {
 					color: @text_color;
 				}
+				.$unique_block_class .tdb-bread-sep-svg svg,
+				.$unique_block_class .tdb-bread-sep-svg svg * {
+				    fill: @text_color;
+				}
                 /* @link_h_color */
 				.$unique_block_class a:hover {
 					color: @link_h_color;
@@ -34,6 +88,10 @@ class tdb_breadcrumbs extends td_block {
                 /* @icon_color */
 				.$unique_block_class .tdb-bread-sep {
 					color: @icon_color;
+				}
+				.$unique_block_class .tdb-bread-sep-svg svg,
+				.$unique_block_class .tdb-bread-sep-svg svg * {
+				    fill: @icon_color;
 				}
 				/* @align_center */
 				.td-theme-wrap .$unique_block_class {
@@ -64,16 +122,30 @@ class tdb_breadcrumbs extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_breadcrumbs', 1 );
+
         /*-- SEPARATOR ICON -- */
+        $separator_icon = $res_ctx->get_icon_att('tdicon');
         // separator icon size
         $icon_size = $res_ctx->get_shortcode_att('icon_size');
-        $res_ctx->load_settings_raw( 'icon_size', $icon_size );
-        if( $icon_size != '' ) {
-            if( is_numeric( $icon_size ) ) {
-                $res_ctx->load_settings_raw( 'icon_size', $icon_size . 'px' );
+        if( base64_encode( base64_decode( $separator_icon ) ) == $separator_icon ) {
+            $res_ctx->load_settings_raw( 'icon_svg_size', $icon_size );
+            if( $icon_size != '' ) {
+                if( is_numeric( $icon_size ) ) {
+                    $res_ctx->load_settings_raw( 'icon_svg_size', $icon_size . 'px' );
+                }
+            } else {
+                $res_ctx->load_settings_raw( 'icon_svg_size', '8px' );
             }
         } else {
-            $res_ctx->load_settings_raw( 'icon_size', '8px' );
+            $res_ctx->load_settings_raw( 'icon_size', $icon_size );
+            if( $icon_size != '' ) {
+                if( is_numeric( $icon_size ) ) {
+                    $res_ctx->load_settings_raw( 'icon_size', $icon_size . 'px' );
+                }
+            } else {
+                $res_ctx->load_settings_raw( 'icon_size', '8px' );
+            }
         }
 
         // separator icon space
@@ -130,9 +202,15 @@ class tdb_breadcrumbs extends td_block {
         $breadcrumbs_array = array();
 
         switch( tdb_state_template::get_template_type() ) {
+            case 'cpt':
             case 'single':
                 $breadcrumbs_array = $tdb_state_single->post_breadcrumbs->__invoke( $this->get_all_atts() );
                 break;
+
+	        case 'cpt_tax':
+	        	$tdb_state_category->set_tax();
+            	$breadcrumbs_array = $tdb_state_category->category_breadcrumbs->__invoke( $this->get_all_atts() );
+	        	break;
 
             case 'category':
                 $breadcrumbs_array = $tdb_state_category->category_breadcrumbs->__invoke( $this->get_all_atts() );
@@ -157,7 +235,17 @@ class tdb_breadcrumbs extends td_block {
             case 'attachment':
                 $breadcrumbs_array = $tdb_state_attachment->attachment_breadcrumbs->__invoke( $this->get_all_atts() );
                 break;
-            
+
+            case '404':
+                $breadcrumbs_array = [
+                    array(
+                        'title_attribute' => '',
+                        'url' => '',
+                        'display_name' => '404'
+                    )
+                ];
+                break;
+
             default:
                 $breadcrumbs_array = $tdb_state_single_page->page_breadcrumbs->__invoke( $atts );
         }
@@ -183,7 +271,11 @@ class tdb_breadcrumbs extends td_block {
         }
 
         // separator icon
-        $separator_icon = $this->get_att( 'tdicon' );
+        $separator_icon = $this->get_icon_att( 'tdicon' );
+        $separator_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $separator_icon_data = 'data-td-svg-icon="' . $this->get_att('tdicon') . '"';
+        }
 
         $buffy = '';
 
@@ -201,14 +293,22 @@ class tdb_breadcrumbs extends td_block {
 
                     if ( empty( $breadcrumb['url'] ) ) {
                         if ( $key != 0 ) { //add separator only after first
-                            $buffy .= ' <i class="' . $separator_icon . ' tdb-bread-sep tdb-bred-no-url-last"></i> ';
+                            if( base64_encode( base64_decode( $separator_icon ) ) == $separator_icon ) {
+                                $buffy .= '<span class="tdb-bread-sep tdb-bread-sep-svg tdb-bred-no-url-last" ' . $separator_icon_data . '>' . base64_decode( $separator_icon ) . '</span>';
+                            } else {
+                                $buffy .= '<i class="tdb-bread-sep tdb-bred-no-url-last ' . $separator_icon . '"></i>';
+                            }
                         }
                         //no link - breadcrumb
                         $buffy .=  '<span class="tdb-bred-no-url-last">' . esc_html( $breadcrumb['display_name'] ) . '</span>';
 
                     } else {
                         if ($key != 0) { //add separator only after first
-                            $buffy .= ' <i class="' . $separator_icon . ' tdb-bread-sep"></i> ';
+                            if( base64_encode( base64_decode( $separator_icon ) ) == $separator_icon ) {
+                                $buffy .= '<span class="tdb-bread-sep tdb-bread-sep-svg">' . base64_decode( $separator_icon ) . '</span>';
+                            } else {
+                                $buffy .= '<i class="tdb-bread-sep ' . $separator_icon . '"></i>';
+                            }
                         }
                         //normal links
                         $buffy .= '<span><a title="' . esc_attr( $breadcrumb['title_attribute'] ) . '" class="tdb-entry-crumb" href="' . esc_url( $breadcrumb['url'] ) . '">' . esc_html( $breadcrumb['display_name'] ) . '</a></span>';

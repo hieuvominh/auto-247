@@ -14,6 +14,8 @@ class tdb_module_cat_grid_3 extends tdb_module {
         $category_position = $this->get_shortcode_att('modules_category');
         $title_length = $this->get_shortcode_att('mcg3_tl');
         $modified_date = $this->get_shortcode_att('show_modified_date');
+        $time_ago = $this->get_shortcode_att('time_ago');
+        $time_ago_add_txt = $this->get_shortcode_att('time_ago_add_txt');
 
         if (empty($image_size)) {
             $image_size = 'td_696x0';
@@ -23,7 +25,7 @@ class tdb_module_cat_grid_3 extends tdb_module {
         ?>
 
         <div class="<?php echo $this->get_module_classes(array("tdb-cat-grid-post", "tdb-cat-grid-post-$order_no"));?>">
-            <div class="td-module-container td-category-pos-<?php echo $category_position; ?>">
+            <div class="td-module-container td-category-pos-<?php echo esc_attr($category_position) ?>">
                 <div class="td-image-container">
                     <?php if ($category_position == 'image') { echo $this->get_category(); }?>
                     <?php echo $this->get_image($image_size);?>
@@ -40,7 +42,7 @@ class tdb_module_cat_grid_3 extends tdb_module {
 
                     <span class="td-editor-date">
                         <?php echo $this->get_author(); ?>
-                        <?php echo $this->get_date($modified_date); ?>
+                        <?php echo $this->get_date($modified_date, false, $time_ago, $time_ago_add_txt); ?>
                         <?php echo $this->get_review();?>
                     </span>
                 </div>

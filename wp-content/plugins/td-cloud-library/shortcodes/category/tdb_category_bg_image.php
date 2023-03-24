@@ -6,15 +6,33 @@
 
 
 class tdb_category_bg_image extends td_block {
+
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
     
+                    /* @style_general_category_bg_image */
+                    .tdb-featured-image-bg {
+                      background-color: #f1f1f1;
+                      background-position: center center;
+                    }
+                    
+                    
                     /* @image */
                     .$unique_block_class .tdb-featured-image-bg {
                         background: url('@image');
@@ -40,7 +58,13 @@ class tdb_category_bg_image extends td_block {
                         width: @img_circle;
                     }
                     .$unique_block_class:after {
+                        position: absolute;
                         border-radius: 100%;
+                    }
+                
+                    /* @hide_img */
+                    .$unique_block_class {
+                        display: none;
                     }
                     
                     /* @overlay_color */
@@ -141,11 +165,20 @@ class tdb_category_bg_image extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_category_bg_image', 1 );
+
         global $tdb_state_category;
 
 	    // image size
         $category_image = $tdb_state_category->category_image->__invoke();
-        $res_ctx->load_settings_raw( 'image', $category_image['background_image_src'] );
+        $default_image = $res_ctx->get_shortcode_att( 'default_image' );
+
+        if ( $category_image['background_image_src'] != '' ) {
+            $image_src = $category_image['background_image_src'];
+        } else {
+            $image_src = wp_get_attachment_image_url($default_image,'full');
+        }
+        $res_ctx->load_settings_raw( 'image', $image_src );
 
         // image alignment
         $image_alignment = $res_ctx->get_shortcode_att( 'image_alignment' );
@@ -173,6 +206,11 @@ class tdb_category_bg_image extends td_block {
 	    if ($img_circle == true) {
 		    $res_ctx->load_settings_raw( 'img_circle', $img_height );
 	    }
+
+        /*-- hide when no featured image -- */
+        if ( $res_ctx->get_shortcode_att('hide_img') == 'yes' && $image_src == '' ) {
+            $res_ctx->load_settings_raw('hide_img', 1);
+        }
 
         // overlay color
         $res_ctx->load_color_settings( 'overlay', 'overlay_color', 'overlay_gradient', '', '' );
@@ -251,30 +289,31 @@ class tdb_category_bg_image extends td_block {
         parent::disable_loop_block_features();
     }
 
-
     function render( $atts, $content = null ) {
         parent::render($atts); // sets the live atts, $this->atts, $this->block_uid, $this->td_query (it runs the query)
 
         global $tdb_state_category;
+
+	    if ( !empty( tdb_state_template::get_template_type() ) && 'cpt_tax' === tdb_state_template::get_template_type() ) {
+		    $tdb_state_category->set_tax();
+	    }
+
         $category_image = $tdb_state_category->category_image->__invoke();
 
+        $buffy = ''; // output buffer
 
-        $buffy = ''; //output buffer
-
-        if( $category_image['background_image_src'] != '' ) {
             $buffy .= '<div class="' . $this->get_block_classes() . '" ' . $this->get_block_html_atts() . '>';
 
-                //get the block css
+                // get the block css
                 $buffy .= $this->get_block_css();
 
-                //get the js for this block
+                // get the js for this block
                 $buffy .= $this->get_block_js();
-
 
                 $buffy .= '<div class="tdb-featured-image-bg"></div>';
 
             $buffy .= '</div>';
-        }
+
 
         return $buffy;
     }

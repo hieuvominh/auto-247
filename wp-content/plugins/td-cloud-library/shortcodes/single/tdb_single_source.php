@@ -8,13 +8,42 @@ class tdb_single_source extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_single_source */
+                .tdb_single_source {
+                  margin-bottom: 2px;
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-weight: 600;
+                }
+                .tdb_single_source span,
+                .tdb_single_source a {
+                  font-size: 11px;
+                }
+                .tdb_single_source span {
+                  text-transform: uppercase;
+                }
+                .tdb_single_source a:hover {
+                  background-color: #4db2ec;
+                  border-color: #4db2ec;
+                  color: #fff;
+                }
+                
                 /* @add_space */
                 .$unique_block_class span {
                     margin-right: @add_space;
@@ -84,6 +113,8 @@ class tdb_single_source extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_single_source', 1 );
 
         /*-- ADDITIONAL TEXT -- */
         // additional text space

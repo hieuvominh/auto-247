@@ -17,7 +17,7 @@ global $td_translation_map_user, $td_translation_map;
 
 
 // The 'SitePress' class is defined by WPML plugin. It's better using it instead of is_active_plugin( $plugin_file_path ) because the $plugin_file_path can vary (maybe the user changes the name of the plugin folder)
-if (class_exists('SitePress')) {
+if (class_exists('SitePress', false)) {
 
 	//read the user translations
 	$td_translation_map_user = array();
@@ -70,7 +70,7 @@ function _etd($td_string, $td_domain = '') {
 
 /**
  * the Privacy Policy text is hardcoded in the new wp method
- * ONLY hook up if the user dosn't have another translation in po mo
+ * ONLY hook up if the user doesn't have another translation in po mo
  * @see get_the_privacy_policy_link
  */
 add_filter('gettext', 'td_translate_privacy_policy', 10, 3);

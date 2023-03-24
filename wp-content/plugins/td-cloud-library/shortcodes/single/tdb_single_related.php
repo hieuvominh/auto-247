@@ -9,6 +9,9 @@ class tdb_single_related extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_related_post', 1 );
+        $res_ctx->load_settings_raw( 'general_style', 1 );
+
         // container_width
         $container_width = $res_ctx->get_shortcode_att('container_width');
         if ( is_numeric( $container_width ) ) {
@@ -235,6 +238,21 @@ class tdb_single_related extends td_block {
             $res_ctx->load_settings_raw( 'video_icon', $video_icon . 'px' );
         }
 
+        // show video duration
+        $res_ctx->load_settings_raw('show_vid_t', $res_ctx->get_shortcode_att('show_vid_t'));
+        // video duration margin
+        $vid_t_margin = $res_ctx->get_shortcode_att('vid_t_margin');
+        $res_ctx->load_settings_raw( 'vid_t_margin', $vid_t_margin );
+        if( $vid_t_margin != '' && is_numeric( $vid_t_margin ) ) {
+            $res_ctx->load_settings_raw( 'vid_t_margin', $vid_t_margin . 'px' );
+        }
+        // video duration padding
+        $vid_t_padding = $res_ctx->get_shortcode_att('vid_t_padding');
+        $res_ctx->load_settings_raw( 'vid_t_padding', $vid_t_padding );
+        if( $vid_t_padding != '' && is_numeric( $vid_t_padding ) ) {
+            $res_ctx->load_settings_raw( 'vid_t_padding', $vid_t_padding . 'px' );
+        }
+
         // meta info horizontal align
         $content_align = $res_ctx->get_shortcode_att('meta_info_horiz');
         if ( $content_align == 'content-horiz-center' ) {
@@ -279,7 +297,9 @@ class tdb_single_related extends td_block {
         }
         // article audio size
         $art_audio_size = $res_ctx->get_shortcode_att('art_audio_size');
-        $res_ctx->load_settings_raw( 'art_audio_size', 10 + $art_audio_size/0.5 . 'px' );
+        if ( is_numeric( $art_audio_size ) ) {
+            $res_ctx->load_settings_raw('art_audio_size', 10 + $art_audio_size / 0.5 . 'px');
+        }
         // article button space
         $art_btn = $res_ctx->get_shortcode_att('art_btn');
         $res_ctx->load_settings_raw( 'art_btn', $art_btn );
@@ -473,6 +493,17 @@ class tdb_single_related extends td_block {
         $res_ctx->load_settings_raw( 'nextprev_border_h', $res_ctx->get_shortcode_att('nextprev_border_h') );
         $res_ctx->load_settings_raw( 'nextprev_bg_h', $res_ctx->get_shortcode_att('nextprev_bg_h') );
 
+        // video pop-up
+        $res_ctx->load_settings_raw( 'video_rec_color', $res_ctx->get_shortcode_att('video_rec_color') );
+        $res_ctx->load_settings_raw( 'video_title_color', $res_ctx->get_shortcode_att('video_title_color') );
+        $res_ctx->load_settings_raw( 'video_title_color_h', $res_ctx->get_shortcode_att('video_title_color_h') );
+        $res_ctx->load_settings_raw( 'video_bg', $res_ctx->get_shortcode_att('video_bg') );
+        $res_ctx->load_settings_raw( 'video_overlay', $res_ctx->get_shortcode_att('video_overlay') );
+
+        // video duration
+        $res_ctx->load_settings_raw( 'vid_t_color', $res_ctx->get_shortcode_att('vid_t_color') );
+        $res_ctx->load_settings_raw( 'vid_t_bg_color', $res_ctx->get_shortcode_att('vid_t_bg_color') );
+
 
         // fonts
         $res_ctx->load_font_settings( 'f_header' );
@@ -484,6 +515,9 @@ class tdb_single_related extends td_block {
         $res_ctx->load_font_settings( 'f_ex' );
         $res_ctx->load_font_settings( 'f_btn' );
         $res_ctx->load_font_settings( 'f_more' );
+
+        $res_ctx->load_font_settings( 'f_vid_title' );
+        $res_ctx->load_font_settings( 'f_vid_time' );
 
         $res_ctx->load_settings_raw( 'equal_height', 1 );
         $res_ctx->load_settings_raw( 'divider_on', $res_ctx->get_shortcode_att('divider_on') );
@@ -557,12 +591,42 @@ class tdb_single_related extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
+        $unique_block_modal_class = $this->block_uid . '_m';
+
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+            
+                /* @general_style */
+                .tdb-dummy-data {
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%);
+                  padding: 8px 40px 9px;
+                  background: rgba(0, 0, 0, 0.35);
+                  color: #fff;
+                  z-index: 100;
+                  opacity: 0;
+                  -webkit-transition: opacity 0.2s;
+                  transition: opacity 0.2s;
+                }
+                .tdc-element:hover .tdb-dummy-data {
+                  opacity: 1;
+                }
 
 				/* @container_width */
 				.$unique_block_class {
@@ -649,6 +713,10 @@ class tdb_single_related extends td_block {
 					top: 0;
 					bottom: auto;
 				}
+				.$unique_block_class .td-post-vid-time {
+					top: 0;
+					bottom: auto;
+				}
 				/* @align_category_bottom */
 				.$unique_block_class .td-image-container {
 				    order: 0;
@@ -657,6 +725,10 @@ class tdb_single_related extends td_block {
 					top: auto;
 				 	bottom: 0;
 			    }
+				.$unique_block_class .td-post-vid-time {
+					top: auto;
+					bottom: 0;
+				}
 			    /* @excerpt_inline */
                 .$unique_block_class .entry-title,
                 .$unique_block_class .td-excerpt {
@@ -778,6 +850,18 @@ class tdb_single_related extends td_block {
 					width: @video_icon;
 					height: @video_icon;
 					font-size: @video_icon;
+				}
+				/* @show_vid_t */
+				.$unique_block_class .td-post-vid-time {
+					display: @show_vid_t;
+				}
+				/* @vid_t_margin */
+				.$unique_block_class .td-post-vid-time {
+					margin: @vid_t_margin;
+				}
+				/* @vid_t_padding */
+				.$unique_block_class .td-post-vid-time {
+					padding: @vid_t_padding;
 				}
 				/* @modules_category_spacing */
 				.$unique_block_class .td-post-category {
@@ -911,7 +995,7 @@ class tdb_single_related extends td_block {
 				}
 				/* @cat_bg_hover */
 				.$unique_block_class .td-post-category:hover {
-					background-color: @cat_bg_hover;
+					background-color: @cat_bg_hover !important;
 				}
 				/* @cat_txt */
 				.$unique_block_class .td-post-category {
@@ -941,7 +1025,7 @@ class tdb_single_related extends td_block {
 				}
 				/* @title_txt_hover */
 				.$unique_block_class .td_module_wrap:hover .td-module-title a {
-					color: @title_txt_hover;
+					color: @title_txt_hover !important;
 				}
 				/* @author_txt */
 				.$unique_block_class .td-post-author-name a {
@@ -1009,6 +1093,10 @@ class tdb_single_related extends td_block {
 				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a {
 					color: @nextprev_icon;
 				}
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap .td-next-prev-icon-svg svg,
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap .td-next-prev-icon-svg svg * {
+				    fill: @nextprev_icon;
+				}
 				/* @nextprev_bg */
 				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a {
 					background-color: @nextprev_bg;
@@ -1022,6 +1110,10 @@ class tdb_single_related extends td_block {
 				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a:hover {
 					color: @nextprev_icon_h;
 				}
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a:hover .td-next-prev-icon-svg svg,
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a:hover .td-next-prev-icon-svg svg * {
+				    fill: @nextprev_icon_h;
+				}
 				/* @nextprev_bg_h */
 				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a:hover {
 					background-color: @nextprev_bg_h;
@@ -1030,6 +1122,36 @@ class tdb_single_related extends td_block {
 				/* @nextprev_border_h */
 				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a:hover {
 					border-color: @nextprev_border_h;
+				}
+				
+				/* @video_rec_color */
+				#td-video-modal.$unique_block_modal_class .td-vm-rec-title {
+				    color: @video_rec_color;
+				}
+				/* @video_title_color */
+				#td-video-modal.$unique_block_modal_class .td-vm-title a {
+				    color: @video_title_color;
+				}
+				/* @video_title_color_h */
+				#td-video-modal.$unique_block_modal_class .td-vm-title a:hover {
+				    color: @video_title_color_h;
+				}
+				/* @video_bg */
+				#td-video-modal.$unique_block_modal_class .td-vm-content-wrap {
+				    background-color: @video_bg;
+				}
+				/* @video_overlay */
+				#td-video-modal.$unique_block_modal_class .td-vm-overlay {
+				    background-color: @video_overlay;
+				}
+				
+				/* @vid_t_color */
+				.$unique_block_class .td-post-vid-time {
+					color: @vid_t_color;
+				}
+				/* @vid_t_bg_color */
+				.$unique_block_class .td-post-vid-time {
+					background-color: @vid_t_bg_color;
 				}
 				
                 
@@ -1133,6 +1255,10 @@ class tdb_single_related extends td_block {
 				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a {
 					font-size: @pag_icons_size;
 				}
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap .td-next-prev-icon-svg svg {
+				    width: @pag_icons_size;
+				    height: calc( @pag_icons_size + 1px );
+				}
 
 				/* @f_header */
 				.$unique_block_class .block-title a,
@@ -1157,6 +1283,8 @@ class tdb_single_related extends td_block {
 				}
 				/* @f_meta */
 				.$unique_block_class .td-editor-date,
+				.$unique_block_class .td-editor-date .entry-date,
+				.$unique_block_class .td-post-author-name a,
 				.$unique_block_class .td-module-comments a {
 					@f_meta
 				}
@@ -1190,6 +1318,14 @@ class tdb_single_related extends td_block {
 				/* @equal_height_float */
 				.$unique_block_class .td-image-container {
 				    flex: 0 0 0;
+				}
+				/* @f_vid_title */
+				#td-video-modal.$unique_block_modal_class .td-vm-title {
+					@f_vid_title
+				}
+				/* @f_vid_time */
+				.$unique_block_class .td-post-vid-time {
+					@f_vid_time
 				}
 				
 				/* @mix_type */
@@ -1337,6 +1473,12 @@ class tdb_single_related extends td_block {
 
 
             $custom_title = $this->get_att( 'custom_title' );
+            $title_tag = 'h4';
+
+            $block_title_tag = $this->get_att( 'title_tag' );
+            if ( $block_title_tag != '' ) {
+                $title_tag = $block_title_tag ;
+            }
 
             if ( $post_related_data['sample'] ) {
                 $buffy .= '<div class="tdb-dummy-data">TDB Template Sample Data</div>';
@@ -1345,9 +1487,9 @@ class tdb_single_related extends td_block {
             if( $custom_title != '' ) {
                 //get the filter for this block
                 $buffy .= '<div class="td-block-title-wrap">';
-                    $buffy .= '<h4 class="' . $td_css_cls_block_title . '">';
+                    $buffy .= '<' . $title_tag . ' class="' . $td_css_cls_block_title . '">';
                         $buffy .= '<span>' . $custom_title . '</span>';
-                    $buffy .= '</h4>';
+                    $buffy .= '</' . $title_tag . '>';
                 $buffy .= '</div>';
             }
 
@@ -1362,8 +1504,8 @@ class tdb_single_related extends td_block {
             $buffy .= '</div>';
 
             if( $this->get_att('nextprev') != '' ) {
-                $prev_icon = $this->get_att('prev_tdicon');
-                $next_icon = $this->get_att('next_tdicon');
+                $prev_icon = $this->get_icon_att('prev_tdicon');
+                $next_icon = $this->get_icon_att('next_tdicon');
 
                 $buffy .= $this->get_block_pagination($prev_icon, $next_icon);
             }

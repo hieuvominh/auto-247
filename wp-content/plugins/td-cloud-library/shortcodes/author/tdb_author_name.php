@@ -9,12 +9,37 @@ class tdb_author_name extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+
+                /* @style_general_author_name */
+                .tdb-title-line {
+                  display: none;
+                  position: relative;
+                }
+                .tdb-title-line:after {
+                  content: '';
+                  width: 100%;
+                  position: absolute;
+                  background-color: #4db2ec;
+                  top: 0;
+                  left: 0;
+                  margin: auto;
+                }
 
                 /* @title_color_solid */
 				.$unique_block_class .tdb-single-auth-text {
@@ -52,10 +77,6 @@ class tdb_author_name extends td_block {
 				.$unique_block_class .tdb-single-auth-text  {
 					padding: @style_bg_space;
 				}
-				/* @fl_align */
-				.$unique_block_class .tdb-first-letter  {
-					margin-top: @fl_align;
-				}
 				/* @line_width */
 				.$unique_block_class .tdb-title-line  {
 				    display: table;
@@ -85,10 +106,6 @@ class tdb_author_name extends td_block {
 				.td-theme-wrap .$unique_block_class {
 					text-align: center;
 				}
-				.$unique_block_class .tdb-first-letter {
-					left: 0;
-					right: 0;
-				}
 				.$unique_block_class .tdb-title-line {
 					margin-left: auto;
 					margin-right: auto;
@@ -96,10 +113,6 @@ class tdb_author_name extends td_block {
 				/* @align_right */
 				.td-theme-wrap .$unique_block_class {
 					text-align: right;
-				}	
-				.$unique_block_class .tdb-first-letter {
-					left: auto0;
-					right: -0.36em;
 				}
 				.$unique_block_class .tdb-title-line {
 					margin-left: auto;
@@ -107,10 +120,6 @@ class tdb_author_name extends td_block {
 				/* @align_left */
 				.td-theme-wrap .$unique_block_class {
 					text-align: left;
-				}
-				.$unique_block_class .tdb-first-letter {
-					left: -0.36em;
-					right: auto;
 				}
 				/* @f_title */
 				.$unique_block_class .tdb-single-auth-text {
@@ -128,6 +137,8 @@ class tdb_author_name extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_author_name', 1 );
 
         // title color
         $res_ctx->load_color_settings( 'title_color', 'title_color_solid', 'title_color_gradient', 'title_color_gradient_1', '' );

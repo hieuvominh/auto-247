@@ -11,12 +11,275 @@ class tdb_category_sibling_categories extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+                /* @style_general_cat_sibling */
+                .tdb_category_sibling_categories {
+                  margin-bottom: 11px;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings {
+                  width: 100%;
+                  z-index: 2;
+                  opacity: 0;
+                  position: relative;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-category {
+                  display: inline-block;
+                  vertical-align: top;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-more {
+                  line-height: 1;
+                  padding: 4px 5px 3px;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown {
+                  background-color: transparent;
+                  display: inline-block;
+                  padding: 0;
+                  position: absolute;
+                  height: 100%;
+                  color: #222;
+                  top: 0;
+                }
+                @media (max-width: 767px) {
+                  .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown {
+                    position: absolute;
+                    top: 0;
+                  }
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown i {
+                  margin: 0;
+                  top: 0;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown ul {
+                  display: none;
+                  right: -1px;
+                  top: 23px;
+                  z-index: 999;
+                  border: 1px solid #222;
+                  margin: 0;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown:hover {
+                  color: #fff;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown:hover ul {
+                  display: block;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown:hover ul:before {
+                  background-color: #222;
+                  content: '';
+                  height: 4px;
+                  position: absolute;
+                  right: -1px;
+                  top: -5px;
+                  width: 21px;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown li {
+                  list-style: none;
+                  margin-left: 0;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown a {
+                  display: block;
+                  color: #fff !important;
+                  padding: 0 13px;
+                  white-space: nowrap;
+                  text-transform: none;
+                  font-size: 10px;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown a:hover {
+                  color: #4db2ec;
+                }
+                .tdb_category_sibling_categories .tdb-category-siblings .td-subcat-dropdown a.td-current-sub-category {
+                  background-color: transparent;
+                  color: #4db2ec;
+                }
+                .tdb_category_sibling_categories .td-category {
+                  overflow: visible;
+                  height: auto;
+                  margin-bottom: 0;
+                }
+                .tdb_category_sibling_categories .td-category .tdb-sibling-cat-bg {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  background-color: #222;
+                  border-style: solid;
+                  border-color: #222;
+                  z-index: -1;
+                  -webkit-transition: all 0.3s ease;
+                  transition: all 0.3s ease;
+                }
+                .tdb_category_sibling_categories .td-category .tdb-sibling-cat-bg:before {
+                  content: '';
+                  width: 100%;
+                  height: 100%;
+                  left: 0;
+                  top: 0;
+                  position: absolute;
+                  z-index: -1;
+                  opacity: 0;
+                  -webkit-transition: opacity 0.3s ease;
+                  transition: opacity 0.3s ease;
+                }
+                .tdb_category_sibling_categories .entry-category {
+                  margin: 0;
+                }
+                .tdb_category_sibling_categories .entry-category a {
+                  position: relative;
+                  font-size: 11px;
+                  margin: 0 5px 0 0;
+                  padding: 4px 8px 5px 8px;
+                  background-color: transparent;
+                  pointer-events: auto !important;
+                }
+                .tdb_category_sibling_categories .entry-category:last-child .tdb-cat-sep {
+                  display: none;
+                }
+                .tdb_category_sibling_categories .tdb-cat-sep {
+                  font-size: 14px;
+                  vertical-align: middle;
+                  position: relative;
+                }
+                .tdb_category_sibling_categories .td-pulldown-filter-display-option {
+                  font-family: 'Roboto', sans-serif;
+                  text-transform: uppercase;
+                  cursor: pointer;
+                  font-size: 10px;
+                  white-space: nowrap;
+                  border: none;
+                }
+                .tdb_category_sibling_categories .td-subcat-more {
+                  display: inline-flex;
+                  height: 100%;
+                  align-items: center;
+                  padding: 5px 5px 4px;
+                  font-size: 11px;
+                  text-transform: none;
+                  border: none;
+                }
+                .tdb_category_sibling_categories .td-subcat-more:before,
+                .tdb_category_sibling_categories .td-subcat-more:after {
+                  content: '';
+                  position: absolute;
+                  z-index: -1;
+                }
+                .tdb_category_sibling_categories .td-subcat-more:before {
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  border-width: 1px;
+                  border-style: solid;
+                  border-color: #eaeaea;
+                }
+                .tdb_category_sibling_categories .td-subcat-more:after {
+                  display: none;
+                  top: 100%;
+                  right: 0;
+                  width: 100%;
+                  height: 4px;
+                  background-color: #222;
+                }
+                .tdb_category_sibling_categories .td-subcat-more i {
+                  position: relative;
+                }
+                .tdb_category_sibling_categories .td-subcat-more-txt {
+                  margin-right: 4px;
+                }
+                .tdb_category_sibling_categories .td-subcat-more-icon-svg {
+                  line-height: 0;
+                }
+                .tdb_category_sibling_categories .td-subcat-more-icon-svg svg {
+                  height: auto;
+                }
+                .tdb_category_sibling_categories .td-pulldown-filter-list {
+                  position: absolute;
+                  right: 0;
+                  background-color: #222222;
+                  padding: 6px 0;
+                  text-align: left;
+                  min-width: 113px;
+                }
+                .tdb_category_sibling_categories .td-pulldown-filter-list a {
+                  margin-right: 0;
+                }
+                .tdb_category_sibling_categories .td-subcat-dropdown {
+                  line-height: 0;
+                }
+                .tdb_category_sibling_categories .td-subcat-dropdown:hover {
+                  background-color: transparent;
+                }
+                .tdb_category_sibling_categories .td-subcat-dropdown:hover .td-subcat-more:before {
+                  border-color: #222;
+                  background-color: #222;
+                }
+                .tdb_category_sibling_categories .td-subcat-dropdown:hover .td-pulldown-filter-list {
+                  right: 0;
+                }
+                .tdb_category_sibling_categories .td-subcat-dropdown:hover .td-pulldown-filter-list:before {
+                  display: none;
+                }
+                .tdb_category_sibling_categories .td-subcat-dropdown a {
+                  display: block;
+                  color: #fff !important;
+                  padding: 0 13px;
+                  white-space: nowrap;
+                  text-transform: none;
+                  font-size: 10px;
+                }
+                .tdb_category_sibling_categories .td-subcat-dropdown .tdb-cat-sep {
+                  display: none;
+                }
+                .tdb_category_sibling_categories.tdb-category-siblings-inline.tdb-category-siblings-in-more .tdb-category-siblings .td-category {
+                  white-space: nowrap;
+                }
+                .tdb_category_sibling_categories.tdb-category-siblings-inline .td-subcat-dropdown:hover .td-subcat-more:after {
+                  display: block;
+                }
+                .tdb_category_sibling_categories.tdb-category-siblings-inline .td-subcat-dropdown:hover .td-pulldown-filter-list {
+                  top: calc(100% + 4px);
+                }
+                .tdb_category_sibling_categories.tdb-category-siblings-list .tdb-category-siblings {
+                  line-height: 0;
+                }
+                .tdb_category_sibling_categories.tdb-category-siblings-list .td-subcat-dropdown {
+                  position: relative;
+                  border: none;
+                }
+                .tdb_category_sibling_categories.tdb-category-siblings-list .td-subcat-dropdown:hover .td-pulldown-filter-list {
+                  top: 100%;
+                  left: 0;
+                  right: auto;
+                }
+                .tdb_category_sibling_categories.tdb-category-siblings-list .td-subcat-more {
+                  position: relative;
+                }
+                .tdb_category_sibling_categories.tdb-category-siblings-list .td-pulldown-filter-list {
+                  width: 100%;
+                }
+                .td-md-is-android .tdb_category_sibling_categories .td-category {
+                  height: auto;
+                }
+                .td-js-loaded .tdb-category-siblings {
+                  opacity: 1;
+                  -webkit-transition: opacity 0.3s;
+                  transition: opacity 0.3s;
+                }
             
                 /* @display_list */
                 .$unique_block_class .td-category {
@@ -68,6 +331,10 @@ class tdb_category_sibling_categories extends td_block {
 				.$unique_block_class .tdb-cat-sep {
 					font-size: @icon_size;
 				}
+				/* @icon_svg_size */
+				.$unique_block_class .tdb-cat-sep-svg svg {
+					width: @icon_svg_size;
+				}
                 /* @icon_space */
 				.$unique_block_class .tdb-cat-sep {
 					margin-right: @icon_space;
@@ -86,6 +353,10 @@ class tdb_category_sibling_categories extends td_block {
 				/* @btn_icon_size */
 				.$unique_block_class .tdb-category-siblings .td-subcat-more i {
 				    font-size: @btn_icon_size;
+				}
+				/* @btn_icon_svg_size */
+				.$unique_block_class .tdb-category-siblings .td-subcat-more-icon-svg svg {
+				    width: @btn_icon_svg_size;
 				}
 				/* @btn_icon_align */
 				.$unique_block_class .tdb-category-siblings .td-subcat-more i {
@@ -114,7 +385,7 @@ class tdb_category_sibling_categories extends td_block {
 				    border-width: @list_border;
 				}
 				/* @list_el_padding */
-				.$unique_block_class .td-subcat-dropdown a {
+				.$unique_block_class .tdb-category-siblings .td-subcat-dropdown a {
 				    padding: @list_el_padding;
 				}
 				/* @list_el_space */
@@ -204,6 +475,10 @@ class tdb_category_sibling_categories extends td_block {
 				.$unique_block_class .tdb-cat-sep {
 					color: @i_color;
 				}
+				.$unique_block_class .tdb-cat-sep-svg svg,
+				.$unique_block_class .tdb-cat-sep-svg svg * {
+					fill: @i_color;
+				}
 				
 				/* @btn_bg */
 				.$unique_block_class .td-subcat-more:before {
@@ -214,21 +489,37 @@ class tdb_category_sibling_categories extends td_block {
 				.$unique_block_class .td-subcat-dropdown:hover .td-subcat-more:after {
 				    background-color: @btn_h_bg;
 				}
+				/* @btn_txt */
+				.$unique_block_class .td-subcat-more {
+				    color: @btn_txt;
+				}
+				.$unique_block_class .td-subcat-more-icon-svg svg,
+				.$unique_block_class .td-subcat-more-icon-svg svg * {
+					fill: @btn_txt;
+				}
+				/* @btn_h_txt */
+				.$unique_block_class .td-subcat-dropdown:hover .td-subcat-more {
+				    color: @btn_h_txt;
+				}
+				.$unique_block_class .td-subcat-dropdown:hover .td-subcat-more-icon-svg svg,
+				.$unique_block_class .td-subcat-dropdown:hover .td-subcat-more-icon-svg svg * {
+					fill: @btn_h_txt;
+				}
 				/* @btn_icon */
 				.$unique_block_class .td-subcat-more i {
 				    color: @btn_icon;
+				}
+				.$unique_block_class .td-subcat-more-icon-svg svg,
+				.$unique_block_class .td-subcat-more-icon-svg svg * {
+					fill: @btn_icon;
 				}
 				/* @btn_h_icon */
 				.$unique_block_class .td-subcat-dropdown:hover .td-subcat-more i {
 				    color: @btn_h_icon;
 				}
-				/* @btn_txt */
-				.$unique_block_class .td-subcat-more {
-				    color: @btn_txt;
-				}
-				/* @btn_h_txt */
-				.$unique_block_class .td-subcat-dropdown:hover .td-subcat-more {
-				    color: @btn_h_txt;
+				.$unique_block_class .td-subcat-dropdown:hover .td-subcat-more-icon-svg svg,
+				.$unique_block_class .td-subcat-dropdown:hover .td-subcat-more-icon-svg svg * {
+					fill: @btn_h_icon;
 				}
 				/* @btn_border */
 				.$unique_block_class .td-subcat-more:before {
@@ -284,6 +575,8 @@ class tdb_category_sibling_categories extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_cat_sibling', 1 );
+
         /*-- MAIN LIST -- */
         // display as list
         $res_ctx->load_settings_raw( 'display_list', $res_ctx->get_shortcode_att('display_list') );
@@ -324,9 +617,14 @@ class tdb_category_sibling_categories extends td_block {
         }
 
         // separator icon size
+        $icon = $res_ctx->get_icon_att('tdicon');
         $icon_size = $res_ctx->get_shortcode_att('icon_size');
         if ( $icon_size != 0 || !empty($icon_size) ) {
-            $res_ctx->load_settings_raw( 'icon_size', $icon_size . 'px' );
+            if( base64_encode( base64_decode( $icon ) ) == $icon ) {
+                $res_ctx->load_settings_raw( 'icon_svg_size', $icon_size . 'px' );
+            } else {
+                $res_ctx->load_settings_raw( 'icon_size', $icon_size . 'px' );
+            }
         }
         // separator icon space
         $icon_space = $res_ctx->get_shortcode_att('icon_space');
@@ -349,9 +647,13 @@ class tdb_category_sibling_categories extends td_block {
             $res_ctx->load_settings_raw( 'btn_text_space', $btn_text_space . 'px' );
         }
         // show more icon size
+        $btn_icon = $res_ctx->get_icon_att('btn_tdicon');
         $btn_icon_size = $res_ctx->get_shortcode_att('btn_icon_size');
         if ( $btn_icon_size != 0 || !empty($btn_icon_size) ) {
             $res_ctx->load_settings_raw( 'btn_icon_size', $btn_icon_size . 'px' );
+            if( base64_encode( base64_decode( $btn_icon ) ) == $btn_icon ) {
+                $res_ctx->load_settings_raw( 'btn_icon_svg_size', $btn_icon_size . 'px' );
+            }
         }
         // show more icon align
         $btn_icon_align = $res_ctx->get_shortcode_att('btn_icon_align');
@@ -440,15 +742,27 @@ class tdb_category_sibling_categories extends td_block {
         parent::render( $atts );
 
         global $tdb_state_category;
+        if ( !empty( tdb_state_template::get_template_type() ) && 'cpt_tax' === tdb_state_template::get_template_type() ) {
+            $tdb_state_category->set_tax();
+        }
+
         $category_sibling_categories_data = $tdb_state_category->category_sibling_categories->__invoke( $atts );
         $categories_list = $category_sibling_categories_data['categories'];
         $additional_classes = array();
 
         // separator icon
         $tdicon_html = '';
-        $tdicon = $this->get_att( 'tdicon' );
+        $tdicon = $this->get_icon_att( 'tdicon' );
+        $tdicon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $tdicon_data = 'data-td-svg-icon="' . $this->get_att('tdicon') . '"';
+        }
         if( $tdicon != '' ) {
-            $tdicon_html = '<i class="' . $tdicon . ' tdb-cat-sep"></i>';
+            if( base64_encode( base64_decode( $tdicon ) ) == $tdicon ) {
+                $tdicon_html = '<span class="tdb-cat-sep tdb-cat-sep-svg" ' . $tdicon_data . '>' . base64_decode( $tdicon ) . '</span>';
+            } else {
+                $tdicon_html = '<i class="tdb-cat-sep ' . $tdicon . '"></i>';
+            }
         }
 
         // cat_style
@@ -484,9 +798,18 @@ class tdb_category_sibling_categories extends td_block {
         }
 
         // show more icon
-        $btn_icon = 'td-icon-menu-down';
-        if( $this->get_att('btn_tdicon') != '' ) {
-            $btn_icon = $this->get_att('btn_tdicon');
+        $btn_icon = $this->get_icon_att('btn_tdicon');
+        $btn_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $btn_icon_data = 'data-td-svg-icon="' . $this->get_att('btn_tdicon') . '"';
+        }
+        $btn_icon_html = '<i class="td-subcat-more-icon td-icon-menu-down"></i>';
+        if( $btn_icon != '' ) {
+            if( base64_encode( base64_decode( $btn_icon ) ) == $btn_icon ) {
+                $btn_icon_html = '<span class="td-subcat-more-icon td-subcat-more-icon-svg" ' . $btn_icon_data . '>' . base64_decode( $btn_icon ) . '</span>';
+            } else {
+                $btn_icon_html = '<i class="td-subcat-more-icon ' . $btn_icon . '"></i>';
+            }
         }
 
 
@@ -547,7 +870,7 @@ class tdb_category_sibling_categories extends td_block {
                                 if( $btn_text != '' ) {
                                     $buffy .= '<span class="td-subcat-more-txt">' . $btn_text . '</span>';
                                 }
-                                $buffy .= '<i class="' . $btn_icon . '"></i>';
+                                $buffy .= $btn_icon_html;
                             $buffy .= '</div>';
 
                             // the dropdown list
@@ -572,7 +895,7 @@ class tdb_category_sibling_categories extends td_block {
 	                    ?>
 	                    <script>
                             /* global jQuery:{} */
-                            jQuery(window).load(function () {
+                            jQuery(window).on( 'load', function () {
 
                                 var jquery_object_container = jQuery('.<?php echo $this->block_uid ?> .tdb-category-siblings');
 

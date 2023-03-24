@@ -8,12 +8,71 @@ class tdb_header_user extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+                
+                /* @style_general_header_user */
+                .tdb_header_user {
+                  margin-bottom: 0;
+                  clear: none;
+                }
+                .tdb_header_user .tdb-block-inner {
+                  display: flex;
+                  align-items: center;
+                }
+                .tdb_header_user .tdb-head-usr-item {
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 11px;
+                  line-height: 1;
+                  color: #000;
+                }
+                .tdb_header_user .tdb-head-usr-item:hover {
+                  color: #4db2ec;
+                }
+                .tdb_header_user .tdb-head-usr-avatar {
+                  position: relative;
+                  width: 20px;
+                  height: 0;
+                  padding-bottom: 20px;
+                  margin-right: 6px;
+                  background-size: cover;
+                  background-position: center center;
+                }
+                .tdb_header_user .tdb-head-usr-name {
+                  margin-right: 16px;
+                  font-weight: 700;
+                }
+                .tdb_header_user .tdb-head-usr-log {
+                  display: flex;
+                  align-items: center;
+                }
+                .tdb_header_user .tdb-head-usr-log i {
+                  font-size: 10px;
+                }
+                .tdb_header_user .tdb-head-usr-log-icon {
+                  position: relative;
+                }
+                .tdb_header_user .tdb-head-usr-log-icon-svg {
+                  line-height: 0;
+                }
+                .tdb_header_user .tdb-head-usr-log-icon-svg svg {
+                  width: 10px;
+                  height: auto;
+                }
                 
                 /* @inline */
                 .$unique_block_class {
@@ -61,16 +120,19 @@ class tdb_header_user extends td_block {
                 .$unique_block_class .tdb-head-usr-log i {
                     font-size: @icon_size;
                 }
+                .$unique_block_class .tdb-head-usr-log-icon-svg svg {
+                    width: @icon_size;
+                }
                 /* @icon_space_right */
-                .$unique_block_class .tdb-head-usr-log i {
+                .$unique_block_class .tdb-head-usr-log .tdb-head-usr-log-icon {
                     margin-right: @icon_space_right;
                 }
                 /* @icon_space_left */
-                .$unique_block_class .tdb-head-usr-log i {
+                .$unique_block_class .tdb-head-usr-log .tdb-head-usr-log-icon {
                     margin-left: @icon_space_left;
                 }
                 /* @icon_align */
-                .$unique_block_class .tdb-head-usr-log i {
+                .$unique_block_class .tdb-head-usr-log .tdb-head-usr-log-icon {
                     top: @icon_align;
                 }
                 
@@ -88,17 +150,33 @@ class tdb_header_user extends td_block {
                 .$unique_block_class .tdb-head-usr-log {
                     color: @log_color;
                 }
+                .$unique_block_class .tdb-head-usr-log-icon-svg svg,
+                .$unique_block_class .tdb-head-usr-log-icon-svg svg * {
+                    fill: @log_color;
+                }
                 /* @log_color_h */
                 .$unique_block_class .tdb-head-usr-log:hover {
                     color: @log_color_h;
+                }
+                .$unique_block_class .tdb-head-usr-log:hover svg,
+                .$unique_block_class .tdb-head-usr-log:hover svg * {
+                    fill: @log_color_h;
                 }
                 /* @log_ico_color */
                 .$unique_block_class .tdb-head-usr-log i {
                     color: @log_ico_color;
                 }
+                .$unique_block_class .tdb-head-usr-log-icon-svg svg,
+                .$unique_block_class .tdb-head-usr-log-icon-svg svg * {
+                    fill: @log_ico_color;
+                }
                 /* @log_ico_color_h */
                 .$unique_block_class .tdb-head-usr-log:hover i {
                     color: @log_ico_color_h;
+                }
+                .$unique_block_class .tdb-head-usr-log:hover svg,
+                .$unique_block_class .tdb-head-usr-log:hover svg *  {
+                    fill: @log_ico_color_h;
                 }
                 
                 
@@ -122,6 +200,9 @@ class tdb_header_user extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_header_user', 1 );
+        $res_ctx->load_settings_raw( 'style_general_header_align', 1 );
 
         // make inline
         $res_ctx->load_settings_raw('inline', $res_ctx->get_shortcode_att('inline'));
@@ -249,13 +330,21 @@ class tdb_header_user extends td_block {
             // login text
             $login_text = $this->get_att('login_txt');
             if( $login_text == '' ) {
-                $login_text = 'Sign in / Join';
+                $login_text = __td('Sign in / Join', TD_THEME_NAME);
             }
             // login icon
-            $login_icon = $this->get_att('login_tdicon');
+            $login_icon = $this->get_icon_att('login_tdicon');
+            $login_icon_data = '';
+            if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+                $login_icon_data = 'data-td-svg-icon="' . $this->get_att('login_tdicon') . '"';
+            }
             $login_icon_html = '';
             if( $login_icon != '' ) {
-                $login_icon_html = '<i class="' . $login_icon . '"></i>';
+                if( base64_encode( base64_decode( $login_icon ) ) == $login_icon ) {
+                    $login_icon_html = '<span class="tdb-head-usr-log-icon tdb-head-usr-log-icon-svg" ' . $login_icon_data . '>' . base64_decode( $login_icon ) . '</span>';
+                } else {
+                    $login_icon_html = '<i class="tdb-head-usr-log-icon ' . $login_icon . '"></i>';
+                }
             }
             $login_html = '<a class="td-login-modal-js tdb-head-usr-item tdb-head-usr-log" href="#login-form" data-effect="mpf-td-login-effect">';
                 if( $icon_pos == '' ) {
@@ -270,13 +359,21 @@ class tdb_header_user extends td_block {
             // logout text
             $logout_txt = $this->get_att('logout_txt');
             if( $logout_txt == '' ) {
-                $logout_txt = 'Logout';
+                $logout_txt = __td('Logout', TD_THEME_NAME);
             }
             // logout icon
-            $logout_icon = $this->get_att('logout_tdicon');
+            $logout_icon = $this->get_icon_att('logout_tdicon');
+            $logout_icon_data = '';
+            if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+                $logout_icon_data = 'data-td-svg-icon="' . $this->get_att('logout_tdicon') . '"';
+            }
             $logout_icon_html = '';
             if( $logout_icon != '' ) {
-                $logout_icon_html = '<i class="' . $logout_icon . '"></i>';
+                if( base64_encode( base64_decode( $logout_icon ) ) == $logout_icon ) {
+                    $logout_icon_html = '<span class="tdb-head-usr-log-icon tdb-head-usr-log-icon-svg" ' . $logout_icon_data . '>' . base64_decode( $logout_icon ) . '</span>';
+                } else {
+                    $logout_icon_html = '<i class="tdb-head-usr-log-icon ' . $logout_icon . '"></i>';
+                }
             }
             $logout_html = '<a href="' . wp_logout_url(home_url( '/' )) . '" class="tdb-head-usr-item tdb-head-usr-log">';
                 if( $icon_pos == '' ) {
@@ -302,7 +399,7 @@ class tdb_header_user extends td_block {
                     //get current loged in user data
                     global $current_user;
 
-                    $buffy .= '<div class="tdb-head-usr-item tdb-head-usr-avatar" style="background-image: url(' . get_avatar_url($current_user->ID, ['size' => 90]) . ')"></div>';
+                    $buffy .= '<div class="tdb-head-usr-item tdb-head-usr-avatar" aria-label="user avatar" style="background-image: url(' . get_avatar_url($current_user->ID, ['size' => 90]) . ')"></div>';
                     $buffy .= '<a href="' . get_author_posts_url($current_user->ID) . '" class="tdb-head-usr-item tdb-head-usr-name">' . $current_user->display_name . '</a>';
 
                     if ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) {

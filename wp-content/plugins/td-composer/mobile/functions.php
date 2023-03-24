@@ -12,6 +12,8 @@ require_once (td_global_mob::$get_parent_template_directory . '/tagdiv-deploy-mo
 
 require_once (td_global_mob::$get_parent_template_directory . '/includes/tagdiv-config.php');
 
+do_action( 'tdm_functions' );
+
 if ( ! defined( 'TDC_PATH_LEGACY' ) ) {
 	define( 'TDC_PATH_LEGACY', TDC_PATH . '/legacy/' . TD_THEME_NAME );
 }
@@ -49,7 +51,7 @@ require_once(TDC_PATH_LEGACY_COMMON . '/wp_booster/td_api.php');
 
 /**
  * add wp blocks editor(gutenberg) assets
- * .. is loaded from the mob theme plugin @see td-mobile-plugin.php because we need this to always run.. not just on mob theme setup 
+ * .. is loaded from the mob theme plugin @see td-mobile-plugin.php because we need this to always run.. not just on mob theme setup
  */
 //require_once('/includes/td_block_editor_assets_mob.php');
 
@@ -256,7 +258,11 @@ add_action('pre_get_posts', function( $query ) {
 			$paged = get_query_var('paged');
 
 			// get the limit of posts on the category page
-			$limit = get_option('posts_per_page');
+			if ( ! empty( $tdm_frontpage_latest_articles_posts_limit ) ) {
+				$limit = td_util::get_option('tdm_frontpage_latest_articles_posts_limit' );
+			} else {
+				$limit = get_option('posts_per_page');
+			}
 
 			// check the panel global posts limit for grids to determine how many posts are we showing in the big grid for this category ( if no user setting.. use the config value )
 			$tdm_grids_posts_limit = td_util::get_option('tdm_grids_posts_limit');
@@ -297,7 +303,7 @@ function td_bottom_code() {
 
     echo '
     <!--
-        Theme: ' . TD_THEME_NAME . ' Mobile Theme by tagDiv 2019
+        Theme: ' . TD_THEME_NAME . ' Mobile Theme by tagDiv 2023
         Version: ' . TD_THEME_VERSION . ' (rara)
         Deploy mode: ' . TD_DEPLOY_MODE . '
         ' . $speed_booster . '
@@ -367,6 +373,12 @@ function hook_wp_head() {
 		}
 	}
 
+    // fav icon support
+    $tds_favicon_upload = td_util::get_option('tds_favicon_upload');
+    if (!empty($tds_favicon_upload)) {
+        echo '<link rel="icon" type="image/png" href="' . $tds_favicon_upload . '">';
+    }
+
 	// ios bookmark icon support
 	$tds_ios_76 = td_util::get_option('tds_ios_icon_76');
 	$tds_ios_120 = td_util::get_option('tds_ios_icon_120');
@@ -375,24 +387,31 @@ function hook_wp_head() {
 	$tds_ios_144 = td_util::get_option('tds_ios_icon_144');
 
 	if( ! empty( $tds_ios_76 ) ) {
-		echo '<link rel="apple-touch-icon-precomposed" sizes="76x76" href="' . $tds_ios_76 . '"/>';
+		echo '<link rel="apple-touch-icon" sizes="76x76" href="' . $tds_ios_76 . '"/>';
 	}
 
 	if( ! empty( $tds_ios_120 ) ) {
-		echo '<link rel="apple-touch-icon-precomposed" sizes="120x120" href="' . $tds_ios_120 . '"/>';
+		echo '<link rel="apple-touch-icon" sizes="120x120" href="' . $tds_ios_120 . '"/>';
 	}
 
 	if( ! empty( $tds_ios_152 ) ) {
-		echo '<link rel="apple-touch-icon-precomposed" sizes="152x152" href="' . $tds_ios_152 . '"/>';
+		echo '<link rel="apple-touch-icon" sizes="152x152" href="' . $tds_ios_152 . '"/>';
 	}
 
 	if( ! empty( $tds_ios_114 ) ) {
-		echo '<link rel="apple-touch-icon-precomposed" sizes="114x114" href="' . $tds_ios_114 . '"/>';
+		echo '<link rel="apple-touch-icon" sizes="114x114" href="' . $tds_ios_114 . '"/>';
 	}
 
 	if( ! empty( $tds_ios_144 ) ) {
-		echo '<link rel="apple-touch-icon-precomposed" sizes="144x144" href="' . $tds_ios_144 . '"/>';
+		echo '<link rel="apple-touch-icon" sizes="144x144" href="' . $tds_ios_144 . '"/>';
 	}
+
+    //load google recaptcha js for login modal ( @td-login-modal.php )
+    $show_captcha = td_util::get_option('tds_captcha');
+    $captcha_site_key = td_util::get_option('tds_captcha_site_key');
+    if ( $show_captcha == 'show' ) { ?>
+        <script src="https://www.google.com/recaptcha/api.js?render=<?php echo $captcha_site_key ?>"></script>
+    <?php }
 }
 
 /* ----------------------------------------------------------------------------
@@ -402,6 +421,14 @@ add_action('wp_head', 'td_header_analytics_code', 40);
 function td_header_analytics_code() {
     $td_analytics = td_util::get_option('td_analytics');
     echo stripslashes($td_analytics);
+}
+/* ----------------------------------------------------------------------------
+ * js after body
+ */
+add_action( 'td_wp_body_open', 'td_body_script_code', 40 );
+function td_body_script_code() {
+    $td_body_code = td_util::get_option( 'td_body_code' );
+    echo stripslashes( $td_body_code );
 }
 
 /* ----------------------------------------------------------------------------
@@ -414,6 +441,12 @@ function td_add_js_variable() {
 	if ( empty( $tds_login_mobile ) ) {
 		td_js_buffer::add_variable('tds_login_mobile', $tds_login_mobile );
 	}
+
+    $tdm_sticky_menu = td_util::get_option( 'tdm_sticky_menu' );
+    if ( $tdm_sticky_menu === 'hide' ) {
+        td_js_buffer::add_variable('tdm_sticky_menu', td_util::get_option('tdm_sticky_menu'));
+    }
+
 }
 
 /* ----------------------------------------------------------------------------
@@ -453,7 +486,7 @@ function td_on_wp_head_canonical(){
 
 		if (class_exists('WPSEO_Frontend')) {
 			// Remove the canonical action of the Yoast SEO plugin
-			remove_action( 'wpseo_head', array( WPSEO_Frontend::get_instance(), 'canonical' ), 20 );
+			add_filter( 'wpseo_canonical', '__return_false' );
 		}
 
 		$td_current_page = '<link rel="canonical" href="' . get_pagenum_link($paged) . '"/>';
@@ -483,7 +516,11 @@ function td_on_wp_head_canonical(){
  * tagDiv gallery - front end hooks
  */
 add_filter('post_gallery', 'td_gallery_shortcode', 10, 4);
-function td_gallery_shortcode($output = '', $atts, $content = false) {
+function td_gallery_shortcode($output = '', $atts = [], $content = false) {
+    //doesn't work on AMP
+     if ( td_util::is_amp() ) {
+         return;
+     }
 
     $buffy = '';
 
@@ -789,3 +826,36 @@ function td_load_css_fonts() {
 	}
 
 }
+
+add_filter( 'pre_handle_404', function($param1, $param2) {
+
+    global $_SERVER;
+    $req_scheme = is_ssl() ? 'https' : 'http';
+
+	$post_id = url_to_postid($req_scheme . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+	if ( !empty($post_id) ) {
+		$td_post_theme_settings = td_util::get_post_meta_array($post_id, 'td_post_theme_settings');
+		// standard smartlist
+		if (is_array($td_post_theme_settings) && array_key_exists('smart_list_template', $td_post_theme_settings)) {
+			return true;
+		} elseif (!empty ($td_post_theme_settings['td_post_template']) && td_global::is_tdb_registered() && td_global::is_tdb_template($td_post_theme_settings['td_post_template'], true)) {  // cloud template smartlist
+			$td_template_id = td_global::tdb_get_template_id($td_post_theme_settings['td_post_template']);
+			$td_template_content = get_post_field('post_content', $td_template_id);
+			$is_tdb_smartlist = tdb_util::get_shortcode($td_template_content, 'tdb_single_smartlist');
+
+			if ($is_tdb_smartlist) {
+				return true;
+			}
+		}
+
+	}
+	return $param1;
+}, 10, 2);
+
+//fix accesibility warnings on pagination arrows (lighthouse)
+add_filter('next_posts_link_attributes', function() {
+	return ' aria-label="next-page" ';
+});
+add_filter('previous_posts_link_attributes', function() {
+	return ' aria-label="prev-page" ';
+});

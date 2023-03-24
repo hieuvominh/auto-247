@@ -4,14 +4,21 @@
  * Plugin URI: http://forum.tagdiv.com/the-mobile-theme/
  * Description: The Mobile Theme makes your website lighter and faster on mobile. Together with the AMP plugin, it provides the best solution for your website.
  * Author: tagDiv
- * Version: 1.3 | built on 15.04.2020 7:19
+ * Version: 2.2 | built on 15.02.2023 13:25
  * Author URI: http://tagdiv.com
  *
  * @package td-mobile-plugin
  */
 
 //hash
-define('TD_MOBILE_PLUGIN', '6cc8fb1220343e605c1e50e50f3dd94c');
+define('TD_MOBILE_PLUGIN', '95d7899533f233a2b9e1ea8f9e712022');
+
+require_once('tdm_version_check.php');
+
+// don't run anything else in the plugin, if the main theme is not tagdiv
+if (tdm_version_check::is_active_theme_compatible() === false) {
+	return;
+}
 
 // don't run anything else in the plugin, if the tagDiv Composer plugin is not active
 if ( ! defined('TD_COMPOSER' ) ) {
@@ -19,8 +26,8 @@ if ( ! defined('TD_COMPOSER' ) ) {
 	add_action( 'admin_notices', function (){
 		?>
         <div class="notice notice-error is-dismissible td-plugins-deactivated-notice">
-            <p style="font-size: 15px; font-weight: 600; color: red; margin-bottom: 5px;">The tagDiv Mobile Theme plugin requires the tagDiv Composer plugin!</p>
-                <br>Please check the theme plugins section to update/install/activate theme plugins.</p>
+            <p style="font-size: 15px; font-weight: 600; color: red; margin-bottom: 5px;">The tagDiv Mobile Theme plugin requires the tagDiv Composer plugin!
+                <p>Please check the theme plugins section to update/install/activate theme plugins.</p>
             <p><a class="button button-secondary" href="admin.php?page=td_theme_plugins">Go to Theme Plugins</a></p>
         </div>
 		<?php
@@ -48,7 +55,9 @@ if ( file_exists(get_template_directory() . '/mobile/functions.php' ) ) {
 }
 
 // The mobile detection library used.
-require_once 'Mobile_Detect.php';
+if ( ! class_exists('Mobile_Detect', false)) {
+	require_once 'Mobile_Detect.php';
+}
 
 // The mobile theme setting hooks.
 require_once 'td_mobile_theme.php';
@@ -97,6 +106,14 @@ add_action( 'td_global_after', function (){
 		td_util::update_option('tds_sub_footer_mob', td_mobile_theme::get_option('tds_sub_footer'));
 		td_util::update_option('tds_footer_copyright_mob', td_mobile_theme::get_option('tds_footer_copyright'));
 		td_util::update_option('tds_footer_copy_symbol_mob', td_mobile_theme::get_option('tds_footer_copy_symbol'));
+
+		// enable mobile theme thumbs
+        td_util::update_option('tds_thumb_td_265x198', 'yes' );
+        td_util::update_option('tds_thumb_td_741x486', 'yes' );
+
+        //show Latest post on Grid and set offset on loop
+        td_util::update_option('tdm_frontpage_grid_sort', 'latest' );
+        td_util::update_option('tdm_frontpage_latest_articles_posts_offset', '3' );
 	}
 });
 
@@ -246,6 +263,28 @@ add_filter( 'hidden_meta_boxes' , function ( $hidden, $screen, $use_defaults ) {
 
     return $hidden;
 }, 10, 3 );
+
+/**
+ * scroll to the Mobile Editor when user clicks on the link from the empty page warning
+ */
+add_action('admin_head', function(){ ?>
+    <script type="text/javascript">
+        jQuery(document).ready(function () {
+
+            if ( window.location.hash === "#td_mobile_editor" ) {
+                setTimeout(function(){
+                    var element = document.getElementById('td_mobile_wp_editor_content_meta_box');
+                    if ( element ) {
+                        element.scrollIntoView();
+                    }
+                }, 150);
+            }
+
+        })
+    </script>
+
+    <?php
+});
 
 /**
  * woocommerce_product_archive_description is a WC function template that's overwritten
@@ -450,3 +489,14 @@ add_filter('theme_page_templates', function($post_templates){
  */
 require_once( TDC_PATH . '/mobile/includes/td_block_editor_assets_mob.php' );
 
+/**
+ * this updates amp status meta with tdm_status
+ * when MT is disabled on specific post
+ * This doesn't work properly, we keep the AMP enable/disable toggle
+ */
+//add_action ('updated_postmeta', 'td_set_post_amp_status', 10, 4);
+//function td_set_post_amp_status ($meta_id, $post_id, $meta_key, $meta_value ) {
+//    if ($meta_key === 'tdm_status') {
+//        update_post_meta($post_id, AMP_Post_Meta_Box::STATUS_POST_META_KEY,  $meta_value);
+//    }
+//}

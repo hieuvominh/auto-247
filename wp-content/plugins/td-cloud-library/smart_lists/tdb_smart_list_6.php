@@ -22,6 +22,11 @@ class tdb_smart_list_6 extends td_smart_list {
 
     protected function render_list_item($item_array, $current_item_id, $current_item_number, $total_items_number) {
 
+        $sm_title_tag = 'h2';
+        if ( isset($this->atts['sm_title_tag']) ) {
+            $sm_title_tag = $this->atts['sm_title_tag'];
+        }
+
         $buffy = '';
 
         // render the pagination
@@ -32,7 +37,7 @@ class tdb_smart_list_6 extends td_smart_list {
 
         //creating each slide
         $buffy .= '<div class="tdb-item">';
-            $buffy .= '<div class="tdb-number-and-title"><h2><span class="tdb-sml-current-item-title">' . $item_array['title'] . '</span></h2></div>';
+            $buffy .= '<div class="tdb-number-and-title"><' . $sm_title_tag . '><span class="tdb-sml-current-item-title">' . $item_array['title'] . '</span></' . $sm_title_tag . '></div>';
 
             //adding description
             if(!empty($item_array['description'])) {

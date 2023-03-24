@@ -3,7 +3,6 @@
 class td_nav_menu_edit_walker extends Walker_Nav_Menu_Edit {
     public function start_el(&$output, $item, $depth = 0, $args = array(), $id = 0) {
 
-
         $control_buffy = '';
 
         //read the menu setting from post meta (menu id, key, single)
@@ -11,16 +10,26 @@ class td_nav_menu_edit_walker extends Walker_Nav_Menu_Edit {
         $td_mega_menu_page_id = get_post_meta($item->ID, 'td_mega_menu_page_id', true);
 
         //make the tree
-        $td_category_tree = array_merge (array(' - Not mega menu - ' => ''), td_util::get_category2id_array(false));
+        if ( $item->type === 'taxonomy' && $item->object !== 'category' ) {
+            $td_category_tree = array(' - Not mega menu - ' => '',  ' Enable mega menu ' => $item->object_id);
+            $description_txt = 'Make this a term mega menu';
+        } else {
+            $td_category_tree = array_merge (array(' - Not mega menu - ' => ''), td_util::get_category2id_array(false, false));
+            $description_txt = 'Make this a category mega menu';
+        }
 
         //make a new ui control ( dropdown )
         $control_buffy .= '<p class="description description-wide"><br><br>';
             $control_buffy .= '<label>';
-                $control_buffy .= 'Make this a category mega menu';
+                $control_buffy .= $description_txt;
             $control_buffy .= '</label>';
             $control_buffy .= '<select name="td_mega_menu_cat[' . $item->ID . ']" id="" class="widefat code edit-menu-item-url">';
                 foreach ($td_category_tree as $category => $category_id) {
-                    $control_buffy .= '<option value="' . $category_id . '"' . selected($td_mega_menu_cat, $category_id, false) . '>' . $category . '</option>';
+                	$disabled = '';
+                	if ( '__' === $category_id && false !== strpos($category, '--')) {
+                		$disabled = 'disabled';
+	                }
+                    $control_buffy .= '<option value="' . $category_id . '"' . selected($td_mega_menu_cat, $category_id, false) . ' ' . $disabled . '>' . $category . '</option>';
                 }
             $control_buffy .= ' </select>';
         $control_buffy .= '</p>';

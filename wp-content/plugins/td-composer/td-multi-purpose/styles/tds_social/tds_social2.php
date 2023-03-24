@@ -26,6 +26,72 @@ class tds_social2 extends td_style {
 		$raw_css =
 			"<style>
 
+                /* @style_general_social2 */
+                .tds-social2 .tdm-social-item-wrap i,
+                .tds-social2 .tdm-social-item-wrap .tdm-social-text {
+                  color: #000;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover i,
+                .tds-social2 .tdm-social-item-wrap:hover .tdm-social-text {
+                  color: #4db2ec;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-behance {
+                  color: #000000;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-blogger {
+                  color: #ffa900;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-dribbble {
+                  color: #ea4c89;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-facebook {
+                  color: #3B5998;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-flickr {
+                  color: #ff0084;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-instagram {
+                  color: #3f729b;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-lastfm {
+                  color: #ce2127;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-linkedin {
+                  color: #007bb6;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-pinterest {
+                  color: #cb2027;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-rss {
+                  color: #f36f24;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-soundcloud {
+                  color: #ff5500;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-tumblr {
+                  color: #32506d;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-twitter {
+                  color: #00aced;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-vimeo {
+                  color: #5289cc;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-youtube {
+                  color: #bb0000;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-vk {
+                  color: #507299;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-naver {
+                  color: #3ec729;
+                }
+                .tds-social2 .tdm-social-item-wrap:hover .td-icon-discord {
+                  color: #7289DA;
+                }
+
+                
+                
                 /* @icons_size */
 				.$unique_style_class .tdm-social-item i {
 					font-size: @icons_size;
@@ -55,12 +121,12 @@ class tds_social2 extends td_style {
 				    margin-right: 0 !important;
 				}
                 /* @icons_color */
-				.$unique_style_class.tds-social2 .tdm-social-item i,
-				.tds-team-member2 .$unique_style_class.tds-social2 .tdm-social-item i {
+				body .$unique_style_class.tds-social2 .tdm-social-item i,
+				body .tds-team-member2 .$unique_style_class.tds-social2 .tdm-social-item i {
 					color: @icons_color;
 				}
 				/* @icons_hover_color */
-				.$unique_style_class.tds-social2 .tdm-social-item-wrap:hover i {
+				body .$unique_style_class.tds-social2 .tdm-social-item-wrap:hover i {
 					color: @icons_hover_color;
 				}
 				
@@ -80,11 +146,11 @@ class tds_social2 extends td_style {
 				}
 				
                 /* @name_color */
-				.$unique_style_class .tdm-social-text {
+				body .$unique_style_class .tdm-social-item-wrap .tdm-social-text {
 					color: @name_color;
 				}
                 /* @name_color_h */
-				.$unique_style_class .tdm-social-item-wrap:hover .tdm-social-text {
+				body .$unique_style_class .tdm-social-item-wrap:hover .tdm-social-text {
 					color: @name_color_h;
 				}
 				
@@ -114,6 +180,8 @@ class tds_social2 extends td_style {
      * @param $atts
      */
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_social2', 1 );
 
         /*-- ICON -- */
         // icons size
@@ -203,56 +271,99 @@ class tds_social2 extends td_style {
         if ('' !== $this->get_shortcode_att('social_rel')) {
             $td_social_rel = ' rel="' . $this->get_shortcode_att('social_rel') . '" ';
         }
-        
-        $buffy = PHP_EOL . '<style>' . PHP_EOL . $this->get_css() . PHP_EOL . '</style>';
 
+        // extra input for youtube
+        $td_youtube_add_input = '';
+        if ('' !== $this->get_shortcode_att('youtube_add_input')) {
+            $td_youtube_add_input = rawurldecode( base64_decode( strip_tags( $this->get_shortcode_att('youtube_add_input') ) ) );
+        }
+
+
+        // extra social icon
+        $extra_social_icon = $this->get_icon_att('extra_social_tdicon');
+        $data_icon = '';
+        if ( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $data_icon = 'data-td-svg-icon="' . $this->get_att('extra_social_tdicon') . '"';
+        }
+
+        $svg_code = '';
+        if ( base64_encode( base64_decode( $extra_social_icon ) ) == $extra_social_icon ) {
+            $svg_code = base64_decode( $extra_social_icon );
+        }
+
+        // extra social name
+        $extra_social_name = '';
+        if ('' !== $this->get_shortcode_att('extra_social_name')) {
+            $extra_social_name = $this->get_shortcode_att('extra_social_name') ;
+        }
+        // extra social url
+        $extra_social_url = '#';
+        if ('' !== $this->get_shortcode_att('extra_social_url')) {
+            $extra_social_url = td_util::get_custom_field_value_from_string($this->get_shortcode_att('extra_social_url')) ;
+        }
+
+        //socials in order of input
+        $social_ordered_array = array();
+        if( '' !== $this->get_shortcode_att('social_order') ) {
+            $social_ordered_array = array_map( 'trim', explode( ',' , $this->get_shortcode_att('social_order') ) );
+        }
+
+        $buffy = $this->get_style($this->get_css());
         $buffy .= '<div class="tdm-social-wrapper ' . self::get_class_style(__CLASS__) . ' ' . $this->unique_style_class . '">';
-        $social_array = array();
-        $social_array['behance']        = array( $this->get_shortcode_att( 'behance' ), 'Behance' );
-        $social_array['blogger']        = array( $this->get_shortcode_att( 'blogger' ), 'Blogger' );
-        $social_array['dailymotion']    = array( $this->get_shortcode_att( 'dailymotion' ), 'Dailymotion' );
-        $social_array['dribbble']       = array( $this->get_shortcode_att( 'dribbble' ), 'Dribbble' );
-        $social_array['ebay']           = array( $this->get_shortcode_att( 'ebay' ), 'Ebay' );
-        $social_array['evernote']       = array( $this->get_shortcode_att( 'evernote' ), 'Evernote' );
-        $social_array['facebook']       = array( $this->get_shortcode_att( 'facebook' ), 'Facebook' );
-        $social_array['flickr']         = array( $this->get_shortcode_att( 'flickr' ), 'Flickr' );
-        $social_array['grooveshark']    = array( $this->get_shortcode_att( 'grooveshark' ), 'Grooveshark' );
-        $social_array['instagram']      = array( $this->get_shortcode_att( 'instagram' ), 'Instagram' );
-        $social_array['lastfm']         = array( $this->get_shortcode_att( 'lastfm' ), 'Lastfm' );
-        $social_array['linkedin']       = array( $this->get_shortcode_att( 'linkedin' ), 'LinkedIn' );
-        $social_array['mail-1']         = array( $this->get_shortcode_att( 'mail-1' ), 'Mail' );
-        $social_array['myspace']        = array( $this->get_shortcode_att( 'myspace' ), 'Myspace' );
-        $social_array['path']           = array( $this->get_shortcode_att( 'path' ), 'Path' );
-        $social_array['paypal']         = array( $this->get_shortcode_att( 'paypal' ), 'Paypal' );
-        $social_array['pinterest']      = array( $this->get_shortcode_att( 'pinterest' ), 'Pinterest' );
-        $social_array['reddit']         = array( $this->get_shortcode_att( 'reddit' ), 'Reddit' );
-        $social_array['rss']            = array( $this->get_shortcode_att( 'rss' ), 'RSS' );
-        $social_array['soundcloud']     = array( $this->get_shortcode_att( 'soundcloud' ), 'Soundcloud' );
-        $social_array['spotify']        = array( $this->get_shortcode_att( 'spotify' ), 'Spotify' );
-        $social_array['stackoverflow']  = array( $this->get_shortcode_att( 'stackoverflow' ), 'Stackoverflow' );
-        $social_array['steam']          = array( $this->get_shortcode_att( 'steam' ), 'Steam' );
-        $social_array['telegram']       = array( $this->get_shortcode_att( 'telegram' ), 'Telegram' );
-        $social_array['tumblr']         = array( $this->get_shortcode_att( 'tumblr' ), 'Tumblr' );
-        $social_array['twitch']         = array( $this->get_shortcode_att( 'twitch' ), 'Twitch' );
-        $social_array['twitter']        = array( $this->get_shortcode_att( 'twitter' ), 'Twitter' );
-        $social_array['vimeo']          = array( $this->get_shortcode_att( 'vimeo' ), 'Vimeo' );
-        $social_array['vk']             = array( $this->get_shortcode_att( 'vk' ), 'VKontakte' );
-        $social_array['wordpress']      = array( $this->get_shortcode_att( 'wordpress' ), 'Wordpress' );
-        $social_array['yahoo']          = array( $this->get_shortcode_att( 'yahoo' ), 'Yahoo' );
-        $social_array['youtube']        = array( $this->get_shortcode_att( 'youtube' ), 'Youtube' );
-        $social_array['xing']           = array( $this->get_shortcode_att( 'xing' ), 'Xing' );
 
+            $social_array = array();
+
+            //in order of input
+            if ( !empty($social_ordered_array) ) {
+                foreach ( $social_ordered_array as $index => $social_id ) {
+                    if( $social_id == 'mail' ) {
+                        $social_id = 'mail-1';
+                    }
+
+                    if ( array_key_exists ( strtolower($social_id), td_social_icons::$td_social_icons_array ) ) {
+                        $social_array[$social_id] = array($this->get_shortcode_att(strtolower($social_id)), ucfirst($social_id));
+                    }
+                }
+            } else { //get all
+                foreach ( td_social_icons::$td_social_icons_array as $social_id => $social_name ) {
+                    $social_array[$social_id] = array( $this->get_shortcode_att( $social_id ), $social_name );
+                }
+            }
+
+            //display only the socials with url
             foreach ( $social_array as $social_key => $social_value ) {
-                if( !empty( $social_value[0] ) ) {
+                $social_url = td_util::get_custom_field_value_from_string( $social_value[0] );
+
+                if( !empty( $social_url ) ) {
+
+                    if ( $social_key === 'youtube') {
+                        $social_url = $td_youtube_add_input . $social_url;
+                    }
+
                     $buffy .= '<div class="tdm-social-item-wrap">';
-                        $buffy .= '<a href="' . $social_value[0] . '" ' . $target . $td_social_rel . 'class="tdm-social-item">';
-                            $buffy .= '<i class="td-icon-font td-icon-' . $social_key . '"></i>';
+                        $buffy .= '<a href="' . $social_url . '" ' . $target . $td_social_rel . ' title="' . $social_value[1] . '" class="tdm-social-item">';
+                            $buffy .= '<i class="td-icon-font td-icon-' . strtolower($social_key) . '"></i>';
                         $buffy .= '</a>';
 
-                        $buffy .= '<a href="' . $social_value[0] . '" ' . $target . $td_social_rel . 'class="tdm-social-text">' . $social_value[1] . '</a>';
+                        $buffy .= '<a href="' . $social_url . '" ' . $target . $td_social_rel . ' class="tdm-social-text">' . ( $social_value[1] == 'Mail-1' ? 'Mail' : $social_value[1] ) . '</a>';
                     $buffy .= '</div>';
                 }
             }
+            if ( $extra_social_icon != '' ) {
+
+            $buffy .= '<div class="tdm-social-item-wrap">';
+            $buffy .= '<a href="' . $extra_social_url . '" ' . $target . $td_social_rel . ' title="' . $extra_social_name . '" class="tdm-social-item">';
+            if ( $svg_code == '' ) {
+                $buffy .= '<i class="' . self::get_group_style( __CLASS__ ) . ' ' . $extra_social_icon . ' ' . $this->unique_style_class . ' td-fix-index"></i>';
+            } else {
+                $buffy .= '<div class="' . self::get_group_style( __CLASS__ ) . ' tds-icon-svg-wrap ' . $this->unique_style_class . ' td-fix-index"><div class="tds-icon-svg" ' . $data_icon . '>' . $svg_code . '</div></div>';
+            }
+            $buffy .= '</a>';
+
+            $buffy .= '<a href="' . $extra_social_url . '" class="tdm-social-text" ' . $target . $td_social_rel . ' >' . $extra_social_name . '</a>';
+            $buffy .= '</div>';
+
+        }
         $buffy .= '</div>';
 
 		return $buffy;

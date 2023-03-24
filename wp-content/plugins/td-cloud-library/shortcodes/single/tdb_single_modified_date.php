@@ -8,13 +8,37 @@ class tdb_single_modified_date extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer';
+            }
+        }
+        $general_block_class = $unique_block_class_prefix ? '.' . $unique_block_class_prefix : '';
+        $unique_block_class = ( $unique_block_class_prefix ? $unique_block_class_prefix . ' .' : '' ) . ( $in_composer ? 'tdc-column .' : '' ) . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_modified_date */
+                $general_block_class .tdb_single_modified_date .tdb-date-icon-svg {
+                  position: relative;
+                  line-height: 0;
+                }
+                $general_block_class .tdb_single_modified_date svg {
+                  height: auto;
+                }
+                $general_block_class .tdb_single_modified_date svg,
+                $general_block_class .tdb_single_modified_date svg * {
+                  fill: #444;
+                }
+                
                 /* @make_inline */
                 .$unique_block_class {
                     display: inline-block;
@@ -28,12 +52,16 @@ class tdb_single_modified_date extends td_block {
                 .$unique_block_class i {
                     font-size: @icon_size;
                 }
+                /* @icon_svg_size */
+                .$unique_block_class svg {
+                    width: @icon_svg_size;
+                }
                 /* @icon_space */
-                .$unique_block_class i {
+                .$unique_block_class .tdb-date-icon {
                     margin-right: @icon_space;
                 }
 				/* @icon_align */
-				.$unique_block_class i {
+				.$unique_block_class .tdb-date-icon {
 					position: relative;
 					top: @icon_align;
 				}
@@ -42,15 +70,31 @@ class tdb_single_modified_date extends td_block {
 				.$unique_block_class {
 					color: @date_color;
 				}
+				.$unique_block_class svg,
+				.$unique_block_class svg * {
+					fill: @date_color;
+				}
                 /* @icon_color */
 				.$unique_block_class i {
 					color: @icon_color;
+				}
+				.$unique_block_class svg,
+				.$unique_block_class svg * {
+					fill: @icon_color;
+				}
+                /* @additional_color */
+				.$unique_block_class span {
+					color: @additional_color;
 				}
 				
 				
 				/* @f_date */
 				.$unique_block_class {
 					@f_date
+				}
+				/* @f_additional */
+				.$unique_block_class span {
+					@f_additional
 				}
 				
 			</style>";
@@ -65,6 +109,9 @@ class tdb_single_modified_date extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_post_meta', 1 );
+        $res_ctx->load_settings_raw( 'style_general_modified_date', 1 );
+
         // make inline
         $res_ctx->load_settings_raw( 'make_inline', $res_ctx->get_shortcode_att('make_inline') );
 
@@ -74,15 +121,27 @@ class tdb_single_modified_date extends td_block {
 
 
         /*-- ICON -- */
+        $icon = $res_ctx->get_icon_att('tdicon');
         // icon size
         $icon_size = $res_ctx->get_shortcode_att('icon_size');
-        $res_ctx->load_settings_raw( 'icon_size', $icon_size );
-        if( $icon_size != '' ) {
-            if( is_numeric( $icon_size ) ) {
-                $res_ctx->load_settings_raw( 'icon_size', $icon_size . 'px' );
+        if( base64_encode( base64_decode( $icon ) ) == $icon ) {
+            $res_ctx->load_settings_raw( 'icon_size', $icon_size );
+            if( $icon_size != '' ) {
+                if( is_numeric( $icon_size ) ) {
+                    $res_ctx->load_settings_raw( 'icon_svg_size', $icon_size . 'px' );
+                }
+            } else {
+                $res_ctx->load_settings_raw( 'icon_svg_size', '14px' );
             }
         } else {
-            $res_ctx->load_settings_raw( 'icon_size', '14px' );
+            $res_ctx->load_settings_raw( 'icon_size', $icon_size );
+            if( $icon_size != '' ) {
+                if( is_numeric( $icon_size ) ) {
+                    $res_ctx->load_settings_raw( 'icon_size', $icon_size . 'px' );
+                }
+            } else {
+                $res_ctx->load_settings_raw( 'icon_size', '14px' );
+            }
         }
 
         // icon space
@@ -107,11 +166,13 @@ class tdb_single_modified_date extends td_block {
         /*-- COLORS -- */
         $res_ctx->load_settings_raw( 'date_color', $res_ctx->get_shortcode_att('date_color') );
         $res_ctx->load_settings_raw( 'icon_color', $res_ctx->get_shortcode_att('icon_color') );
+        $res_ctx->load_settings_raw( 'additional_color', $res_ctx->get_shortcode_att('additional_color') );
 
 
 
         /*-- FONTS -- */
         $res_ctx->load_font_settings( 'f_date' );
+        $res_ctx->load_font_settings( 'f_additional' );
 
     }
 
@@ -128,26 +189,52 @@ class tdb_single_modified_date extends td_block {
 
         global $tdb_state_single;
 
-        $post_modified_date_data = $tdb_state_single->post_modified->__invoke();
+        $post_modified_date_data = $tdb_state_single->post_modified->__invoke( $atts );
         
         $additional_text = $this->get_att( 'additional_text' );
+        $extra_text = $this->get_att( 'extra_text' );
         $additional_text_after = $this->get_att( 'additional_text_after' );
+        $time_ago = $this->get_att( 'time_ago' );
 
         $display_date = $post_modified_date_data['modified_date'];
-        
-        if (!empty($additional_text)) {
-
-            if($additional_text_after !== '') {
-                $display_date = $display_date . ' ' . $additional_text;
-            } else {
-                $display_date = $additional_text . ' ' . $display_date;
-            }
+        $display_extra_text = '';
+        if ( $time_ago == true and !empty( $post_modified_date_data['human_time_diff'] ) ) {
+            $display_date = $post_modified_date_data['human_time_diff'];
+            $display_extra_text = $extra_text;
         }
-        $buffy = ''; //output buffer
 
         // date icon
-        $date_icon = $this->get_att( 'tdicon' );
+        $date_icon = $this->get_icon_att( 'tdicon' );
+        $date_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $date_icon_data = 'data-td-svg-icon="' . $this->get_att('tdicon') . '"';
+        }
+        $date_icon_html = '';
+        if ( $date_icon != '' ) {
+            if( base64_encode( base64_decode( $date_icon ) ) == $date_icon ) {
+                $date_icon_html = '<span class="tdb-date-icon tdb-date-icon-svg" ' . $date_icon_data . '>' . base64_decode( $date_icon ) . '</span>';
+            } else {
+                $date_icon_html = '<i class="tdb-date-icon ' . $date_icon . '"></i>';
+            }
+        }
 
+        //In HTML documents we must use the ISO 8601 format
+        $show_date = '<time class="entry-date updated td-module-date" datetime="' . $post_modified_date_data['date'] . '">' . $display_date . ' ' . $display_extra_text . '</time>';
+
+        if ( !empty($additional_text) ) {
+            $additional_text = '<span>' . $additional_text . '</span>';
+
+            if( $additional_text_after !== '' ) {
+                $show_date = $show_date . ' ' . $additional_text;
+            } else {
+                $show_date = $additional_text . ' ' . $show_date;
+            }
+        }
+
+        // add icon
+        $show_date = $date_icon_html . $show_date;
+
+        $buffy = ''; //output buffer
 
         $buffy .= '<div class="' . $this->get_block_classes() . ' tdb-post-meta" ' . $this->get_block_html_atts() . '>';
 
@@ -159,13 +246,12 @@ class tdb_single_modified_date extends td_block {
 
 
             $buffy .= '<div class="tdb-block-inner td-fix-index">';
-                if( $date_icon != '' ) {
-                    $buffy .= '<i class="' . $date_icon . '"></i>';
-                }
         
                 //we don't use datetime attribute because we already add post meta
                 //@see post_item_scope_meta property in tdb_state_single.php for post meta data
-                $buffy .= '<time class="entry-date updated td-module-date">' . $display_date . '</time>';
+                if ( $post_modified_date_data['human_time_diff'] != 'hide' ) {
+                    $buffy .= $show_date;
+                }
         
             $buffy .= '</div>';
 

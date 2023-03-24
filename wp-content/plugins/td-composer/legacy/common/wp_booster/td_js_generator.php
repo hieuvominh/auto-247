@@ -1,10 +1,17 @@
 <?php
 function td_js_generator() {
-	if (is_admin()) {
+	if ( is_admin() ) {
 		td_js_buffer::add_variable( 'td_admin_url', admin_url() );
+
+		$theme_plugins_list = array();
+		foreach ( tagdiv_global::$theme_plugins_list as $plugin ) {
+			$theme_plugins_list[$plugin['slug']] = $plugin['name'];
+		}
+
+		td_js_buffer::add_variable( 'theme_plugins_list', $theme_plugins_list );
 	}
 
-	if (td_util::tdc_is_installed()) {
+	if ( td_util::tdc_is_installed() ) {
 		td_js_buffer::add_variable( 'tdc_is_installed', 'yes' );
     }
 
@@ -18,15 +25,20 @@ function td_js_generator() {
     td_js_buffer::add_variable('td_email_user_pass_incorrect', __td('User or password incorrect!', TD_THEME_NAME));
     td_js_buffer::add_variable('td_email_user_incorrect', __td('Email or username incorrect!', TD_THEME_NAME));
     td_js_buffer::add_variable('td_email_incorrect', __td('Email incorrect!', TD_THEME_NAME));
+    td_js_buffer::add_variable('td_user_incorrect', __td('Username incorrect!', TD_THEME_NAME));
+    td_js_buffer::add_variable('td_email_user_empty', __td('Email or username empty!', TD_THEME_NAME));
+    td_js_buffer::add_variable('td_pass_empty', __td('Pass empty!', TD_THEME_NAME));
+    td_js_buffer::add_variable('td_pass_pattern_incorrect', __td('Invalid Pass Pattern!', TD_THEME_NAME));
+    td_js_buffer::add_variable('td_retype_pass_incorrect', __td('Retyped Pass incorrect!', TD_THEME_NAME));
 
     //use for more articles on post pages
     td_js_buffer::add_variable('tds_more_articles_on_post_enable', td_util::get_option('tds_more_articles_on_post_pages_enable'));
     td_js_buffer::add_variable('tds_more_articles_on_post_time_to_wait', td_util::get_option('tds_more_articles_on_post_pages_time_to_wait'));
     td_js_buffer::add_variable('tds_more_articles_on_post_pages_distance_from_top', intval(td_util::get_option('tds_more_articles_on_post_pages_distance_from_top')));
 
-    //theme color - used for loading box
+    // theme color - used for loading box
     $td_get_db_theme_color = td_util::get_option('tds_theme_color');
-    if(!preg_match('/^#[a-f0-9]{6}$/i', $td_get_db_theme_color)) {
+    if( !preg_match( '/^#[a-f0-9]{6}$/i', $td_get_db_theme_color ) ) {
         $td_get_db_theme_color = '#4db2ec';//default theme color
     }
     td_js_buffer::add_variable('tds_theme_color_site_wide', $td_get_db_theme_color);
@@ -46,12 +58,12 @@ function td_js_generator() {
 
 
 	// make the nonce for our wp-admin ajax
-	if (is_admin()) {
-		if (current_user_can('switch_themes')) {
+	if ( is_admin() ) {
+		if ( current_user_can('switch_themes') ) {
 			td_js_buffer::add_variable('tdWpAdminImportNonce', wp_create_nonce('td-demo-install'));         // install demos
 		}
 
-		if (current_user_can('edit_theme_options')) {
+		if ( current_user_can('edit_theme_options') ) {
 			td_js_buffer::add_variable('tdWpAdminPanelBoxNonce', wp_create_nonce('td-panel-box'));          // load ajax box
 			td_js_buffer::add_variable('tdWpAdminSidebarOpsNonce', wp_create_nonce('td-sidebar-ops'));      // sidebar operations in theme panel
 			td_js_buffer::add_variable('tdWpAdminTdLogSwitchNonce', wp_create_nonce('td-log-switch'));      // td log turn on/off switch in system status
@@ -87,6 +99,24 @@ function td_js_generator() {
         td_js_buffer::add_variable('tds_video_playlists', false);
     }
 
+    $fb_login_enabled = td_util::get_option('tds_social_login_fb_enable');
+    if( is_ssl() && $fb_login_enabled == 'true' ) {
+        td_js_buffer::add_variable('td_fb_login_enabled', '1');
+    }
+
+    // opt-in builder
+    if( defined( 'TD_SUBSCRIPTION' ) ) {
+        td_js_buffer::add_variable('td_reset_pass_empty', __td('Please enter a new password before proceeding.', TD_THEME_NAME));
+        td_js_buffer::add_variable('td_reset_pass_confirm_empty', __td('Please confirm the new password before proceeding.', TD_THEME_NAME));
+        td_js_buffer::add_variable('td_reset_pass_not_matching', __td('Please make sure that the passwords match.', TD_THEME_NAME));
+    }
+
+    if( 'Newspaper' === TD_THEME_NAME ) {
+        td_js_buffer::add_variable('tdb_modal_confirm', __td('Save', TD_THEME_NAME));
+        td_js_buffer::add_variable('tdb_modal_cancel', __td('Cancel', TD_THEME_NAME));
+        td_js_buffer::add_variable('tdb_modal_confirm_alt', __td('Yes', TD_THEME_NAME));
+        td_js_buffer::add_variable('tdb_modal_cancel_alt', __td('No', TD_THEME_NAME));
+    }
 
 
     // This js code has to run as fast as possible. No jQuery dependencies here

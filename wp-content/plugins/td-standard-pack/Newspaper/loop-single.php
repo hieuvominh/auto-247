@@ -9,7 +9,7 @@ if (have_posts()) {
     $td_mod_single = new td_module_single($post);
     ?>
 
-    <article id="post-<?php echo esc_attr( $td_mod_single->post->ID ) ?>" class="<?php echo join(' ', get_post_class());?>" <?php $td_mod_single->show_item_scope() ?>>
+    <article id="post-<?php echo esc_attr( $td_mod_single->post->ID ) ?>" class="<?php echo join(' ', get_post_class());?>" <?php echo $td_mod_single->get_item_scope();?>>
         <div class="td-post-header">
 
             <?php $td_mod_single->show_category() ?>
@@ -24,7 +24,7 @@ if (have_posts()) {
 
                 <div class="td-module-meta-info">
                     <?php $td_mod_single->show_author() ?>
-                    <?php $td_mod_single->show_date(false) ?>
+                    <?php $td_mod_single->show_date(false, false) ?>
                     <?php $td_mod_single->show_comments() ?>
                     <?php $td_mod_single->show_views() ?>
                 </div>

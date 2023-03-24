@@ -7,15 +7,55 @@ class tdb_single_subtitle extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+                /* @style_general_single_subtitle */
+                .tdb_single_subtitle {
+                  margin-bottom: 14px;
+                }
+                .tdb_single_subtitle p,
+                .tdb_single_subtitle h1,
+                .tdb_single_subtitle h2,
+                .tdb_single_subtitle h3,
+                .tdb_single_subtitle h4 {
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 16px;
+                  font-style: italic;
+                  font-weight: 300;
+                  line-height: 24px;
+                  margin-top: 0;
+                  margin-bottom: 0;
+                  color: #747474;
+                }
+                .tdb_single_subtitle.tdb-content-horiz-center {
+                  text-align: center;
+                }
+                .tdb_single_subtitle.tdb-content-horiz-right {
+                  text-align: right;
+                }
+
+                
                 /* @sub_color */
-				.$unique_block_class p {
+				.$unique_block_class p,
+                .$unique_block_class h1,
+                .$unique_block_class h2,
+                .$unique_block_class h3,
+                .$unique_block_class h4 {
 					color: @sub_color;
 				}
 				/* @sub_color_gradient */
@@ -41,7 +81,11 @@ class tdb_single_subtitle extends td_block {
 					text-align: left;
 				}
 				/* @f_sub */
-				.$unique_block_class p {
+				.$unique_block_class p,
+				.$unique_block_class h1,
+				.$unique_block_class h2,
+				.$unique_block_class h3,
+				.$unique_block_class h4 {
 					@f_sub
 				}
 				
@@ -56,6 +100,8 @@ class tdb_single_subtitle extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_single_subtitle', 1 );
 
         // subtitle color
         $res_ctx->load_color_settings( 'sub_color', 'sub_color', 'sub_color_gradient', 'sub_color_gradient_1', '' );
@@ -90,6 +136,8 @@ class tdb_single_subtitle extends td_block {
         $post_subtitle_data = $tdb_state_single->post_subtitle->__invoke();
 
         $additional_classes = array();
+        $title_tag = $this->get_att( 'title_tag' );
+
 
         $buffy = ''; //output buffer
 
@@ -106,9 +154,8 @@ class tdb_single_subtitle extends td_block {
             //get the js for this block
             $buffy .= $this->get_block_js();
 
-
             $buffy .= '<div class="tdb-block-inner td-fix-index">';
-                $buffy .= '<p>' . $post_subtitle_data['post_subtitle'] . '</p>';
+                $buffy .= '<' . $title_tag . '>' . $post_subtitle_data['post_subtitle'] . '</' . $title_tag . '>';
             $buffy .= '</div>';
 
         $buffy .= '</div>';

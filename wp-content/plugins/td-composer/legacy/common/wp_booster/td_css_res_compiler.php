@@ -15,7 +15,7 @@ class td_css_res_compiler  {
 	private $responsive_context;
 
 	function __construct( $raw_css ) {
-		$this->raw_css = $raw_css;
+		$this->raw_css = '<style>' . td_util::remove_style_tag( td_block::get_common_css() . $raw_css ) . '</style>';
 	}
 
 	/**
@@ -27,13 +27,17 @@ class td_css_res_compiler  {
 
 	function load_settings( $callback, $atts, $index_style = '' ) {
 
-		if ( empty( $callback ) || empty( $atts ) ) {
+		if ( empty( $callback ) ) {
 			return;
 		}
 
 		$this->callback = $callback;
 
 		$this->responsive_context = new td_res_context( $index_style );
+
+		if ( empty( $atts ) ) {
+			return;
+		}
 
 		$settings = null;
 
@@ -126,6 +130,17 @@ class td_css_res_compiler  {
 //		var_dump($settings);
 //		echo '</pre>';
 //		die;
+
+
+		// manual sort in this order: all, landscape, portrait, phone - some of the preset values may have only responsive values, and they can change this order (That's why we need to keep the order)
+		$ordered_settings = [];
+		foreach (['all', 'landscape', 'portrait', 'phone'] as $view) {
+			if (array_key_exists($view, $settings)) {
+				$ordered_settings[$view] = $settings[$view];
+			}
+		}
+		$settings = $ordered_settings;
+
 
 		// normalize
 		if ( isset( $settings ) ) {
@@ -233,8 +248,21 @@ class td_css_res_compiler  {
 
 			$td_options = td_options::get_all();
 
-			if ( function_exists( 'tdc_load_google_fonts' ) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax())) {
-				tdc_load_google_fonts( $compiled_css, $fonts_to_load, $td_options);
+			if ( function_exists( 'tdc_load_google_fonts' ) && ( tdc_state::is_live_editor_iframe() || tdc_state::is_live_editor_ajax() || ( $this->callback === 'tds_locker::cssMedia' ) ) ) {
+				tdc_load_google_fonts( $compiled_css, $fonts_to_load, $td_options );
+			}
+		}
+
+		// Important! For mobile theme, td_global::$viewport_settings is not set, because the shortcodes usually comes with specific css. But there are shortcodes (like those of tds_locker plugin) which need it.
+		// For those shortcodes we set a media viewport with 'all'. but the media query is for phones (@media (max-width: 767px))
+		if ( empty(td_global::$viewport_settings) && class_exists('Mobile_Detect')) {
+			$mobile_detect = new Mobile_Detect();
+			if ( $mobile_detect->isMobile() ) {
+				td_global::$viewport_settings = array(
+					'all' => array(
+						'media_query' => '@media (max-width: 767px)',
+					)
+				);
 			}
 		}
 
@@ -274,6 +302,8 @@ class td_res_context {
 	private $current_media;
 	private $atts;
 
+	private static $registered_atts = array();
+
 	public $index_style;
 
 	// $atts not base64encoded
@@ -307,7 +337,19 @@ class td_res_context {
 	}
 
 	function load_settings_raw( $param_name, $param_value ) {
+		if ( ! td_util::tdc_is_live_editor_iframe() && 0 === strpos( $param_name, 'style_' ) ) {
+			if ( in_array( $param_name, self::$registered_atts ) ) {
+				return;
+			} else {
+				self::$registered_atts[] = $param_name;
+			}
+		}
+
 	    $this->settings[ $this->current_media ][ $param_name ] = $param_value;
+    }
+
+    static function resetRegisteredAtts() {
+    	self::$registered_atts = [];
     }
 
 
@@ -389,6 +431,7 @@ class td_res_context {
 
 	function load_font_settings( $param_name = '', $style_class = '' ) {
 		$font_family_list = td_util::get_font_family_list( false );
+		$tdc_wm_global_fonts = td_util::get_option('tdc_wm_global_fonts' );
 
 		$font_settings = array(
 			'font_family' => 'font-family',
@@ -424,13 +467,28 @@ class td_res_context {
 					$loaded_value = 'DEFAULT';
 
 					if ( empty( $font_setting_value ) ) {
-
 						$font_family_loaded = $loaded_value;
-
 					} else {
 
-						$font_family_loaded = $font_setting_value;
+						if ( strpos( $font_setting_value, '_global' ) !== false ) {
+							$font_setting_option_id = str_replace( '_global', '', $font_setting_value );
+
+							if ( !empty( $tdc_wm_global_fonts ) && is_array( $tdc_wm_global_fonts ) ) {
+								foreach ( $tdc_wm_global_fonts as $font_option_id => $font_data ) {
+
+									if ( $font_option_id === $font_setting_option_id ) {
+										$font_family_loaded = $font_data['key'];
+									}
+
+								}
+							}
+
+						} else {
+							$font_family_loaded = $font_setting_value;
+						}
+
 					}
+
 					break;
 
 				case 'font-size':
@@ -451,8 +509,29 @@ class td_res_context {
 
 			if ( '' !== $font_setting_value ) {
 				if ( 'font-family' === $font_setting ) {
-					if ( 'DEFAULT' !== $font_setting_value && !empty($font_family_list[ $font_setting_value ])) {
-						$param_value .= $font_setting . ':' . $font_family_list[ $font_setting_value ] . ' !important;';
+
+					if ( 'DEFAULT' !== $font_setting_value && !empty( $font_family_list[$font_setting_value] ) ) {
+
+						if ( strpos( $font_setting_value, '_global' ) !== false ) {
+
+							// global fonts
+							$f_var = '';
+							if ( !empty( $tdc_wm_global_fonts ) && is_array( $tdc_wm_global_fonts ) ) {
+								foreach ( $tdc_wm_global_fonts as $font_option_id => $font_data ) {
+
+									if ( $font_data['name'] /*. ' -- ' . trim( $font_data['key'] )*/ === $font_family_list[$font_setting_value] ) {
+										$f_var = 'var(--' . $font_option_id . ')';
+									}
+
+								}
+							}
+
+							$param_value .= $font_setting . ': ' . $f_var . ' !important;';
+
+						} else {
+							$param_value .= $font_setting . ':' . $font_family_list[$font_setting_value] . ' !important;';
+						}
+
 					}
 				} else {
 					$param_value .= $font_setting . ':' . $font_setting_value . ' !important;';
@@ -487,7 +566,7 @@ class td_res_context {
 	}
 
 
-	function load_shadow_settings( $default_shadow_size, $default_shadow_offset_h, $default_shadow_offset_v, $default_shadow_spread, $default_shadow_color, $param_name = '', $style_class = '' ) {
+	function load_shadow_settings( $default_shadow_size, $default_shadow_offset_h, $default_shadow_offset_v, $default_shadow_spread, $default_shadow_color, $param_name = '', $style_class = '', $for_divider = false ) {
 
 		$param_value = '';
 
@@ -523,6 +602,9 @@ class td_res_context {
 
 					$shadow_setting_value = $default_shadow_size;
 				}
+                if ( 'solid' === $shadow_setting_value ) {
+                    $shadow_setting_value = 0;
+                }
 
                 if( $shadow_setting_value < 0 ) {
                     $param_value = 'inset' . $param_value;
@@ -536,8 +618,14 @@ class td_res_context {
             if ( 'shadow_offset_vertical' === $shadow_param_name && '' === $shadow_setting_value ) {
                 $shadow_setting_value = $default_shadow_offset_v;
             }
-            if ( 'shadow_spread' === $shadow_param_name && '' === $shadow_setting_value ) {
-                $shadow_setting_value = $default_shadow_spread;
+            if ( 'shadow_spread' === $shadow_param_name ) {
+                if( $for_divider ) {
+                    continue;
+                }
+
+                if ( '' === $shadow_setting_value ) {
+                    $shadow_setting_value = $default_shadow_spread;
+                }
             }
 			if ( 'shadow_color' === $shadow_param_name && '' === $shadow_setting_value ) {
                 $shadow_setting_value = $default_shadow_color;
@@ -585,4 +673,38 @@ class td_res_context {
 		    }
 	    }
 	}
+
+
+	function get_icon_att( $att_name ) {
+        $icon_class = $this->get_att( $att_name, '', $this->index_style );
+
+        $svg_list = td_global::$svg_theme_font_list;
+
+        if( array_key_exists( $icon_class, $svg_list ) ) {
+            return $svg_list[$icon_class];
+        }
+
+        return $icon_class;
+    }
+
+
+    function calc_full_ad_spot_width( $cols_count, $col_width, $ad_spot_repeat, $ad_loop_full ) {
+
+        $result = $col_width;
+
+        if( $ad_loop_full != '' ) {
+            if( $ad_spot_repeat > ( $cols_count - 1 ) ) {
+                if( $ad_spot_repeat % $cols_count == 0 ) {
+                    $result = 100;
+                } else {
+                    $result = 100 - ( $ad_spot_repeat % $cols_count ) * $col_width;
+                }
+            } else {
+                $result = ( $cols_count - $ad_spot_repeat ) * $col_width;
+            }
+        }
+
+        return $result;
+
+    }
 }

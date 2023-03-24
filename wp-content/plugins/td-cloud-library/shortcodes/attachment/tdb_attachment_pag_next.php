@@ -8,12 +8,35 @@ class tdb_attachment_pag_next extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+
+                /* @style_general_attachment_pag_next */
+                .tdb-attachment-pag-block {
+                  margin: 10px 0 21px 0;
+                }
+                .tdb-attachment-pag-block .tdb-attachment-pag {
+                  position: relative;
+                  display: inline-block;
+                  overflow: hidden;
+                }
+                .tdb-attachment-pag-block img {
+                  width: 100%;
+                }
 
                 /* @img_size */
 				.$unique_block_class .tdb-attachment-pag {
@@ -90,6 +113,8 @@ class tdb_attachment_pag_next extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_attachment_pag_next', 1 );
 
         // images size
         $img_size = $res_ctx->get_shortcode_att( 'img_size' );

@@ -4,12 +4,12 @@
 	Plugin URI: http://tagdiv.com
 	Description: tagDiv Social Counter - Displays your activity on social networks with style. Use it as a cool widget, tagDiv Composer block or shortcode.
 	Author: tagDiv
-	Version: 4.7 | built on 28.02.2020 8:16
+	Version: 5.2 | built on 15.02.2023 13:25
 	Author URI: https://tagdiv.com
 */
 
 //hash
-define('TD_SOCIAL_COUNTER', '5efaf7a3582a25e66757dbbc6689ec87');
+define('TD_SOCIAL_COUNTER', '5387775a540d1c4b705d8df90caf990c');
 
 
 //version check
@@ -25,7 +25,7 @@ class td_social_counter_plugin {
     var $plugin_path = '';
 
     function __construct($load_before_theme = false, $siblings_priority_level = 0) {
-        $this->plugin_path =  dirname(__FILE__);
+        $this->plugin_path = dirname(__FILE__);
         add_action('td_global_after', array($this, 'hook_td_global_after'));
     }
 
@@ -106,33 +106,33 @@ class td_social_counter_plugin {
 						"holder" => "div",
 						"class" => "tdc-textfield-big"
 					),
-//		            array(
-//			            "param_name" => "facebook_app_id",
-//			            "type" => "textfield",
-//			            "value" => "",
-//			            "heading" => __("Facebook App Id", TD_THEME_NAME),
-//			            "description" => "",
-//			            "holder" => "div",
-//			            "class" => "tdc-textfield-big"
-//		            ),
-//		            array(
-//			            "param_name" => "facebook_security_key",
-//			            "type" => "textfield",
-//			            "value" => "",
-//			            "heading" => __("Facebook Security Key", TD_THEME_NAME),
-//			            "description" => "",
-//			            "holder" => "div",
-//			            "class" => "tdc-textfield-big"
-//		            ),
-//		            array(
-//			            "param_name" => "facebook_access_token",
-//			            "type" => "textfield",
-//			            "value" => "",
-//			            "heading" => __("Facebook Access Token", TD_THEME_NAME) . '&nbsp;<a class="td_access_token facebook" href="#">Get Access Token</a><i class="td_access_token_info" style="display: none; color: #F00; margin-left: 10px">Please wait...</i>',
-//			            "description" => "",
-//			            "holder" => "div",
-//			            "class" => "tdc-textfield-big"
-//		            ),
+					//array(
+					//    "param_name" => "facebook_app_id",
+					//    "type" => "textfield",
+					//    "value" => "",
+					//    "heading" => __("Facebook App Id", TD_THEME_NAME),
+					//    "description" => "",
+					//    "holder" => "div",
+					//    "class" => "tdc-textfield-big"
+					//),
+					//array(
+					//    "param_name" => "facebook_security_key",
+					//    "type" => "textfield",
+					//    "value" => "",
+					//    "heading" => __("Facebook Security Key", TD_THEME_NAME),
+					//    "description" => "",
+					//    "holder" => "div",
+					//    "class" => "tdc-textfield-big"
+					//),
+					//array(
+					//    "param_name" => "facebook_access_token",
+					//    "type" => "textfield",
+					//    "value" => "",
+					//    "heading" => __("Facebook Access Token", TD_THEME_NAME) . '&nbsp;<a class="td_access_token facebook" href="#">Get Access Token</a><i class="td_access_token_info" style="display: none; color: #F00; margin-left: 10px">Please wait...</i>',
+					//    "description" => "",
+					//    "holder" => "div",
+					//    "class" => "tdc-textfield-big"
+					//),
 	                array(
 	                    "param_name" => "twitter",
 	                    "type" => "textfield",
@@ -156,7 +156,7 @@ class td_social_counter_plugin {
 	                    "type" => "textfield",
 	                    "value" => "",
 	                    "heading" => __("Youtube id", TD_THEME_NAME),
-	                    "description" => "User: www.youtube.com/user/<b style='color: #000'>ENVATO</b><br/>Channel: www.youtube.com/ <b style='color: #000'>channel/UCJr72fY4cTaNZv7WPbvjaSw</b>",
+	                    "description" => "User: www.youtube.com/user/<b style='color: #000'>ENVATO</b><br/>Channel: www.youtube.com/ <b style='color: #000'>channel/UCJr72fY4cTaNZv7WPbvjaSw</b><br><a href='https://forum.tagdiv.com/youtube-api-key/'>YouTube API Key guide</a>",
 	                    "holder" => "div",
 	                    "class" => "tdc-textfield-big"
 	                ),
@@ -169,33 +169,33 @@ class td_social_counter_plugin {
 						"holder" => "div",
 						"class" => "tdc-textfield-big"
 					),
-	//                array(
-	//                    "param_name" => "vimeo",
-	//                    "type" => "textfield",
-	//                    "value" => "",
-	//                    "heading" => __("Vimeo id", TD_THEME_NAME),
-	//                    "description" => "",
-	//                    "holder" => "div",
-	//                    "class" => "tdc-textfield-big"
-	//                ),
-//	                array(
-//	                    "param_name" => "googleplus",
-//	                    "type" => "textfield",
-//	                    "value" => '',
-//	                    "heading" => __("Google Plus User", TD_THEME_NAME),
-//	                    "description" => "",
-//	                    "holder" => "div",
-//	                    "class" => "tdc-textfield-big"
-//	                ),
-//					array(
-//						"param_name" => "manual_count_googleplus",
-//						"type" => "textfield",
-//						"value" => '',
-//						"heading" => __("Google+ fixed count", TD_THEME_NAME),
-//						"description" => "Add a fixed followers count for google plus",
-//						"holder" => "div",
-//						"class" => "tdc-textfield-big"
-//					),
+					//array(
+					//    "param_name" => "vimeo",
+					//    "type" => "textfield",
+					//    "value" => "",
+					//    "heading" => __("Vimeo id", TD_THEME_NAME),
+					//    "description" => "",
+					//    "holder" => "div",
+					//    "class" => "tdc-textfield-big"
+					//),
+					//array(
+					//    "param_name" => "googleplus",
+					//    "type" => "textfield",
+					//    "value" => '',
+					//    "heading" => __("Google Plus User", TD_THEME_NAME),
+					//    "description" => "",
+					//    "holder" => "div",
+					//    "class" => "tdc-textfield-big"
+					//),
+					//array(
+					//	"param_name" => "manual_count_googleplus",
+					//	"type" => "textfield",
+					//	"value" => '',
+					//	"heading" => __("Google+ fixed count", TD_THEME_NAME),
+					//	"description" => "Add a fixed followers count for google plus",
+					//	"holder" => "div",
+					//	"class" => "tdc-textfield-big"
+					//),
 	                array(
 	                    "param_name" => "instagram",
 	                    "type" => "textfield",
@@ -229,6 +229,24 @@ class td_social_counter_plugin {
 						"value" => "",
 						"heading" => __("Pinterest fixed count", TD_THEME_NAME),
 						"description" => "Add a fixed followers count for pinterest",
+						"holder" => "div",
+						"class" => "tdc-textfield-big"
+					),
+					array(
+						"param_name" => "tiktok",
+						"type" => "textfield",
+						"value" => "",
+						"heading" => __("TikTok username", TD_THEME_NAME),
+						"description" => "User: @username OR @username/video_id",
+						"holder" => "div",
+						"class" => "tdc-textfield-big"
+					),
+					array(
+						"param_name" => "manual_count_tiktok",
+						"type" => "textfield",
+						"value" => "",
+						"heading" => __("TikTok fixed count", TD_THEME_NAME),
+						"description" => "Add a fixed followers count for TikTok",
 						"holder" => "div",
 						"class" => "tdc-textfield-big"
 					),
@@ -268,6 +286,16 @@ class td_social_counter_plugin {
 						"holder" => "div",
 						"class" => "tdc-textfield-big"
 					),
+					// twitch
+	                array(
+		                "param_name" => "twitch",
+		                "type" => "textfield",
+		                "value" => '',
+		                "heading" => __("Twitch User Login Name", TD_THEME_NAME),
+		                "description" => "The login name of the user to get.",
+		                "holder" => "div",
+		                "class" => "tdc-textfield-big"
+	                ),
 	                array(
 	                    "param_name" => "open_in_new_window",
 	                    "type" => "dropdown",
@@ -446,6 +474,9 @@ class td_social_counter_plugin {
 
 	    add_action('admin_enqueue_scripts', 'td_on_admin_enqueue_scripts');
 	    function td_on_admin_enqueue_scripts($admin_page) {
+	    	if ( ! empty($_GET['action'] ) && 'update-selected-themes' === $_GET['action']) {
+                return;
+            }
 		    wp_enqueue_script('td_social_counter', plugin_dir_url( __FILE__ ) . 'js/td_social_counter.js', array('jquery'), false, true);
 	    }
     }

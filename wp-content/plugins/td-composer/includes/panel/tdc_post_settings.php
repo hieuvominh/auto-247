@@ -64,6 +64,7 @@ global $post;
                         array('text' => 'next posts', 'val' => 'next', 'descr' => 'Next published post - load posts that were published after the current post.'),
                         array('text' => 'same category previous', 'val' => 'same_cat_prev', 'descr' => 'Same category previous - load older posts that are in the same category as the current post.'),
                         array('text' => 'same category next', 'val' => 'same_cat_next', 'descr' => 'Same category next - load newer posts that are in the same category as the current post.'),
+                        array('text' => 'same category latest', 'val' => 'same_cat_latest', 'descr' => 'Same category latest - load latest posts that are in the same category as the current post.'),
                     )
                 ));
                 ?>
@@ -104,7 +105,12 @@ global $post;
 
         <?php echo td_panel_generator::box_end(); ?>
 
-    <?php } ?>
+    <?php }
+
+    // Extensions add their content in 'tdc-live-panel' (usually their own hidden input fields that will be saved by composer - see 'tdc_extension_save' action)
+    do_action( 'tdc_extension_settings' );
+
+    ?>
 
 </form>
 

@@ -1,6 +1,60 @@
 <?php
 
 
+add_filter('manage_pages_columns', function($columns) {
+    $columns['tdb_mobile_template'] = 'Mobile Page';
+    $columns['tdb_is_mobile_template'] = 'Is Mobile Template';
+
+    return $columns;
+});
+
+/**
+ * Add custom data to the columns on wp-admin page list
+ */
+add_action('manage_pages_custom_column' , function($column, $post_id) {
+
+    switch( $column ) {
+
+        case 'tdb_mobile_template':
+
+        	$tdc_mobile_template_id = get_post_meta( $post_id, 'tdc_mobile_template_id', true );
+
+	    	if ( !empty($tdc_mobile_template_id ) ) {
+		        $mobile_template = get_post($tdc_mobile_template_id);
+		        if ( $mobile_template instanceof WP_Post) {
+
+		        	if ( 'publish' !== get_post_status( $tdc_mobile_template_id ) ) {
+		        		break;
+			        }
+
+		        	$tdb_template_type = get_post_meta( $tdc_mobile_template_id, 'tdb_template_type', true );
+					if ( empty( $tdb_template_type ) ) {
+						$tdb_template_type = 'page';
+					}
+
+		            echo sprintf( '<b><a target="_blank" href="%s">%s</a></b>', get_edit_post_link($mobile_template->ID), $mobile_template->post_title );
+		            echo '<br><a target="_blank" href="' . admin_url( 'post.php?post_id=' . $mobile_template->ID . '&td_action=tdc&tdbTemplateType=' . $tdb_template_type . '&prev_url='  . rawurlencode(tdc_util::get_current_url()) ) . '">Edit with TD Composer</a>';
+		        }
+		    }
+
+	    	break;
+
+	    case 'tdb_is_mobile_template':
+
+	    	$tdc_mobile_template_id = get_post_meta( $post_id, 'tdc_is_mobile_template', true );
+
+		    if ( empty($tdc_mobile_template_id ) ) {
+	            echo '-';
+		    } else {
+	            echo 'Yes';
+	        }
+
+	    	break;
+    }
+
+}, 10, 2 );
+
+
 /**
  * Add custom columns on wp-admin cpt list
  */
@@ -8,6 +62,8 @@ add_filter('manage_tdb_templates_posts_columns', function($columns) {
     $date = $columns['date'];
     unset($columns['date']);
     $columns['tdb_template_type'] = 'Template Type';
+    $columns['tdb_mobile_template'] = 'Mobile Template';
+    $columns['tdb_is_mobile_template'] = 'Is Mobile Template';
     $columns['tdb_used_on'] = 'Used On';
     $columns['date'] = $date;
 
@@ -268,15 +324,15 @@ add_filter('manage_edit-tdb_templates_sortable_columns', function ( $columns ) {
 /**
  * add filter support on wp-admin cpt list
  */
-add_action( 'restrict_manage_posts', 'my_restrict_manage_posts' );
-function my_restrict_manage_posts($post_type) {
+add_action( 'restrict_manage_posts', 'tdb_restrict_manage_posts' );
+function tdb_restrict_manage_posts($post_type) {
 
     // only display these taxonomy filters on desired custom post_type listings
-    if ( $post_type == 'tdb_templates' ) {
+    if ( 'tdb_templates' === $post_type ) {
 
-        // output html for templates type dropdown filter
+        // output select html for templates type dropdown filter
         echo '<select name="template_type" id="template_type" class="postform">';
-        echo "<option value=''>Show All Types</option>";
+        echo "<option value=''>All Template Types</option>";
 
         $filters = array(
 	        'header',
@@ -291,14 +347,47 @@ function my_restrict_manage_posts($post_type) {
             'tag'
         );
 
-        foreach ( $filters as $template_type ) {
+	    $filters = apply_filters( 'tdb_template_types', $filters );
 
-            $selected = isset($_GET['template_type'])? $_GET['template_type'] : null;
+	    foreach ( $filters as $template_type ) {
+            $selected = $_GET['template_type'] ?? null;
             $template_name = ucfirst($template_type);
-
             // output each select option line, check against the last $_GET to show the current option selected
             echo '<option value='. $template_type, $selected == $template_type ? ' selected="selected"' : '','>' . $template_name .'</option>';
+        }
 
+        echo "</select>";
+
+	    echo '<select name="is_mobile_template" id="is_mobile_template" class="postform">';
+	    echo "<option value=''>Show All Types</option>";
+
+        $mob_template_type_filters = array(
+	        'normal',
+            'mobile',
+        );
+
+        foreach ( $mob_template_type_filters as $template_type ) {
+            $selected = $_GET['is_mobile_template'] ?? null;
+            // output each select option line, check against the last $_GET to show the current option selected
+            echo '<option value='. $template_type, $selected == $template_type ? ' selected="selected"' : '','>' . ucfirst($template_type) .'</option>';
+        }
+
+	    echo "</select>";
+
+    } else if ( 'page' === $post_type ) {
+
+    	echo '<select name="is_mobile_template" id="is_mobile_template" class="postform">';
+	    echo "<option value=''>All Page Types</option>";
+
+        $page_type_filters = array(
+	        'normal',
+            'mobile',
+        );
+
+        foreach ( $page_type_filters as $page_type ) {
+            $selected = $_GET['is_mobile_template'] ?? null;
+            // output each select option line, check against the last $_GET to show the current option selected
+            echo '<option value='. $page_type, $selected == $page_type ? ' selected="selected"' : '','>' . ucfirst($page_type) .'</option>';
         }
 
         echo "</select>";
@@ -308,31 +397,84 @@ function my_restrict_manage_posts($post_type) {
 /**
  * change the links for each item on wp-admin cpt list
  */
-add_filter('page_row_actions', function ($actions, $post) {
-    global $current_screen;
-    if ( ( !empty($current_screen) && $current_screen->post_type != 'tdb_templates' ) || get_post_status( $post ) === 'trash') {
+add_filter( 'page_row_actions', function ( $actions, $post ) {
+	global $current_screen;
+
+    $post_types_array = array( 'tdb_templates', 'page' );
+    if ( ( !empty( $current_screen ) && !in_array( $current_screen->post_type, $post_types_array ) ) || get_post_status( $post ) === 'trash' ) {
         return $actions;
     }
+	if ( is_user_logged_in() && current_user_can('publish_pages') && $post->ID !== (int) get_option( 'page_for_posts' ) ) {
+		$tdb_template_type = get_post_meta( $post->ID, 'tdb_template_type', true );
 
-    $tdb_template_type = get_post_meta($post->ID, 'tdb_template_type', true);
+		// remove the default td-composer edit
+		unset( $actions['edit_tdc_composer'] );
 
-    // remove the default td-composer edit
-    unset($actions['edit_tdc_composer']);
+		// WP Page is not a tdb_template
+        if ( $tdb_template_type == '' && $current_screen->post_type === 'page' ) {
+            $tdb_template_type = 'page';
+        }
 
-    if ( 'footer' !== $tdb_template_type ) {
+        $actions = array_merge(
+			array(
+				'edit_tdc_composer' => '<a href="' . admin_url( 'post.php?post_id=' . $post->ID . '&td_action=tdc&tdbTemplateType=' . $tdb_template_type . '&prev_url=' . rawurlencode( tdc_util::get_current_url() ) ) . '">Edit with TagDiv Composer</a>'
+			),
+			$actions
+		);
 
-	    $actions = array_merge(
-		    array(
-			    'edit_tdc_composer' => '<a href="' . admin_url( 'post.php?post_id=' . $post->ID . '&td_action=tdc&tdbTemplateType=' . $tdb_template_type . '&prev_url=' . rawurlencode( tdc_util::get_current_url() ) ) . '">Edit template</a>'
-		    ),
-		    $actions
-	    );
-    }
+        $actions['duplicate'] = '<a data-post-id="' . $post->ID . '" data-template-type="' . $tdb_template_type . '" data-template-name="' . get_the_title( $post->ID ) . '" class="tdb-duplicate-template" href="#" title="Duplicate this template." >Duplicate</a><span class="tdb-working-prompt">Working...</span>';
 
-    $actions['duplicate'] = '<a data-post-id="' . $post->ID . '" data-template-type="' . $tdb_template_type . '" data-template-name="' . get_the_title( $post->ID ) . '" class="tdb-duplicate-template" href="#" title="Duplicate this template." >Duplicate</a><span class="tdb-working-prompt">Working...</span>';
-
-    unset($actions['inline hide-if-no-js']); // hide quick edit
+        if ( 'page' !== $tdb_template_type ) {
+            unset($actions['inline hide-if-no-js']); // hide quick edit
+        }
+	}
 
     return $actions;
+
 }, 11, 2 );
 
+/**
+ * exclude tdb_templates cpt from theme's cpt support
+ */
+add_filter( 'td_custom_post_types', function ( $td_cpts ) {
+	$tdb_templates = array_search( 'tdb_templates', $td_cpts );
+	if( $tdb_templates !== false ) {
+		unset( $td_cpts[$tdb_templates] );
+	}
+	return $td_cpts;
+}, 10, 1 );
+
+/**
+ * ensure statuses are correctly reassigned when restoring cloud templates
+ *
+ * @param string $new_status      The new status of the post being restored.
+ * @param int    $post_id         The ID of the post being restored.
+ * @param string $previous_status The status of the post at the point where it was trashed.
+ * @return string
+ */
+add_filter( 'wp_untrash_post_status', function ( $new_status, $post_id, $previous_status ) {
+
+	if ( get_post_type( $post_id ) === 'tdb_templates' ) {
+		$new_status = $previous_status;
+	}
+
+	return $new_status;
+
+}, 10, 3 );
+
+/**
+ * cloud templates wp-admin redesign: new cloud templates manager page
+ */
+add_action( 'admin_menu', function () {
+	add_menu_page(
+		'tagDiv Cloud templates',
+		'Cloud templates',
+		'manage_categories',
+		'tdb_cloud_templates',
+		function () {
+			require_once TDB_TEMPLATE_BUILDER_DIR . '/includes/admin/templates/cloud-templates.php';
+		},
+		null,
+		27
+	);
+});

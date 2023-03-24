@@ -8,12 +8,38 @@ class tdb_header_date extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
+                
+                /* @style_general_header_date */
+                .tdb_header_date {
+                  margin-bottom: 0;
+                  clear: none;
+                }
+                .tdb_header_date .tdb-block-inner {
+                  display: flex;
+                  align-items: baseline;
+                }
+                .tdb_header_date .tdb-head-date-txt {
+                  font-family: 'Open Sans', 'Open Sans Regular', sans-serif;
+                  font-size: 11px;
+                  line-height: 1;
+                  color: #000;
+                }
                 
                 /* @inline */
                 .$unique_block_class {
@@ -56,6 +82,9 @@ class tdb_header_date extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_header_date', 1 );
+        $res_ctx->load_settings_raw( 'style_general_header_align', 1 );
 
         // make inline
         $res_ctx->load_settings_raw('inline', $res_ctx->get_shortcode_att('inline'));
@@ -116,8 +145,9 @@ class tdb_header_date extends td_block {
 
 
             $buffy .= '<div class="tdb-block-inner td-fix-index">';
-
-                $buffy .= '<div class="tdb-head-date-txt">' . date_i18n(stripslashes($data_format)) . '</div>';
+               
+                //Note that composer stripslash pagebuilder content, so we need double backslash for date format to escape
+                $buffy .= '<div class="tdb-head-date-txt">' . date_i18n($data_format) . '</div>';
 
             $buffy .= '</div>';
 

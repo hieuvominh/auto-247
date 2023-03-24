@@ -9,6 +9,20 @@
 //read the logo + retina logo
 $td_customLogo = td_util::get_option('tds_logo_upload');
 $td_customLogoR = td_util::get_option('tds_logo_upload_r');
+$logo_image_size = '';
+
+if ($td_customLogo !== '') {
+    $td_logo_headers = @get_headers($td_customLogo);
+
+    if ( $td_logo_headers && strpos($td_logo_headers[0],'200') !== false ) {
+        if ( function_exists('wp_getimagesize') )  {
+            $info_img = wp_getimagesize($td_customLogo);
+            if ( is_array($info_img) ) {
+                $logo_image_size = $info_img[3];
+            }
+        }
+    }
+}
 
 $td_logo_alt = td_util::get_option('tds_logo_alt');
 $td_logo_title = td_util::get_option('tds_logo_title');
@@ -45,7 +59,7 @@ if (!empty($td_customLogoR)) { // if retina
     };
     ?>
         <a class="td-main-logo" href="<?php echo esc_url(home_url( '/' )); ?>">
-            <img class="td-retina-data" data-retina="<?php echo esc_attr($td_customLogoR) ?>" src="<?php echo $td_customLogo?>" alt="<?php echo $td_logo_alt ?>"<?php echo $td_logo_title ?>/>
+            <img class="td-retina-data" data-retina="<?php echo esc_attr($td_customLogoR) ?>" src="<?php echo $td_customLogo?>" alt="<?php echo $td_logo_alt ?>"<?php echo $td_logo_title . ' ' . $logo_image_size ?>/>
             <span class="td-visual-hidden"><?php bloginfo('name'); ?></span>
         </a>
     <?php
@@ -59,7 +73,7 @@ if (!empty($td_customLogoR)) { // if retina
         };
         ?>
             <a class="td-main-logo" href="<?php echo esc_url(home_url( '/' )); ?>">
-                <img src="<?php echo $td_customLogo?>" alt="<?php echo $td_logo_alt ?>"<?php echo $td_logo_title ?>/>
+                <img src="<?php echo $td_customLogo?>" alt="<?php echo $td_logo_alt ?>"<?php echo $td_logo_title . ' ' . $logo_image_size ?>/>
                 <span class="td-visual-hidden"><?php bloginfo('name'); ?></span>
             </a>
         <?php

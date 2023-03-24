@@ -4,13 +4,34 @@ class td_block_text_with_title extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
 
+				/* @style_general_text_with_title */
+				.td_block_text_with_title {
+                  margin-bottom: 44px;
+                  -webkit-transform: translateZ(0);
+                  transform: translateZ(0);
+                }
+                .td_block_text_with_title p:last-child {
+                  margin-bottom: 0;
+                }
+
+				
 				/* @f_post */
 				.$unique_block_class,
                 .$unique_block_class p {
@@ -91,6 +112,8 @@ class td_block_text_with_title extends td_block {
     }
 
     static function cssMedia( $res_ctx ) {
+
+        $res_ctx->load_settings_raw( 'style_general_text_with_title', 1 );
 
         /*-- fonts -- */
         $res_ctx->load_font_settings( 'f_post' );

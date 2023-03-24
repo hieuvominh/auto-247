@@ -33,15 +33,37 @@ class tdb_state_search extends tdb_state_base {
         // search page posts loop
         $this->loop = function ( $atts ) {
 
-            // previous text icon class
-            $prev_class = 'td-icon-menu-left';
+            $svg_list = td_global::$svg_theme_font_list;
+
+            // previous text icon
+            $prev_icon_html = '<i class="page-nav-icon td-icon-menu-left"></i>';
             if( isset( $atts['prev_tdicon'] ) ) {
-                $prev_class = $atts['prev_tdicon'];
+                $prev_icon = $atts['prev_tdicon'];
+                $prev_icon_data = '';
+                if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+                    $prev_icon_data = 'data-td-svg-icon="' . $prev_icon . '"';
+                }
+
+                if( array_key_exists( $prev_icon, $svg_list ) ) {
+                    $prev_icon_html = '<div class="page-nav-icon page-nav-icon-svg" ' . $prev_icon_data . '>' . base64_decode( $svg_list[$prev_icon] ) . '</div>';
+                } else {
+                    $prev_icon_html = '<i class="page-nav-icon ' . $prev_icon . '"></i>';
+                }
             }
-            // next text icon class
-            $next_class = 'td-icon-menu-right';
+            // next text icon
+            $next_icon_html = '<i class="page-nav-icon td-icon-menu-right"></i>';
             if( isset( $atts['next_tdicon'] ) ) {
-                $next_class = $atts['next_tdicon'];
+                $next_icon = $atts['next_tdicon'];
+                $next_icon_data = '';
+                if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+                    $next_icon_data = 'data-td-svg-icon="' . $next_icon . '"';
+                }
+
+                if( array_key_exists( $next_icon, $svg_list ) ) {
+                    $next_icon_html = '<div class="page-nav-icon page-nav-icon-svg" ' . $next_icon_data . '>' . base64_decode( $svg_list[$next_icon] ) . '</div>';
+                } else {
+                    $next_icon_html = '<i class="page-nav-icon ' . $next_icon . '"></i>';
+                }
             }
 
             // pagination options
@@ -51,8 +73,8 @@ class tdb_state_search extends tdb_state_base {
                 'page_text'     => '%PAGE_NUMBER%',
                 'first_text'    => __td( '1' ),
                 'last_text'     => __td( '%TOTAL_PAGES%' ),
-                'next_text'     => '<i class="' . $next_class . '"></i>',
-                'prev_text'     => '<i class="' . $prev_class . '"></i>',
+                'next_text'     => $next_icon_html,
+                'prev_text'     => $prev_icon_html,
                 'dotright_text' => __td( '...' ),
                 'dotleft_text'  => __td( '...' ),
                 'num_pages'     => 3,
@@ -67,8 +89,8 @@ class tdb_state_search extends tdb_state_base {
                 'start_page' => 1,
                 'end_page' => 3,
                 'pages_to_show' => 3,
-                'previous_posts_link' => '<a href="#"><i class="' . $prev_class . '"></i></a>',
-                'next_posts_link' => '<a href="#"><i class="' . $next_class . '"></i></a>'
+                'previous_posts_link' => '<a href="#">' . $prev_icon_html . '</a>',
+                'next_posts_link' => '<a href="#">' . $next_icon_html . '</a>'
             );
 
             // posts limit - by default get the global wp loop posts limit setting
@@ -89,7 +111,7 @@ class tdb_state_search extends tdb_state_base {
                 'offset'     => $offset
             );
 
-            for ( $i = $offset; $i < $limit + $offset; $i++ ) {
+            for ( $i = (int)$offset; $i < (int)$limit + (int)$offset; $i++ ) {
                 $dummy_data_array['loop_posts'][$i] = array(
                     'post_id' => '-' . $i, // negative post_id to avoid conflict with existent posts
                     'post_type' => 'sample',
@@ -306,8 +328,6 @@ class tdb_state_search extends tdb_state_base {
 
             return $data_array;
         };
-
-
 
 
         parent::lock_state_definition();

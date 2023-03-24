@@ -1009,7 +1009,6 @@ class td_page_generator {
         if($larger_end_page_end > $max_page) {
             $larger_end_page_end = $max_page;
         }
-
         if($max_page > 1 || intval($pagenavi_options['always_show']) == 1) {
             $pages_text = str_replace("%CURRENT_PAGE%", number_format_i18n($paged), $pagenavi_options['pages_text']);
             $pages_text = str_replace("%TOTAL_PAGES%", number_format_i18n($max_page), $pages_text);
@@ -1224,17 +1223,18 @@ class td_page_generator {
 
 
     static function no_posts() {
-        if (td_global::$custom_no_posts_message === false) {
+        if ( td_global::$custom_no_posts_message === false ) {
             return '';
         } else {
 
             $buffy = '<div class="no-results td-pb-padding-side">';
-            if (empty(td_global::$custom_no_posts_message)) {
-                $buffy .= '<h2>' . __td('No posts to display', TD_THEME_NAME) . '</h2>';
+            if ( empty( td_global::$custom_no_posts_message ) ) {
+                $buffy .= '<h2>' . __td('No posts to display', TD_THEME_NAME ) . '</h2>';
             } else {
                 $buffy .= '<h2>' . td_global::$custom_no_posts_message . '</h2>';
             }
             $buffy .= '</div>';
+
             return $buffy;
         }
 

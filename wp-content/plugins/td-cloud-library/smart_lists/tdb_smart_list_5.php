@@ -31,7 +31,11 @@ class tdb_smart_list_5 extends td_smart_list {
                 // render the pagination
                 $buffy .= $this->callback_render_pagination();
 
-                $buffy .= '<h2><span class="tdb-sml-current-item-title">' . $current_item_number. '. ' . $item_array['title'] . '</span></h2>';
+            $sm_title_tag = 'h2';
+            if ( isset($this->atts['sm_title_tag']) ) {
+                $sm_title_tag = $this->atts['sm_title_tag'];
+            }
+            $buffy .= '<' . $sm_title_tag . '><span class="tdb-sml-current-item-title">' . $current_item_number. '. ' . $item_array['title'] . '</span></' . $sm_title_tag . '>';
             $buffy .= '</div>';
 
 
@@ -73,7 +77,7 @@ class tdb_smart_list_5 extends td_smart_list {
                 $srcset_sizes = td_util::get_srcset_sizes($item_array['first_img_id'], $image_type, $image_width, $first_img_info[0]);
 
                 // class used by magnific popup
-                $smart_list_lightbox = " td-lightbox-enabled";
+            $smart_list_lightbox = 	td_util::get_option('tds_smart_list_modal_image') !== 'hide' ? " td-lightbox-enabled" : '';
 
                 // if a custom link is set use it
                 if (!empty($item_array['first_img_link']) && $first_img_src != $item_array['first_img_link']) {
@@ -81,9 +85,7 @@ class tdb_smart_list_5 extends td_smart_list {
 
                     // remove the magnific popup class for custom links
                     $smart_list_lightbox = "";
-                }
-
-                $buffy .= '
+                    $buffy .= '
                             <figure class="tdb-slide-smart-list-figure td-slide-smart-list-7' . $smart_list_lightbox . '">
                                 <a class="td-sml-link-to-image" href="' . $first_img_src . '" data-caption="' . esc_attr($first_img_caption, ENT_QUOTES) . '" ' . $first_img_link_target . ' >
                                     <img src="' . $first_img_info[0] . '"' . $srcset_sizes . ' alt="' . $first_img_alt . '"/>
@@ -91,6 +93,25 @@ class tdb_smart_list_5 extends td_smart_list {
                             </figure>
                             <figcaption class="tdb-sml-caption"><div>' . $first_img_caption . '</div></figcaption>
                             ';
+                } elseif ( td_util::get_option('tds_smart_list_modal_image') === 'hide') {
+                    $buffy .= '
+                            <figure class="tdb-slide-smart-list-figure td-slide-smart-list-7' . $smart_list_lightbox . '">
+                                    <img src="' . $first_img_info[0] . '"' . $srcset_sizes . ' alt="' . $first_img_alt . '"/>
+                            </figure>
+                            <figcaption class="tdb-sml-caption"><div>' . $first_img_caption . '</div></figcaption>
+                            ';
+                } else {
+                    $buffy .= '
+                            <figure class="tdb-slide-smart-list-figure td-slide-smart-list-7' . $smart_list_lightbox . '">
+                                <a class="td-sml-link-to-image" href="' . $first_img_src . '" data-caption="' . esc_attr($first_img_caption, ENT_QUOTES) . '" ' . $first_img_link_target . ' >
+                                    <img src="' . $first_img_info[0] . '"' . $srcset_sizes . ' alt="' . $first_img_alt . '"/>
+                                </a>
+                            </figure>
+                            <figcaption class="tdb-sml-caption"><div>' . $first_img_caption . '</div></figcaption>
+                            ';
+                }
+
+
             }
 
         $buffy .= '</div>';

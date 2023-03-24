@@ -23,23 +23,78 @@
     </div>
 </div>
 
-<!-- set general modal image -->
+    <!-- set smartlist modal image -->
+    <div class="td-box-row">
+        <div class="td-box-description">
+            <span class="td-box-title">Smartlist MODAL IMAGE</span>
+            <p>Enable or disable general modal image viewer over all smart list images.</p>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::checkbox(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_smart_list_modal_image',
+                'true_value' => '',
+                'false_value' => 'hide'
+            ));
+            ?>
+        </div>
+    </div>
+
+<!-- enable/disable Reviews -->
 <div class="td-box-row">
     <div class="td-box-description">
-        <span class="td-box-title">Disable article schema</span>
-        <p>Activating the option will disable the schema.org/Article markups in the theme. Use this when you use an SEO plugin that comes with its own markups.</p>
+        <span class="td-box-title">Reviews system</span>
+        <p>Enable or disable the Reviews in WordPress menu.</p>
+    </div>
+    <div class="td-box-control-full">
+        <?php
+        echo td_panel_generator::checkbox(array(
+            'ds' => 'td_option',
+            'option_id' => 'tds_reviews',
+            'true_value' => '',
+            'false_value' => 'hide'
+        ));
+        ?>
+    </div>
+</div>
+
+
+<!-- set theme article schema -->
+<div class="td-box-row">
+    <div class="td-box-description">
+        <span class="td-box-title">Enable article schema</span>
+        <p>This option will enable the schema.org/Article markups in the theme. You can deactivate this, when you use an SEO plugin that comes with its own markups.</p>
     </div>
     <div class="td-box-control-full">
         <?php
         echo td_panel_generator::checkbox(array(
             'ds' => 'td_option',
             'option_id' => 'tds_disable_article_schema',
-            'true_value' => 'yes',
-            'false_value' => ''
+            'true_value' => '',
+            'false_value' => 'hide'
         ));
         ?>
     </div>
 </div>
+
+    <!-- add Aggregate Rating meta -->
+    <div class="td-box-row">
+        <div class="td-box-description">
+            <span class="td-box-title">Add AggregateRating schema</span>
+            <p>This option will enable the schema.org/AggregateRating markups for the theme reviews. The votes count will replace the post author in search. </p>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::checkbox(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_aggregate_rating_schema',
+                'true_value' => 'yes',
+                'false_value' => ''
+            ));
+            ?>
+        </div>
+    </div>
     <?php echo td_panel_generator::box_end(); ?>
 
 <?php } ?>
@@ -55,9 +110,20 @@
         </div>
         <div class="td-box-control-full">
             <?php
+            $option_id = 'td_default_site_post_template';
+            if (class_exists('SitePress', false)) {
+                global $sitepress;
+                $sitepress_settings = $sitepress->get_settings();
+                if ( isset($sitepress_settings['custom_posts_sync_option'][ 'tdb_templates']) ) {
+                    $translation_mode = (int)$sitepress_settings['custom_posts_sync_option']['tdb_templates'];
+                    if (1 === $translation_mode) {
+                        $option_id .= $sitepress->get_current_language();
+                    }
+                }
+            }
             echo td_panel_generator::visual_select_o(array(
                 'ds' => 'td_option',
-                'option_id' => 'td_default_site_post_template',
+                'option_id' => $option_id,
                 'values' => td_api_single_template::_helper_td_global_list_to_panel_values()
             ));
             ?>
@@ -308,23 +374,23 @@
         </div>
     </div>
 
-    <!-- set general modal image -->
-    <div class="td-box-row">
-        <div class="td-box-description">
-            <span class="td-box-title">Disable article schema</span>
-            <p>Activating the option will disable the schema.org/Article markups in the theme. Use this when you use an SEO plugin that comes with its own markups.</p>
-        </div>
-        <div class="td-box-control-full">
-            <?php
-            echo td_panel_generator::checkbox(array(
-                'ds' => 'td_option',
-                'option_id' => 'tds_disable_article_schema',
-                'true_value' => 'yes',
-                'false_value' => ''
-            ));
-            ?>
-        </div>
+<!-- set theme article schema -->
+<div class="td-box-row">
+    <div class="td-box-description">
+        <span class="td-box-title">Enable article schema</span>
+        <p>This option will enable the schema.org/Article markups in the theme. You can deactivate this, when you use an SEO plugin that comes with its own markups.</p>
     </div>
+    <div class="td-box-control-full">
+        <?php
+        echo td_panel_generator::checkbox(array(
+            'ds' => 'td_option',
+            'option_id' => 'tds_disable_article_schema',
+            'true_value' => '',
+            'false_value' => 'hide'
+        ));
+        ?>
+    </div>
+</div>
 
 <?php } ?>
 
@@ -488,218 +554,6 @@
     <?php echo td_panel_generator::box_end();
 }?>
 
-
-
-<!-- sharing -->
-<?php echo td_panel_generator::box_start('Sharing', false);
-    if ( 'Newsmag' == TD_THEME_NAME || ( 'Newspaper' == TD_THEME_NAME && defined('TD_STANDARD_PACK') ) ) { ?>
-
-        <!-- text -->
-        <div class="td-box-row">
-            <div class="td-box-description td-box-full">
-                <p>All the articles of <?php echo TD_THEME_NAME ?> have sharing buttons at the start of the article
-                    (usually under the title) and at the end of the article (after tags). You can sort the social
-                    networks with drag and drop.</p>
-            </div>
-            <div class="td-box-row-margin-bottom"></div>
-        </div>
-
-
-        <div class="td-box-section-separator"></div>
-
-
-        <!-- ARTICLE sharing top -->
-        <div class="td-box-row">
-            <div class="td-box-description">
-                <span class="td-box-title">TOP ARTICLE SHARING</span>
-                <p>Show or hide the top article sharing on single post</p>
-            </div>
-            <div class="td-box-control-full">
-                <?php
-                echo td_panel_generator::checkbox(array(
-                    'ds' => 'td_option',
-                    'option_id' => 'tds_top_social_show',
-                    'true_value' => '',
-                    'false_value' => 'hide'
-                ));
-                ?>
-            </div>
-        </div>
-
-        <!-- ARTICLE top like -->
-        <div class="td-box-row">
-            <div class="td-box-description">
-                <span class="td-box-title">TOP ARTICLE LIKE</span>
-                <p>Show or hide the top article like on single post</p>
-            </div>
-            <div class="td-box-control-full">
-                <?php
-                echo td_panel_generator::checkbox(array(
-                    'ds' => 'td_option',
-                    'option_id' => 'tds_top_like_show',
-                    'true_value' => 'show',
-                    'false_value' => ''
-                ));
-                ?>
-            </div>
-        </div>
-
-        <!-- ARTICLE top share text -->
-        <div class="td-box-row">
-            <div class="td-box-description">
-                <span class="td-box-title">TOP ARTICLE SHARE TEXT</span>
-                <p>Show or hide the top article share text on single post</p>
-            </div>
-            <div class="td-box-control-full">
-                <?php
-                echo td_panel_generator::checkbox(array(
-                    'ds' => 'td_option',
-                    'option_id' => 'tds_top_like_share_text_show',
-                    'true_value' => 'show',
-                    'false_value' => ''
-                ));
-                ?>
-            </div>
-        </div>
-
-        <!-- TOP sharing style -->
-        <div class="td-box-row">
-            <div class="td-box-description">
-                <span class="td-box-title">TOP SHARE BUTTONS STYLE</span>
-                <p>Change the appearance of the top sharing buttons.</p>
-            </div>
-            <div class="td-box-control-full">
-                <?php
-                echo td_panel_generator::visual_select_o(array(
-                    'ds' => 'td_option',
-                    'option_id' => 'tds_social_sharing_top_style',
-                    'values' => td_api_social_sharing_styles::_helper_social_sharing_to_panel_values()
-                ));
-                ?>
-            </div>
-        </div>
-
-
-        <div class="td-box-section-separator"></div>
-
-
-        <!-- ARTICLE sharing bottom -->
-        <div class="td-box-row">
-            <div class="td-box-description">
-                <span class="td-box-title">BOTTOM ARTICLE SHARING</span>
-                <p>Show or hide the bottom article sharing on post</p>
-            </div>
-            <div class="td-box-control-full">
-                <?php
-                echo td_panel_generator::checkbox(array(
-                    'ds' => 'td_option',
-                    'option_id' => 'tds_bottom_social_show',
-                    'true_value' => '',
-                    'false_value' => 'hide'
-                ));
-                ?>
-            </div>
-        </div>
-
-
-        <!-- ARTICLE bottom like -->
-        <div class="td-box-row">
-            <div class="td-box-description">
-                <span class="td-box-title">BOTTOM ARTICLE LIKE</span>
-                <p>Show or hide the bottom article like on post</p>
-            </div>
-            <div class="td-box-control-full">
-                <?php
-                echo td_panel_generator::checkbox(array(
-                    'ds' => 'td_option',
-                    'option_id' => 'tds_bottom_like_show',
-                    'true_value' => '',
-                    'false_value' => 'hide'
-                ));
-                ?>
-            </div>
-        </div>
-
-        <!-- ARTICLE bottom share text -->
-        <div class="td-box-row">
-            <div class="td-box-description">
-                <span class="td-box-title">BOTTOM ARTICLE SHARE TEXT</span>
-                <p>Show or hide the bottom article share text on single post</p>
-            </div>
-            <div class="td-box-control-full">
-                <?php
-                echo td_panel_generator::checkbox(array(
-                    'ds' => 'td_option',
-                    'option_id' => 'tds_bottom_like_share_text_show',
-                    'true_value' => 'show',
-                    'false_value' => ''
-                ));
-                ?>
-            </div>
-        </div>
-
-        <!-- BOTTOM sharing style -->
-        <div class="td-box-row">
-            <div class="td-box-description">
-                <span class="td-box-title">BOTTOM SHARE BUTTONS STYLE</span>
-                <p>Change the appearance of the bottom sharing buttons.</p>
-            </div>
-            <div class="td-box-control-full">
-                <?php
-                echo td_panel_generator::visual_select_o(array(
-                    'ds' => 'td_option',
-                    'option_id' => 'tds_social_sharing_bottom_style',
-                    'values' => td_api_social_sharing_styles::_helper_social_sharing_to_panel_values()
-                ));
-                ?>
-            </div>
-        </div>
-
-
-        <div class="td-box-section-separator"></div>
-    <?php } ?>
-
-
-    <!-- Twitter name -->
-    <div class="td-box-row">
-        <div class="td-box-description">
-            <span class="td-box-title">TWITTER USERNAME</span>
-            <p>This will be used in the tweet for the via parameter. The site name will be used if no twitter username
-                is provided. <br> Do not include the @</p>
-        </div>
-        <div class="td-box-control-full">
-            <?php
-            echo td_panel_generator::input(array(
-                'ds' => 'td_option',
-                'option_id' => 'tds_tweeter_username'
-            ));
-            ?>
-        </div>
-    </div>
-
-
-    <div class="td-box-section-separator"></div>
-
-
-    <!-- Twitter name -->
-    <div class="td-box-row">
-        <div class="td-box-description">
-            <span class="td-box-title">SOCIAL NETWORKS</span>
-            <p>Select active social share links and sort them with drag and drop:</p>
-        </div>
-        <div class="td-box-control-full">
-            <?php
-            echo td_panel_generator::social_drag_and_drop(array(
-                'ds' => 'td_social_drag_and_drop'
-            ));
-            ?>
-        </div>
-    </div>
-
-<?php echo td_panel_generator::box_end(); ?>
-
-
-
 <?php if( 'Newsmag' == TD_THEME_NAME || ( 'Newspaper' == TD_THEME_NAME && defined('TD_STANDARD_PACK') ) ) {
     echo td_panel_generator::box_start('More Article Box', false); ?>
 
@@ -835,7 +689,8 @@
         </div>
     </div>
 
-    <?php echo td_panel_generator::box_end(); ?>
+    <?php echo td_panel_generator::box_end();
+}?>
 
 
     <!-- Advanced options -->
@@ -876,5 +731,167 @@
 
     </div>
 
-    <?php echo td_panel_generator::box_end();
-}?>
+    <?php echo td_panel_generator::box_end(); ?>
+
+<!-- Advanced options -->
+<?php echo td_panel_generator::box_start('Video settings', false); ?>
+
+    <!-- text -->
+    <div class="td-box-row">
+        <div class="td-box-description td-box-full">
+            <p>Enabling this feature will keep Youtube player when page is scrolling.</p>
+        </div>
+        <div class="td-box-row-margin-bottom"></div>
+    </div>
+
+    <div class="td-box-row">
+        <div class="td-box-description td-no-short-description">
+            <span class="td-box-title">ENABLE PLAYING ONLY ONE PLAYER</span>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::checkbox(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_video_playing_one',
+                'true_value' => 'enabled',
+                'false_value' => ''
+            ));
+            ?>
+        </div>
+    </div>
+
+    <div class="td-box-row">
+        <div class="td-box-description td-no-short-description">
+            <span class="td-box-title">ENABLE PAUSE HIDDEN PLAYER</span>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::checkbox(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_video_pause_hidden',
+                'true_value' => 'enabled',
+                'false_value' => ''
+            ));
+            ?>
+        </div>
+    </div>
+
+    <div class="td-box-row">
+        <div class="td-box-description td-no-short-description">
+            <span class="td-box-title">ENABLE LAZY VIDEO ON MOBILE</span>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::checkbox(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_video_lazy',
+                'true_value' => 'enabled',
+                'false_value' => ''
+            ));
+            ?>
+        </div>
+    </div>
+
+    <div class="td-box-section-separator"></div>
+
+    <!-- Enable / Disabled Modal Video at scroll -->
+    <div class="td-box-row">
+        <div class="td-box-description td-no-short-description">
+            <span class="td-box-title">ENABLE STICKY VIDEO AT SCROLL</span>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::checkbox(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_video_scroll',
+                'true_value' => 'enabled',
+                'false_value' => ''
+            ));
+            ?>
+        </div>
+    </div>
+
+    <div class="td-box-row">
+        <div class="td-box-description">
+            <span class="td-box-title">VIDEO WIDTH</span>
+            <p>Default width: 450px</p>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::input(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_video_width'
+            ));
+            ?>
+        </div>
+    </div>
+
+    <!-- Vertical video position -->
+    <div class="td-box-row">
+        <div class="td-box-description">
+            <span class="td-box-title">VERTICAL POSITION</span>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::radio_button_control(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_video_position_v',
+                'values' => array(
+                    array('text' => 'Top', 'val' => ''),
+                    array('text' => 'Bottom', 'val' => 'bottom')
+                )
+            ));
+            ?>
+        </div>
+    </div>
+
+    <div class="td-box-row">
+        <div class="td-box-description">
+            <span class="td-box-title">VERTICAL DISTANCE</span>
+            <p>Default vertical distance: 300px</p>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::input(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_video_distance_v'
+            ));
+            ?>
+        </div>
+    </div>
+
+    <!-- Horizontal video position -->
+    <div class="td-box-row">
+        <div class="td-box-description">
+            <span class="td-box-title">HORIZONTAL POSITION</span>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::radio_button_control(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_video_position_h',
+                'values' => array(
+                    array('text' => 'Right', 'val' => ''),
+                    array('text' => 'Left', 'val' => 'left')
+                )
+            ));
+            ?>
+        </div>
+    </div>
+
+    <div class="td-box-row">
+        <div class="td-box-description">
+            <span class="td-box-title">HORIZONTAL DISTANCE</span>
+            <p>Default horizontal distance: 0px</p>
+        </div>
+        <div class="td-box-control-full">
+            <?php
+            echo td_panel_generator::input(array(
+                'ds' => 'td_option',
+                'option_id' => 'tds_video_distance_h'
+            ));
+            ?>
+        </div>
+    </div>
+
+<?php echo td_panel_generator::box_end(); ?>

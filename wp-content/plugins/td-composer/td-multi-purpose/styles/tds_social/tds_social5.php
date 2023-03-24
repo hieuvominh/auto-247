@@ -80,6 +80,14 @@ class tds_social5 extends td_style {
 				.$unique_style_class .tdm-social-item-wrap:hover .tdm-social-item {
 					background: @icons_background_hover_color;
 				}
+				/* @all_border_width */
+				body .$unique_style_class .tdm-social-item {
+				    border: @all_border_width @all_border_style @all_icons_border_color;
+				}
+				/* @icons_border_hover_color */
+				body .$unique_style_class .tdm-social-item-wrap:hover .tdm-social-item {
+					border-color: @icons_border_hover_color;
+				}
 				/* @border_radius */
 				.$unique_style_class .tdm-social-item {
 					border-radius: @border_radius;
@@ -188,6 +196,31 @@ class tds_social5 extends td_style {
 
 
         /*-- BORDER -- */
+        // border width
+        $border_width = $res_ctx->get_style_att( 'all_border_width', __CLASS__ );
+        if( $border_width != '' ) {
+            if( is_numeric( $border_width ) ) {
+                $res_ctx->load_settings_raw( 'all_border_width', $border_width . 'px' );
+            }
+        }
+
+        // border style
+        $border_style = $res_ctx->get_style_att( 'all_border_style', __CLASS__ );
+        $res_ctx->load_settings_raw( 'all_border_style', 'solid' );
+        if( $border_style != '' ) {
+            $res_ctx->load_settings_raw( 'all_border_style', $border_style );
+        }
+
+        // border color
+        $border_color = $res_ctx->get_style_att( 'all_icons_border_color', __CLASS__ );
+        $res_ctx->load_settings_raw( 'all_icons_border_color', '#000' );
+        if( $border_color != '' ) {
+            $res_ctx->load_settings_raw( 'all_icons_border_color', $border_color );
+        }
+
+        // border hover color
+        $res_ctx->load_settings_raw( 'icons_border_hover_color', $res_ctx->get_style_att( 'icons_border_hover_color', __CLASS__ ) );
+
         // border radius
         $border_radius = $res_ctx->get_style_att( 'border_radius', __CLASS__ );
         $res_ctx->load_settings_raw( 'border_radius', $border_radius );
@@ -257,54 +290,96 @@ class tds_social5 extends td_style {
             $td_social_rel = ' rel="' . $this->get_shortcode_att('social_rel') . '" ';
         }
 
-        $buffy = PHP_EOL . '<style>' . PHP_EOL . $this->get_css() . PHP_EOL . '</style>';
+        // extra input for youtube
+        $td_youtube_add_input = '';
+        if ('' !== $this->get_shortcode_att('youtube_add_input')) {
+            $td_youtube_add_input = rawurldecode( base64_decode( strip_tags( $this->get_shortcode_att('youtube_add_input') ) ) );
+        }
 
-            $buffy .= '<div class="tdm-social-wrapper ' . self::get_class_style(__CLASS__) . ' ' . $this->unique_style_class . '">';
-        $social_array = array();
-        $social_array['behance']        = array( $this->get_shortcode_att( 'behance' ), 'Behance' );
-        $social_array['blogger']        = array( $this->get_shortcode_att( 'blogger' ), 'Blogger' );
-        $social_array['dailymotion']    = array( $this->get_shortcode_att( 'dailymotion' ), 'Dailymotion' );
-        $social_array['dribbble']       = array( $this->get_shortcode_att( 'dribbble' ), 'Dribbble' );
-        $social_array['ebay']           = array( $this->get_shortcode_att( 'ebay' ), 'Ebay' );
-        $social_array['evernote']       = array( $this->get_shortcode_att( 'evernote' ), 'Evernote' );
-        $social_array['facebook']       = array( $this->get_shortcode_att( 'facebook' ), 'Facebook' );
-        $social_array['flickr']         = array( $this->get_shortcode_att( 'flickr' ), 'Flickr' );
-        $social_array['grooveshark']    = array( $this->get_shortcode_att( 'grooveshark' ), 'Grooveshark' );
-        $social_array['instagram']      = array( $this->get_shortcode_att( 'instagram' ), 'Instagram' );
-        $social_array['lastfm']         = array( $this->get_shortcode_att( 'lastfm' ), 'Lastfm' );
-        $social_array['linkedin']       = array( $this->get_shortcode_att( 'linkedin' ), 'LinkedIn' );
-        $social_array['mail-1']         = array( $this->get_shortcode_att( 'mail-1' ), 'Mail' );
-        $social_array['myspace']        = array( $this->get_shortcode_att( 'myspace' ), 'Myspace' );
-        $social_array['path']           = array( $this->get_shortcode_att( 'path' ), 'Path' );
-        $social_array['paypal']         = array( $this->get_shortcode_att( 'paypal' ), 'Paypal' );
-        $social_array['pinterest']      = array( $this->get_shortcode_att( 'pinterest' ), 'Pinterest' );
-        $social_array['reddit']         = array( $this->get_shortcode_att( 'reddit' ), 'Reddit' );
-        $social_array['rss']            = array( $this->get_shortcode_att( 'rss' ), 'RSS' );
-        $social_array['soundcloud']     = array( $this->get_shortcode_att( 'soundcloud' ), 'Soundcloud' );
-        $social_array['spotify']        = array( $this->get_shortcode_att( 'spotify' ), 'Spotify' );
-        $social_array['stackoverflow']  = array( $this->get_shortcode_att( 'stackoverflow' ), 'Stackoverflow' );
-        $social_array['steam']          = array( $this->get_shortcode_att( 'steam' ), 'Steam' );
-        $social_array['telegram']       = array( $this->get_shortcode_att( 'telegram' ), 'Telegram' );
-        $social_array['tumblr']         = array( $this->get_shortcode_att( 'tumblr' ), 'Tumblr' );
-        $social_array['twitch']         = array( $this->get_shortcode_att( 'twitch' ), 'Twitch' );
-        $social_array['twitter']        = array( $this->get_shortcode_att( 'twitter' ), 'Twitter' );
-        $social_array['vimeo']          = array( $this->get_shortcode_att( 'vimeo' ), 'Vimeo' );
-        $social_array['vk']             = array( $this->get_shortcode_att( 'vk' ), 'VKontakte' );
-        $social_array['wordpress']      = array( $this->get_shortcode_att( 'wordpress' ), 'Wordpress' );
-        $social_array['yahoo']          = array( $this->get_shortcode_att( 'yahoo' ), 'Yahoo' );
-        $social_array['youtube']        = array( $this->get_shortcode_att( 'youtube' ), 'Youtube' );
-        $social_array['xing']           = array( $this->get_shortcode_att( 'xing' ), 'Xing' );
+
+        // extra social icon
+        $extra_social_icon = $this->get_icon_att('extra_social_tdicon');
+        $data_icon = '';
+        if ( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $data_icon = 'data-td-svg-icon="' . $this->get_att('extra_social_tdicon') . '"';
+        }
+
+        $svg_code = '';
+        if ( base64_encode( base64_decode( $extra_social_icon ) ) == $extra_social_icon ) {
+            $svg_code = base64_decode( $extra_social_icon );
+        }
+
+        // extra social name
+        $extra_social_name = '';
+        if ('' !== $this->get_shortcode_att('extra_social_name')) {
+            $extra_social_name = $this->get_shortcode_att('extra_social_name') ;
+        }
+        // extra social url
+        $extra_social_url = '#';
+        if ('' !== $this->get_shortcode_att('extra_social_url')) {
+            $extra_social_url = td_util::get_custom_field_value_from_string($this->get_shortcode_att('extra_social_url')) ;
+        }
+
+        //socials in order of input
+        $social_ordered_array = array();
+        if( '' !== $this->get_shortcode_att('social_order') ) {
+            $social_ordered_array = array_map( 'trim', explode( ',' , $this->get_shortcode_att('social_order') ) );
+        }
+
+        $buffy = $this->get_style($this->get_css());
+        $buffy .= '<div class="tdm-social-wrapper ' . self::get_class_style(__CLASS__) . ' ' . $this->unique_style_class . '">';
+
+            $social_array = array();
+
+            //in order of input
+            if ( !empty($social_ordered_array) ) {
+                foreach ( $social_ordered_array as $index => $social_id ) {
+                    if( $social_id == 'mail' ) {
+                        $social_id = 'mail-1';
+                    }
+
+                    if ( array_key_exists ( strtolower($social_id), td_social_icons::$td_social_icons_array ) ) {
+                        $social_array[$social_id] = array($this->get_shortcode_att(strtolower($social_id)), ucfirst($social_id));
+                    }
+                }
+            } else { //get all
+                foreach ( td_social_icons::$td_social_icons_array as $social_id => $social_name ) {
+                    $social_array[$social_id] = array( $this->get_shortcode_att( $social_id ), $social_name );
+                }
+            }
 
             foreach ( $social_array as $social_key => $social_value ) {
-                if( !empty( $social_value[0] ) ) {
+                $social_url = td_util::get_custom_field_value_from_string( $social_value[0] );
+
+                if( !empty( $social_url ) ) {
+
+                    if ( $social_key === 'youtube') {
+                        $social_url = $td_youtube_add_input . $social_url;
+                    }
+
                     $buffy .= '<div class="tdm-social-item-wrap">';
-                        $buffy .= '<a href="' . $social_value[0] . '" ' . $target . $td_social_rel . 'class="tdm-social-item">';
-                            $buffy .= '<i class="td-icon-font td-icon-' . $social_key . '"></i>';
+                        $buffy .= '<a href="' . $social_url . '" ' . $target . $td_social_rel . ' title="' . $social_value[1] . '" class="tdm-social-item">';
+                            $buffy .= '<i class="td-icon-font td-icon-' . strtolower($social_key) . '"></i>';
                         $buffy .= '</a>';
 
-                        $buffy .= '<a href="' . $social_value[0] . '" ' . $target . $td_social_rel . 'class="tdm-social-text">' . $social_value[1] . '</a>';
+                        $buffy .= '<a href="' . $social_url . '" ' . $target . $td_social_rel . ' class="tdm-social-text">' . ( $social_value[1] == 'Mail-1' ? 'Mail' : $social_value[1] ) . '</a>';
                     $buffy .= '</div>';
                 }
+            }
+            if ( $extra_social_icon != '' ) {
+
+                $buffy .= '<div class="tdm-social-item-wrap">';
+                $buffy .= '<a href="' . $extra_social_url . '" ' . $target . $td_social_rel . ' title="' . $extra_social_name . '" class="tdm-social-item">';
+                if ( $svg_code == '' ) {
+                    $buffy .= '<i class="' . self::get_group_style( __CLASS__ ) . ' ' . $extra_social_icon . ' ' . $this->unique_style_class . ' td-fix-index"></i>';
+                } else {
+                    $buffy .= '<div class="' . self::get_group_style( __CLASS__ ) . ' tds-icon-svg-wrap ' . $this->unique_style_class . ' td-fix-index"><div class="tds-icon-svg" ' . $data_icon . '>' . $svg_code . '</div></div>';
+                }
+                $buffy .= '</a>';
+
+                $buffy .= '<a href="' . $extra_social_url . '" class="tdm-social-text" ' . $target . $td_social_rel . ' >' . $extra_social_name . '</a>';
+                $buffy .= '</div>';
+
             }
         $buffy .= '</div>';
 

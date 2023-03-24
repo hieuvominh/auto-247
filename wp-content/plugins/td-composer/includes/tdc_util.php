@@ -14,14 +14,14 @@ class tdc_util {
 	}
 
 
-	static function enqueue_js_files_array($js_files_array, $dependency_array = array(), $url = TDC_URL ) {
+	static function enqueue_js_files_array( $js_files_array, $dependency_array = array(), $url = TDC_URL, $ver = TD_COMPOSER ) {
 
 		$last_js_file_id = '';
-		foreach ($js_files_array as $js_file_id => $js_file) {
-			if ($last_js_file_id == '') {
-				wp_enqueue_script($js_file_id, $url . $js_file, $dependency_array, TD_COMPOSER, true); //first, load it with jQuery dependency
+		foreach ( $js_files_array as $js_file_id => $js_file ) {
+			if ( $last_js_file_id == '' ) {
+				wp_enqueue_script( $js_file_id, $url . $js_file, $dependency_array, $ver, true ); // first, load it with jQuery dependency
 			} else {
-				wp_enqueue_script($js_file_id, $url . $js_file, array($last_js_file_id), TD_COMPOSER, true);  //not first - load with the last file dependency
+				wp_enqueue_script( $js_file_id, $url . $js_file, array( $last_js_file_id ), $ver, true );  // not first - load with the last file dependency
 			}
 			$last_js_file_id = $js_file_id;
 		}
@@ -123,8 +123,8 @@ class tdc_util {
 //							$image_info['width']  = $image_attributes[1];
 //							$image_info['height'] = $image_attributes[2];
                             $image_info['url']    = $image_attributes[0];
-                            $image_info['height'] = $image_attributes[1];
-                            $image_info['width']  = $image_attributes[2];
+                            $image_info['width']  = $image_attributes[1];
+                            $image_info['height'] = $image_attributes[2];
 						}
 						break;
 					}
@@ -438,8 +438,10 @@ class tdc_util {
 
 		if ( td_util::is_template_header() && ! td_util::is_no_header() ) {
 			$header_template_content = td_util::get_header_template_content();
-			foreach ( $header_template_content as $header_template ) {
-				$content .= $header_template;
+			if (is_array($header_template_content)) {
+				foreach ( $header_template_content as $header_template ) {
+					$content .= $header_template;
+				}
 			}
 		}
 
@@ -447,7 +449,11 @@ class tdc_util {
 			$content .= td_util::get_footer_template_content();
 		}
 
-		$content .= get_post( $post_id )->post_content;
+		$post_content = get_post( $post_id )->post_content;
+		if ( base64_decode( $post_content, true ) && base64_encode( base64_decode( $post_content, true ) ) === $post_content && mb_detect_encoding( base64_decode( $post_content, true ) ) === mb_detect_encoding( $post_content ) ) {
+			$post_content = stripslashes( base64_decode( $post_content, true ));
+		}
+		$content .= $post_content;
 
 		return self::get_content_icon_fonts_ids( $content );
 	}
@@ -610,5 +616,307 @@ class tdc_util {
         );
 
         return $url;
+    }
+
+
+    static function parse_content_for_mobile( &$content = null ) {
+
+		$new_content = '';
+
+		if ( preg_match_all( '/' . get_shortcode_regex() . '/s', $content, $matches, PREG_SET_ORDER ) ) {
+			foreach ( $matches as &$shortcode ) {
+//				var_dump($shortcode[ 2 ]);
+
+				$attributes = shortcode_parse_atts( $shortcode[ 3 ] );
+
+//				var_dump($matches);
+//				var_dump($attributes);
+
+				$wrapper_shortcode = false;
+
+				if (strpos( $content, "[/" . $shortcode[ 2 ] . "]") > 0 ) {
+					$wrapper_shortcode = true;
+				}
+
+
+				if ( ! empty( $shortcode[5] ) ) {
+					$new_content .= '[' . $shortcode[2];
+
+					if (is_array($attributes)) {
+						self::parse_content_attr( $new_content, $shortcode[2], $attributes );
+					}
+
+					$new_content .= ']';
+
+					$new_content .= self::parse_content_for_mobile($shortcode[5] );
+
+					$new_content .= '[/' . $shortcode[2] . ']';
+
+				} else {
+
+					$new_content .= '[' . $shortcode[2];
+
+					if (is_array($attributes)) {
+						self::parse_content_attr( $new_content, $shortcode[ 2 ], $attributes );
+					}
+
+					$new_content .= ']';
+					if ( $wrapper_shortcode ) {
+						$new_content .= '[/' . $shortcode[ 2 ] . ']';
+					}
+				}
+			}
+			return $new_content;
+		} else {
+			return $content;
+		}
+	}
+
+
+
+	private static function parse_content_attr( &$content, $shortcode, $attributes) {
+		foreach ( $attributes as $key => $val ) {
+
+			if ( 'tdc_css' === $key ) {
+
+				// Detect base64 encoding
+				if ( base64_decode( $val, true ) && base64_encode( base64_decode( $val, true ) ) === $val && mb_detect_encoding( base64_decode( $val, true ) ) === mb_detect_encoding( $val ) ) {
+
+					$decoded_values = base64_decode( $val, true );
+					$values         = json_decode( $decoded_values, true );
+
+					if ( isset( $values[ 'type' ] ) && 'gradient' === $values[ 'type' ] ) {
+						$content .= " $key=\"$val\"";
+						continue;
+					}
+
+					$final_values = [];
+
+//					if ( ! isset( $values[ 'phone' ] ) && isset( $values[ 'all' ] ) ) {
+//						$final_values[ 'phone' ] = $values[ 'all' ];
+//					}
+
+					if (isset( $values[ 'all' ])) {
+						foreach ( $values['all'] as $key_all => $value_all ) {
+
+							if (empty($final_values[ 'all' ])) {
+								$final_values[ 'all' ] = [];
+							}
+							$final_values[ 'all' ][ $key_all ] = $value_all;
+
+							if ( ! isset( $values[ 'phone' ][ $key_all ] ) ) {
+								if (empty($final_values[ 'phone' ])) {
+									$final_values[ 'phone' ] = [];
+								}
+								$final_values[ 'phone' ][ $key_all ] = $value_all;
+							}
+						}
+					}
+
+
+//					if ( isset( $values[ 'portrait' ] ) ) {
+//						$final_values[ 'all' ] = $values[ 'portrait' ];
+//					} else if ( isset( $values[ 'all' ] ) ) {
+//						$final_values[ 'all' ] = $values[ 'all' ];
+//					}
+
+					if ( isset( $values[ 'portrait' ] ) ) {
+						foreach ($values[ 'portrait' ] as $key_portrait => $value_portrait ) {
+							if (empty($final_values[ 'all' ])) {
+								$final_values[ 'all' ] = [];
+							}
+							$final_values[ 'all' ][ $key_portrait ] = $value_portrait;
+						}
+					} else if ( isset( $values[ 'all' ] ) ) {
+						foreach ($values[ 'all' ] as $key_all => $value_all ) {
+							if (empty($final_values[ 'all' ])) {
+								$final_values[ 'all' ] = [];
+							}
+							$final_values[ 'all' ][ $key_all ] = $value_all;
+						}
+					}
+
+
+
+//					if ( isset( $values[ 'phone' ] ) ) {
+//						$final_values[ 'phone' ] = $values[ 'phone' ];
+//					}
+
+					if ( isset( $values[ 'phone' ] ) ) {
+						foreach ($values[ 'phone' ] as $key_phone => $value_phone ) {
+							if (empty($final_values[ 'phone' ])) {
+								$final_values[ 'phone' ] = [];
+							}
+							$final_values[ 'phone' ][ $key_phone ] = $value_phone;
+						}
+					}
+
+					if (!empty($values['phone_max_width'])) {
+						$final_values['phone_max_width'] = $values['phone_max_width'];
+					}
+
+
+					$val = base64_encode( json_encode( $final_values ) );
+				}
+
+			} else {
+
+				// Detect base64 encoding
+				if ( base64_decode( $val, true ) && base64_encode( base64_decode( $val, true ) ) === $val && mb_detect_encoding( base64_decode( $val, true ) ) === mb_detect_encoding( $val ) ) {
+
+					$decoded_values = base64_decode( $val, true );
+					$values         = json_decode( $decoded_values, true );
+
+					if ( isset( $values[ 'type' ] ) && 'gradient' === $values[ 'type' ] ) {
+						$content .= " $key=\"$val\"";
+						continue;
+					}
+
+					if ( ! isset( $values[ 'all' ] ) && ! isset( $values[ 'portrait' ] ) && ! isset( $values[ 'phone' ] )) {
+
+						// we have not responsive value encoded - maybe an inline text
+						$content .= " $key=\"$val\"";
+						continue;
+					}
+
+					$final_values = [];
+
+					if ( ! isset( $values[ 'phone' ] ) && isset( $values[ 'all' ] ) ) {
+						$final_values[ 'phone' ] = $values[ 'all' ];
+					}
+
+					if ( isset( $values[ 'portrait' ] ) ) {
+						$final_values[ 'all' ] = $values[ 'portrait' ];
+					} else if ( isset( $values[ 'all' ] ) ) {
+						$final_values[ 'all' ] = $values[ 'all' ];
+					}
+
+					if ( isset( $values[ 'phone' ] ) ) {
+						$final_values[ 'phone' ] = $values[ 'phone' ];
+					}
+
+					$val = base64_encode( json_encode( $final_values ) );
+				}
+			}
+
+			$content .= " $key=\"$val\"";
+		}
+	}
+
+
+	static function get_api_url($ext = 'api') {
+    	$api_url = '';
+
+	    if ( defined('TDB_CLOUD_LOCATION') && TDB_CLOUD_LOCATION === 'local') {
+		    $api_url = 'http://' . $_SERVER['SERVER_ADDR'] . '/td_cloud/' . $ext;
+		    //$api_url = 'http://localhost/td_cloud/' . $ext;
+	    } else {
+	    	$cloud = get_option('tdb_work_cloud');
+	    	if (empty($cloud) || 'false' === $cloud) {
+	    	    $api_url = 'https://cloud.tagdiv.com/' . $ext;
+		    } else {
+	    	    $api_url = 'https://work-cloud.tagdiv.com/' . $ext;
+		    }
+	    }
+
+	    return $api_url;
+    }
+
+
+    static function get_custom_pagination(
+        $current_page,
+        $num_pages,
+        $url_param,
+        $pages_to_show = 3,
+        $classes = array(
+            'wrapper' => '',
+            'item' => '',
+            'active' => '',
+            'dots' => ''
+        )
+    ) {
+
+        $buffy = '';
+
+
+        // Set the start and end pages that need to be displayed
+        $pages_to_show_minus_1 = $pages_to_show - 1;
+        $half_page_start       = floor($pages_to_show_minus_1/2 );
+        $half_page_end         = ceil($pages_to_show_minus_1/2 );
+        $start_page            = $current_page - $half_page_start;
+
+        if( $start_page <= 0 ) {
+            $start_page = 1;
+        }
+
+        $end_page = $current_page + $half_page_end;
+        if( ( $end_page - $start_page ) != $pages_to_show_minus_1 ) {
+            $end_page = $start_page + $pages_to_show_minus_1;
+        }
+
+        if( $end_page > $num_pages ) {
+            $start_page = $num_pages - $pages_to_show_minus_1;
+            $end_page = $num_pages;
+        }
+
+        if( $start_page <= 0 ) {
+            $start_page = 1;
+        }
+
+
+        // Build the pagination if the total number of pages is greater than 1
+        if( $num_pages > 1 ) {
+            $buffy .= '<div class="' . $classes['wrapper'] . '">';
+                // Display the previous page link if the current page
+                // is greater than the current page
+                if( $current_page > 1 ) {
+                    $buffy .= '<a href="' . self::get_custom_pagination_page_link( ($current_page - 1), $url_param ) . '" class="' . $classes['item'] . '" data-page="' . ($current_page - 1) . '"><i class="td-icon-left"></i></a>';
+                }
+
+                // If the current page number exceeds the maximum number of pages
+                // allowed to be displayed, then show the first page and dots placeholder
+                if( $start_page >= 2 && $pages_to_show < $num_pages ) {
+                    $buffy .= '<a href="' . self::get_custom_pagination_page_link( 1, $url_param ) . '" class="' . $classes['item'] . '" data-page="1">1</a>';
+
+                    if( $start_page > 2 ) {
+                        $buffy .= '<span class="' . $classes['item'] . ' ' . $classes['dots'] . '">...</span>';
+                    }
+                }
+
+                // Display the pages
+                for( $page = $start_page; $page <= $end_page; $page++ ) {
+                    if( $page == $current_page ) {
+                        $buffy .= '<div class="' . $classes['item'] . ' ' . $classes['active'] . '">' . $page . '</div>';
+                    } else {
+                        $buffy .= '<a href="' . self::get_custom_pagination_page_link( $page, $url_param ) . '" class="' . $classes['item'] . '" data-page="' . $page . '">' . $page . '</a>';
+                    }
+                }
+
+                //
+                if( $end_page < $num_pages ) {
+                    if( $end_page + 1 < $num_pages ) {
+                        $buffy .= '<div class="' . $classes['item'] . ' ' . $classes['dots'] . '">...</div>';
+                    }
+
+                    $buffy .= '<a href="' . self::get_custom_pagination_page_link( $num_pages, $url_param ) . '" class="' . $classes['item'] . '" data-page="' . $num_pages . '">' . $num_pages .'</a>';
+                }
+
+                // Display the next page link if the current page is not
+                // equal to the last page
+                if( $current_page < $num_pages ) {
+                    $buffy .= '<a href="' . self::get_custom_pagination_page_link( ($current_page + 1), $url_param ) . '" class="' . $classes['item'] . '" data-page="' . ($current_page + 1) . '"><i class="td-icon-right"></i></a>';
+                }
+            $buffy .= '</div>';
+        }
+
+        return $buffy;
+
+    }
+
+
+    static function get_custom_pagination_page_link( $current_page, $url_param ) {
+
+        return add_query_arg($url_param, $current_page, self::get_current_url());
+
     }
 }

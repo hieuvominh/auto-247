@@ -116,7 +116,7 @@ class td_menu {
             $td_mega_menu_cat = '';
             $td_mega_menu_page_id = '';
 
-            if ( td_util::tdc_is_installed() && ( 'Newsmag' == TD_THEME_NAME || ( 'Newspaper' == TD_THEME_NAME && defined('TD_STANDARD_PACK') ) ) ) {
+            if ( td_util::tdc_is_installed() ) {
 	            //read mega menu and mega page menu settings
 	            $td_mega_menu_cat     = get_post_meta( $item->ID, 'td_mega_menu_cat', true );
 	            $td_mega_menu_page_id = get_post_meta( $item->ID, 'td_mega_menu_page_id', true );
@@ -147,9 +147,11 @@ class td_menu {
                     }
 
                     //check for subcategories
+                    //cache_domain was added from WP 6.0, to get uncached result
                     $td_subcategories = get_categories(array(
                         'child_of' => $td_mega_menu_cat,
-                        'number' => $td_show_child_cat  //
+                        'number' => $td_show_child_cat,
+                        'cache_domain' => microtime()
                     ));
                     if (!empty($td_subcategories)) {
 	                    $item->classes[] = 'menu-item-has-children'; // add the extra class for the dropdown to work

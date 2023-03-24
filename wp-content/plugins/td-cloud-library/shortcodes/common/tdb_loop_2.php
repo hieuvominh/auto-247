@@ -1,65 +1,67 @@
 <?php
 
 /**
- * Class tdb_loop - this works on all wp templates pages that have a loop 
+ * Class tdb_loop - this works on all wp templates pages that have a loop
  */
 
 class tdb_loop_2 extends td_block {
 
     static function cssMedia( $res_ctx ) {
 
+        $res_ctx->load_settings_raw( 'style_general_loop_2', 1 );
+        $res_ctx->load_settings_raw( 'style_general_module_loop', 1 );
+
         // modules per row
         $modules_on_row = $res_ctx->get_shortcode_att('modules_on_row');
-        $res_ctx->load_settings_raw( 'modules_on_row', $modules_on_row );
         if ( $modules_on_row == '' ) {
             $modules_on_row = '100%';
         }
+        $res_ctx->load_settings_raw( 'modules_on_row', $modules_on_row );
+
+        $ad_loop_full = $res_ctx->get_shortcode_att('ad_loop_full');
+        $ad_loop_repeat = $res_ctx->get_shortcode_att('ad_loop_repeat') != '' ? $res_ctx->get_shortcode_att('ad_loop_repeat') : 2;
 
         // modules clearfix
-        $clearfix = 'clearfix';
         $padding = 'padding';
-        if ( $res_ctx->is( 'all' ) ) {
-            $clearfix = 'clearfix_desktop';
-            $padding = 'padding_desktop';
-        }
         switch ($modules_on_row) {
             case '100%':
+                $res_ctx->load_settings_raw( 'ad_loop_width', '100%' );
                 $res_ctx->load_settings_raw( $padding,  '1' );
                 break;
             case '50%':
-                $res_ctx->load_settings_raw( $clearfix,  '2n+1' );
+                $res_ctx->load_settings_raw( 'ad_loop_width', $res_ctx->calc_full_ad_spot_width( 2, 50, $ad_loop_repeat, $ad_loop_full ) . '%' );
                 $res_ctx->load_settings_raw( $padding,  '-n+2' );
                 break;
             case '33.33333333%':
-                $res_ctx->load_settings_raw( $clearfix,  '3n+1' );
+                $res_ctx->load_settings_raw( 'ad_loop_width', $res_ctx->calc_full_ad_spot_width( 3, 33.33333333, $ad_loop_repeat, $ad_loop_full ) . '%' );
                 $res_ctx->load_settings_raw( $padding,  '-n+3' );
                 break;
             case '25%':
-                $res_ctx->load_settings_raw( $clearfix,  '4n+1' );
+                $res_ctx->load_settings_raw( 'ad_loop_width', $res_ctx->calc_full_ad_spot_width( 4, 25, $ad_loop_repeat, $ad_loop_full ) . '%' );
                 $res_ctx->load_settings_raw( $padding,  '-n+4' );
                 break;
             case '20%':
-                $res_ctx->load_settings_raw( $clearfix,  '5n+1' );
+                $res_ctx->load_settings_raw( 'ad_loop_width', $res_ctx->calc_full_ad_spot_width( 5, 20, $ad_loop_repeat, $ad_loop_full ) . '%' );
                 $res_ctx->load_settings_raw( $padding,  '-n+5' );
                 break;
             case '16.66666667%':
-                $res_ctx->load_settings_raw( $clearfix,  '6n+1' );
+                $res_ctx->load_settings_raw( 'ad_loop_width', $res_ctx->calc_full_ad_spot_width( 6, 16.66666667, $ad_loop_repeat, $ad_loop_full ) . '%' );
                 $res_ctx->load_settings_raw( $padding,  '-n+6' );
                 break;
             case '14.28571428%':
-                $res_ctx->load_settings_raw( $clearfix,  '7n+1' );
+                $res_ctx->load_settings_raw( 'ad_loop_width', $res_ctx->calc_full_ad_spot_width( 7, 14.28571428, $ad_loop_repeat, $ad_loop_full ) . '%' );
                 $res_ctx->load_settings_raw( $padding,  '-n+7' );
                 break;
             case '12.5%':
-                $res_ctx->load_settings_raw( $clearfix,  '8n+1' );
+                $res_ctx->load_settings_raw( 'ad_loop_width', $res_ctx->calc_full_ad_spot_width( 8, 12.5, $ad_loop_repeat, $ad_loop_full ) . '%' );
                 $res_ctx->load_settings_raw( $padding,  '-n+8' );
                 break;
             case '11.11111111%':
-                $res_ctx->load_settings_raw( $clearfix,  '9n+1' );
+                $res_ctx->load_settings_raw( 'ad_loop_width', $res_ctx->calc_full_ad_spot_width( 9, 11.11111111, $ad_loop_repeat, $ad_loop_full ) . '%' );
                 $res_ctx->load_settings_raw( $padding,  '-n+9' );
                 break;
             case '10%':
-                $res_ctx->load_settings_raw( $clearfix,  '10n+1' );
+                $res_ctx->load_settings_raw( 'ad_loop_width', $res_ctx->calc_full_ad_spot_width( 10, 10, $ad_loop_repeat, $ad_loop_full ) . '%' );
                 $res_ctx->load_settings_raw( $padding,  '-n+10' );
                 break;
         }
@@ -137,6 +139,21 @@ class tdb_loop_2 extends td_block {
             $res_ctx->load_settings_raw( 'video_icon', $video_icon . 'px' );
         }
 
+        // show video duration
+        $res_ctx->load_settings_raw('show_vid_t', $res_ctx->get_shortcode_att('show_vid_t'));
+        // video duration margin
+        $vid_t_margin = $res_ctx->get_shortcode_att('vid_t_margin');
+        $res_ctx->load_settings_raw( 'vid_t_margin', $vid_t_margin );
+        if( $vid_t_margin != '' && is_numeric( $vid_t_margin ) ) {
+            $res_ctx->load_settings_raw( 'vid_t_margin', $vid_t_margin . 'px' );
+        }
+        // video duration padding
+        $vid_t_padding = $res_ctx->get_shortcode_att('vid_t_padding');
+        $res_ctx->load_settings_raw( 'vid_t_padding', $vid_t_padding );
+        if( $vid_t_padding != '' && is_numeric( $vid_t_padding ) ) {
+            $res_ctx->load_settings_raw( 'vid_t_padding', $vid_t_padding . 'px' );
+        }
+
 
 
         /*-- META INFO -- */
@@ -180,6 +197,17 @@ class tdb_loop_2 extends td_block {
         $res_ctx->load_settings_raw( 'meta_info_border_style', $res_ctx->get_shortcode_att('meta_info_border_style') );
         // meta info border color
         $res_ctx->load_settings_raw( 'meta_info_border_color', $res_ctx->get_shortcode_att('meta_info_border_color') );
+        // meta info border radius
+        $meta_info_border_radius = $res_ctx->get_shortcode_att('meta_info_border_radius');
+        $res_ctx->load_settings_raw( 'meta_info_border_radius', $meta_info_border_radius );
+        if ( is_numeric( $meta_info_border_radius ) ) {
+            $res_ctx->load_settings_raw( 'meta_info_border_radius', $meta_info_border_radius . 'px' );
+        }
+        $meta_info_border_radius2 = $res_ctx->get_shortcode_att('meta_info_border_radius2');
+        $res_ctx->load_settings_raw( 'meta_info_border_radius2', $meta_info_border_radius2 );
+        if ( is_numeric( $meta_info_border_radius2 ) ) {
+            $res_ctx->load_settings_raw( 'meta_info_border_radius2', $meta_info_border_radius2 . 'px' );
+        }
 
 
         // article title space
@@ -215,8 +243,9 @@ class tdb_loop_2 extends td_block {
         }
         // article audio size
         $art_audio_size = $res_ctx->get_shortcode_att('art_audio_size');
-        $res_ctx->load_settings_raw( 'art_audio_size', 10 + $art_audio_size/0.5 . 'px' );
-
+        if ( is_numeric( $art_audio_size ) ) {
+            $res_ctx->load_settings_raw('art_audio_size', 10 + $art_audio_size / 0.5 . 'px');
+        }
 
         // show category tag
         $res_ctx->load_settings_raw( 'show_cat', $res_ctx->get_shortcode_att('show_cat') );
@@ -283,11 +312,25 @@ class tdb_loop_2 extends td_block {
         $show_author = $res_ctx->get_shortcode_att('show_author');
         $show_date = $res_ctx->get_shortcode_att('show_date');
         $show_review = $res_ctx->get_shortcode_att('show_review');
+        $review_space = $res_ctx->get_shortcode_att('review_space');
+        $res_ctx->load_settings_raw( 'review_space', $review_space );
+        if( $review_space != '' && is_numeric( $review_space ) ) {
+            $res_ctx->load_settings_raw( 'review_space', $review_space . 'px' );
+        }
         $review_size = $res_ctx->get_shortcode_att('review_size');
-        $res_ctx->load_settings_raw( 'review_size', 10 + $review_size/0.5 . 'px' );
+        if ( is_numeric( $review_size ) ) {
+            $res_ctx->load_settings_raw('review_size', 10 + $review_size / 0.5 . 'px');
+        }
+        $review_distance = $res_ctx->get_shortcode_att('review_distance');
+        $res_ctx->load_settings_raw( 'review_distance', $review_distance );
+        if( $review_distance != '' && is_numeric( $review_distance ) ) {
+            $res_ctx->load_settings_raw( 'review_distance', $review_distance . 'px' );
+        }
         $show_com = $res_ctx->get_shortcode_att('show_com');
         if( $show_author == 'none' && $show_date == 'none' && $show_com == 'none' && $show_review == 'none' ) {
             $res_ctx->load_settings_raw( 'hide_author_date', 1 );
+        } else {
+            $res_ctx->load_settings_raw( 'show_author_date', 1 );
         }
         $res_ctx->load_settings_raw( 'show_author', $show_author );
         $res_ctx->load_settings_raw( 'show_date', $show_date );
@@ -422,15 +465,95 @@ class tdb_loop_2 extends td_block {
 
         $res_ctx->load_shadow_settings( 0, 0, 0, 0, 'rgba(0, 0, 0, 0.08)', 'shadow_m' );
 
+        // video pop-up
+        $res_ctx->load_settings_raw( 'video_rec_color', $res_ctx->get_shortcode_att('video_rec_color') );
+        $res_ctx->load_settings_raw( 'video_title_color', $res_ctx->get_shortcode_att('video_title_color') );
+        $res_ctx->load_settings_raw( 'video_title_color_h', $res_ctx->get_shortcode_att('video_title_color_h') );
+        $res_ctx->load_settings_raw( 'video_bg', $res_ctx->get_shortcode_att('video_bg') );
+        $res_ctx->load_settings_raw( 'video_overlay', $res_ctx->get_shortcode_att('video_overlay') );
+
+        // video duration
+        $res_ctx->load_settings_raw( 'vid_t_color', $res_ctx->get_shortcode_att('vid_t_color') );
+        $res_ctx->load_settings_raw( 'vid_t_bg_color', $res_ctx->get_shortcode_att('vid_t_bg_color') );
+
+
+        // exclusive label
+        if( !empty( has_filter('td_composer_map_exclusive_label_array', 'td_subscription::add_exclusive_label_settings') ) ) {
+            // show exclusive label
+            $excl_show = $res_ctx->get_shortcode_att('excl_show');
+            $res_ctx->load_settings_raw( 'excl_show', $excl_show );
+            if( $excl_show == '' ) {
+                $res_ctx->load_settings_raw( 'excl_show', 'inline-block' );
+            }
+
+            // exclusive label text
+            $res_ctx->load_settings_raw( 'excl_txt', $res_ctx->get_shortcode_att('excl_txt') );
+
+            // exclusive label margin
+            $excl_margin = $res_ctx->get_shortcode_att('excl_margin');
+            $res_ctx->load_settings_raw( 'excl_margin', $excl_margin );
+            if( $excl_margin != '' && is_numeric( $excl_margin ) ) {
+                $res_ctx->load_settings_raw( 'excl_margin', $excl_margin . 'px' );
+            }
+
+            // exclusive label padding
+            $excl_padd = $res_ctx->get_shortcode_att('excl_padd');
+            $res_ctx->load_settings_raw( 'excl_padd', $excl_padd );
+            if( $excl_padd != '' && is_numeric( $excl_padd ) ) {
+                $res_ctx->load_settings_raw( 'excl_padd', $excl_padd . 'px' );
+            }
+
+            // exclusive label border size
+            $excl_border = $res_ctx->get_shortcode_att('all_excl_border');
+            $res_ctx->load_settings_raw( 'all_excl_border', $excl_border );
+            if( $excl_border != '' && is_numeric( $excl_border ) ) {
+                $res_ctx->load_settings_raw( 'all_excl_border', $excl_border . 'px' );
+            }
+
+            // exclusive label border style
+            $res_ctx->load_settings_raw( 'all_excl_border_style', $res_ctx->get_shortcode_att('all_excl_border_style') );
+
+            // exclusive label border radius
+            $excl_radius = $res_ctx->get_shortcode_att('excl_radius');
+            $res_ctx->load_settings_raw( 'excl_radius', $excl_radius );
+            if( $excl_radius != '' && is_numeric( $excl_radius ) ) {
+                $res_ctx->load_settings_raw( 'excl_radius', $excl_radius . 'px' );
+            }
+
+
+            $res_ctx->load_settings_raw( 'excl_color', $res_ctx->get_shortcode_att('excl_color') );
+            $res_ctx->load_settings_raw( 'excl_color_h', $res_ctx->get_shortcode_att('excl_color_h') );
+            $res_ctx->load_settings_raw( 'excl_bg', $res_ctx->get_shortcode_att('excl_bg') );
+            $res_ctx->load_settings_raw( 'excl_bg_h', $res_ctx->get_shortcode_att('excl_bg_h') );
+            $excl_border_color = $res_ctx->get_shortcode_att('all_excl_border_color');
+            $res_ctx->load_settings_raw( 'all_excl_border_color', $excl_border_color );
+            if( $excl_border_color == '' ) {
+                $res_ctx->load_settings_raw( 'all_excl_border_color', '#000' );
+            }
+            $res_ctx->load_settings_raw( 'excl_border_color_h', $res_ctx->get_shortcode_att('excl_border_color_h') );
+
+
+            $res_ctx->load_font_settings( 'f_excl' );
+        }
+
+        // loop ads
+        $res_ctx->load_settings_raw( 'ad_loop_color', $res_ctx->get_shortcode_att('ad_loop_color') );
+
 
 
         /*-- FONTS -- */
         $res_ctx->load_font_settings( 'f_header' );
+        $res_ctx->load_font_settings( 'f_pag' );
         $res_ctx->load_font_settings( 'f_title' );
         $res_ctx->load_font_settings( 'f_cat' );
         $res_ctx->load_font_settings( 'f_meta' );
         $res_ctx->load_font_settings( 'f_ex' );
         $res_ctx->load_font_settings( 'f_btn' );
+
+        $res_ctx->load_font_settings( 'f_vid_title' );
+        $res_ctx->load_font_settings( 'f_vid_time' );
+
+        $res_ctx->load_font_settings( 'f_ad' );
 
         // mix blend
         $mix_type = $res_ctx->get_shortcode_att('mix_type');
@@ -500,51 +623,122 @@ class tdb_loop_2 extends td_block {
 
     public function get_custom_css() {
         // $unique_block_class - the unique class that is on the block. use this to target the specific instance via css
-        $unique_block_class = $this->block_uid;
+        $in_composer = td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax();
+        $in_element = td_global::get_in_element();
+        $unique_block_class_prefix = '';
+        if( $in_element || $in_composer ) {
+            $unique_block_class_prefix = 'tdc-row .';
+
+            if( $in_element && $in_composer ) {
+                $unique_block_class_prefix = 'tdc-row-composer .';
+            }
+        }
+        $unique_block_class = $unique_block_class_prefix . $this->block_uid;
+
+        $unique_block_modal_class = $this->block_uid . '_m';
 
         $compiled_css = '';
 
         $raw_css =
             "<style>
             
+				/* @style_general_loop_2 */
+				.tdb_loop_2 .tdb-block-inner {
+                    display: flex;
+                    flex-wrap: wrap;
+				}
+				.tdb_loop_2 .td_module_wrap {
+				    padding-bottom: 0;
+				}
+				.tdb_loop_2 .tdb_module_rec {
+				    text-align: center;
+				}
+                .tdb_loop_2 .tdb-author-photo {
+                  display: inline-block;
+                }
+                .tdb_loop_2 .tdb-author-photo,
+                .tdb_loop_2 .tdb-author-photo img {
+                  vertical-align: middle;
+                }
+                .tdb_loop_2 .td-post-author-name,
+                .tdb_loop_2 .td-post-date,
+                .tdb_loop_2 .td-module-comments {
+                  vertical-align: text-top;
+                }
+                .tdb_loop_2 .entry-review-stars {
+                  margin-left: 6px;
+                  vertical-align: text-bottom;
+                }
+                .tdb_loop_2 .td-load-more-wrap,
+                .tdb_loop_2 .td-next-prev-wrap {
+                  margin: 20px 0 0;
+                }
+                .tdb_loop_2 .page-nav {
+                  position: relative;
+                  margin: 54px 0 0;
+                }
+                .tdb_loop_2 .page-nav a,
+                .tdb_loop_2 .page-nav span {
+                  margin-top: 8px;
+                  margin-bottom: 0;
+                }
+                .tdb_loop_2 .td-next-prev-wrap a {
+                  width: auto;
+                  height: auto;
+                  min-width: 25px;
+                  min-height: 25px;
+                }
+                .tdb_loop_2 {
+                  display: inline-block;
+                  width: 100%;
+                  margin-bottom: 78px;
+                  padding-bottom: 0;
+                  overflow: visible !important;
+                }
+                .tdb_module_loop_2 {
+                  display: inline-block;
+                  width: 100%;
+                  padding-bottom: 0;
+                }
+                .tdb_module_loop_2 .td-module-meta-info {
+                  min-height: 0;
+                }
+                .tdb_module_loop_2 .td-author-photo {
+                  display: inline-block;
+                  vertical-align: middle;
+                }
+                .tdb_module_loop_2 .td-read-more {
+                  margin: 20px 0 0;
+                }
+                .tdb_loop_2 .td-spot-id-loop .tdc-placeholder-title:before {
+                    content: 'Posts Loop Ad' !important;
+                }
+                
+                .tdb_loop_2.tdc-no-posts .td_block_inner {
+                    margin-left: 0 !important;
+                    margin-right: 0 !important;
+                }
+                
+                .tdb_loop_2.tdc-no-posts .td_block_inner .no-results h2 {
+                    font-size: 13px;
+                    font-weight: normal;
+                    text-align: left;
+                    padding: 20px;
+                    border: 1px solid rgba(190, 190, 190, 0.35);
+                    color: rgba(125, 125, 125, 0.8);
+                }
+				
 				/* @modules_on_row */
 				.$unique_block_class .td_module_wrap {
 					width: @modules_on_row;
-					float: left;
 				}
-				/* @clearfix_desktop */
-				.$unique_block_class .td_module_wrap:nth-child(@clearfix_desktop) {
-					clear: both;
-				}
-				/* @clearfix */
-				.$unique_block_class .td_module_wrap {
-					clear: none !important;
-				}
-				.$unique_block_class .td_module_wrap:nth-child(@clearfix) {
-					clear: both !important;
-				}
-				/* @padding_desktop */
-				.$unique_block_class .td_module_wrap:nth-last-child(@padding_desktop) {
-					margin-bottom: 0;
-					padding-bottom: 0;
-				}
-				.$unique_block_class .td_module_wrap:nth-last-child(@padding_desktop) .td-module-container:before {
-					display: none;
+				/* @ad_loop_width */
+				.$unique_block_class .tdb_module_rec {
+					width: @ad_loop_width;
 				}
 				/* @padding */
-				.$unique_block_class .td_module_wrap {
-					padding-bottom: @all_modules_space !important;
-					margin-bottom: @all_modules_space !important;
-				}
-				.$unique_block_class .td_module_wrap:nth-last-child(@padding) {
-					margin-bottom: 0 !important;
-					padding-bottom: 0 !important;
-				}
-				.$unique_block_class .td_module_wrap .td-module-container:before {
-					display: block !important;
-				}
 				.$unique_block_class .td_module_wrap:nth-last-child(@padding) .td-module-container:before {
-					display: none !important;
+					display: none;
 				}
 				/* @modules_gap */
 				.$unique_block_class .td_module_wrap {
@@ -560,9 +754,8 @@ class tdb_loop_2 extends td_block {
 					padding: @m_padding;
 				}
 				/* @all_modules_space */
-				.$unique_block_class .td_module_wrap {
-					padding-bottom: @all_modules_space;
-					margin-bottom: @all_modules_space;
+				.$unique_block_class .tdb-block-inner {
+					row-gap: calc(@all_modules_space * 2);
 				}
 				.$unique_block_class .td-module-container:before {
 					bottom: -@all_modules_space;
@@ -632,6 +825,18 @@ class tdb_loop_2 extends td_block {
 					height: @video_icon;
 					font-size: @video_icon;
 				}
+				/* @show_vid_t */
+				.$unique_block_class .td-post-vid-time {
+					display: @show_vid_t;
+				}
+				/* @vid_t_margin */
+				.$unique_block_class .td-post-vid-time {
+					margin: @vid_t_margin;
+				}
+				/* @vid_t_padding */
+				.$unique_block_class .td-post-vid-time {
+					padding: @vid_t_padding;
+				}
 				
 				
 				/* @meta_horiz_align_center */
@@ -642,12 +847,12 @@ class tdb_loop_2 extends td_block {
 					margin-left: auto;
                     margin-right: auto;
 				}
-				.$unique_block_class .td-category-pos-image .td-post-category {
+				.$unique_block_class .td-category-pos-image .td-post-category:not(.td-post-extra-category) {
 					left: 50%;
 					transform: translateX(-50%);
 					-webkit-transform: translateX(-50%);
 				}
-				.$unique_block_class.td-h-effect-up-shadow .td_module_wrap:hover .td-category-pos-image .td-post-category {
+				.$unique_block_class.td-h-effect-up-shadow .td_module_wrap:hover .td-category-pos-image .td-post-category:not(.td-post-extra-category) {
 				    transform: translate(-50%, -2px);
 					-webkit-transform: translate(-50%, -2px);
 				}
@@ -683,6 +888,14 @@ class tdb_loop_2 extends td_block {
 				/* @meta_info_border_color */
 				.$unique_block_class .td-module-meta-info {
 					border-color: @meta_info_border_color;
+				}
+				/* @meta_info_border_radius */
+				.$unique_block_class .td-module-meta-info-top {
+					border-radius: @meta_info_border_radius;
+				}
+				/* @meta_info_border_radius2 */
+				.$unique_block_class .td-module-meta-info-bottom {
+					border-radius: @meta_info_border_radius2;
 				}
 				
 				/* @art_title */
@@ -726,7 +939,7 @@ class tdb_loop_2 extends td_block {
 				}
 				
 				/* @show_cat */
-				.$unique_block_class .td-post-category {
+				.$unique_block_class .td-post-category:not(.td-post-extra-category) {
 					display: @show_cat;
 				}
 				/* @modules_category_margin */
@@ -751,6 +964,10 @@ class tdb_loop_2 extends td_block {
 				/* @hide_author_date */
 				.$unique_block_class .td-author-date {
 					display: none;
+				}
+				/* @show_author_date */
+				.$unique_block_class .td-author-date {
+					display: inline;
 				}
 				
 				/* @show_author */
@@ -780,11 +997,22 @@ class tdb_loop_2 extends td_block {
 				.$unique_block_class .entry-review-stars {
 					display: @show_review;
 				}
+				/* @review_space */
+				.$unique_block_class .entry-review-stars {
+					margin: @review_space;
+				}
 				/* @review_size */
 				.$unique_block_class .td-icon-star,
                 .$unique_block_class .td-icon-star-empty,
                 .$unique_block_class .td-icon-star-half {
 					font-size: @review_size;
+				}
+				/* @review_distance */
+				.$unique_block_class .entry-review-stars i {
+					margin-right: @review_distance;
+				}
+				.$unique_block_class .entry-review-stars i:last-child {
+				    margin-right: 0;
 				}
 				/* @show_com */
 				.$unique_block_class .td-module-comments {
@@ -862,6 +1090,10 @@ class tdb_loop_2 extends td_block {
 				.$unique_block_class .td-load-more-wrap a i,
 				.$unique_block_class .page-nav a i {
 					font-size: @pag_icons_size;
+				}
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap .td-next-prev-icon-svg svg {
+				    width: @pag_icons_size;
+				    height: calc( @pag_icons_size + 1px );
 				}
 				
            
@@ -1003,6 +1235,12 @@ class tdb_loop_2 extends td_block {
 				.$unique_block_class .td-load-more-wrap a {
 					color: @pag_text;
 				}
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap .td-next-prev-icon-svg svg,
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap .td-next-prev-icon-svg svg *,
+				.$unique_block_class .page-nav .page-nav-icon-svg svg ,
+				.$unique_block_class .page-nav .page-nav-icon-svg svg * {
+				    fill: @pag_text;
+				}
 				/* @pag_bg */
 				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a,
 				.$unique_block_class .page-nav a,
@@ -1033,6 +1271,12 @@ class tdb_loop_2 extends td_block {
 				.$unique_block_class .td-load-more-wrap a:hover {
 					color: @pag_h_text;
 				}
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a:hover .td-next-prev-icon-svg svg,
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a:hover .td-next-prev-icon-svg svg *,
+				.$unique_block_class .page-nav a:hover .page-nav-icon-svg svg ,
+				.$unique_block_class .page-nav a:hover .page-nav-icon-svg svg * {
+				    fill: @pag_h_text;
+				}
 				/* @pag_h_bg */
 				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a:hover,
 				.$unique_block_class .page-nav a:hover,
@@ -1046,10 +1290,95 @@ class tdb_loop_2 extends td_block {
 					border-color: @pag_h_border;
 				}
 				
+				/* @video_rec_color */
+				#td-video-modal.$unique_block_modal_class .td-vm-rec-title {
+				    color: @video_rec_color;
+				}
+				/* @video_title_color */
+				#td-video-modal.$unique_block_modal_class .td-vm-title a {
+				    color: @video_title_color;
+				}
+				/* @video_title_color_h */
+				#td-video-modal.$unique_block_modal_class .td-vm-title a:hover {
+				    color: @video_title_color_h;
+				}
+				/* @video_bg */
+				#td-video-modal.$unique_block_modal_class .td-vm-content-wrap {
+				    background-color: @video_bg;
+				}
+				/* @video_overlay */
+				#td-video-modal.$unique_block_modal_class .td-vm-overlay {
+				    background-color: @video_overlay;
+				}
+				
+				/* @vid_t_color */
+				.$unique_block_class .td-post-vid-time {
+					color: @vid_t_color;
+				}
+				/* @vid_t_bg_color */
+				.$unique_block_class .td-post-vid-time {
+					background-color: @vid_t_bg_color;
+				}
+				
+				/* @ad_loop_color */
+				.$unique_block_class .td-adspot-title {
+					color: @ad_loop_color;
+				}
+				
 				/* @shadow_m */
 				.$unique_block_class .td-module-meta-info {
 				    box-shadow: @shadow_m;
 				}
+                
+                
+                /* @excl_show */
+                .$unique_block_class .td-module-exclusive .td-module-title a:before {
+                    display: @excl_show;
+                }
+                /* @excl_txt */
+                .$unique_block_class .td-module-exclusive .td-module-title a:before {
+                    content: '@excl_txt';
+                }
+                /* @excl_margin */
+                .$unique_block_class .td-module-exclusive .td-module-title a:before {
+                    margin: @excl_margin;
+                }
+                /* @excl_padd */
+                .$unique_block_class .td-module-exclusive .td-module-title a:before {
+                    padding: @excl_padd;
+                }
+                /* @all_excl_border */
+                .$unique_block_class .td-module-exclusive .td-module-title a:before {
+                    border: @all_excl_border @all_excl_border_style @all_excl_border_color;
+                }
+                /* @excl_radius */
+                .$unique_block_class .td-module-exclusive .td-module-title a:before {
+                    border-radius: @excl_radius;
+                }
+                /* @excl_color */
+                .$unique_block_class .td-module-exclusive .td-module-title a:before {
+                    color: @excl_color;
+                }
+                /* @excl_color_h */
+                .$unique_block_class .td-module-exclusive:hover .td-module-title a:before {
+                    color: @excl_color_h;
+                }
+                /* @excl_bg */
+                .$unique_block_class .td-module-exclusive .td-module-title a:before {
+                    background-color: @excl_bg;
+                }
+                /* @excl_bg_h */
+                .$unique_block_class .td-module-exclusive:hover .td-module-title a:before {
+                    background-color: @excl_bg_h;
+                }
+                /* @excl_border_color_h */
+                .$unique_block_class .td-module-exclusive:hover .td-module-title a:before {
+                    border-color: @excl_border_color_h;
+                }
+                /* @f_excl */
+                .$unique_block_class .td-module-exclusive .td-module-title a:before {
+                    @f_excl
+                }
 				
 
 				/* @f_header */
@@ -1057,11 +1386,12 @@ class tdb_loop_2 extends td_block {
 				.$unique_block_class .td-block-title span {
 					@f_header
 				}
-				/* @f_ajax */
-				.$unique_block_class .td-subcat-list a,
-				.$unique_block_class .td-subcat-dropdown span,
-				.$unique_block_class .td-subcat-dropdown a {
-					@f_ajax
+				/* @f_pag */
+				.$unique_block_class.td_with_ajax_pagination .td-next-prev-wrap a i,
+				.$unique_block_class .page-nav a,
+				.$unique_block_class .page-nav span,
+				.$unique_block_class .td-load-more-wrap a {
+					@f_pag
 				}
 				/* @f_title */
 				.$unique_block_class .entry-title {
@@ -1073,7 +1403,8 @@ class tdb_loop_2 extends td_block {
 				}
 				/* @f_meta */
 				.$unique_block_class .td-editor-date,
-				.$unique_block_class .td-editor-date .td-post-author-name,
+				.$unique_block_class .td-editor-date .td-post-author-name a,
+				.$unique_block_class .td-editor-date .entry-date,
 				.$unique_block_class .td-module-comments a {
 					@f_meta
 				}
@@ -1088,6 +1419,19 @@ class tdb_loop_2 extends td_block {
 				/* @f_more */
 				.$unique_block_class .td-load-more-wrap a {
 					@f_more
+				}
+				/* @f_vid_title */
+				#td-video-modal.$unique_block_modal_class .td-vm-title {
+					@f_vid_title
+				}
+				/* @f_vid_time */
+				.$unique_block_class .td-post-vid-time {
+					@f_vid_time
+				}
+				
+				/* @f_ad */
+				.$unique_block_class .td-adspot-title {
+					@f_ad
 				}
 				
 				/* @mix_type */
@@ -1174,19 +1518,14 @@ class tdb_loop_2 extends td_block {
 
         switch( tdb_state_template::get_template_type() ) {
 
-            case 'single':
+	        case 'cpt':
+	        case '404':
+	        case 'attachment':
+	        case 'single':
                 $loop_data = array();
                 break;
 
-            case '404':
-                $loop_data = array();
-                break;
-
-            case 'attachment':
-                $loop_data = array();
-                break;
-
-            case 'category':
+	        case 'category':
                 $loop_data = $tdb_state_category->loop->__invoke( $atts );
                 $atts['category_id'] = $loop_data['category_id'];
 
@@ -1216,6 +1555,15 @@ class tdb_loop_2 extends td_block {
 
                 break;
 
+            case 'cpt_tax':
+                if ( is_tax() ) {
+                    $tdb_state_category->set_tax();
+                }
+                $loop_data = $tdb_state_category->loop->__invoke( $atts );
+                $atts['tag_slug'] = $loop_data['tag_slug'];
+
+                break;
+
             default:
                 $loop_data = $tdb_state_single_page->loop->__invoke( $atts );
         }
@@ -1223,18 +1571,50 @@ class tdb_loop_2 extends td_block {
 
         parent::render( $atts ); // sets the live atts, $this->atts, $this->block_uid, $this->td_query (it runs the query)
 
-        if( $this->get_att('block_template_id') != '' ) {
-            $global_block_template_id = $this->get_att('block_template_id');
-        } else {
-            $global_block_template_id = td_options::get( 'tds_global_block_template', 'td_block_template_1' );
-        }
-        $td_css_cls_block_title = 'td-block-title';
+	    $additional_classes_array = array();
 
-        if ( $global_block_template_id === 'td_block_template_1' ) {
-            $td_css_cls_block_title = 'block-title';
-        }
+	    // if no posts
+	    if ( empty( $loop_data['loop_posts'] ) ) {
 
-        $additional_classes_array = array();
+		    // on composer iframe && search templates
+		    if ( ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) && tdb_state_template::get_template_type() === 'search' ) {
+
+			    // in this case get the posts from block's td_query
+                if ( !empty( $this->td_query->posts ) ) {
+
+                    // run through td_query posts & set them as arrays
+                    foreach ( $this->td_query->posts as $post ) {
+	                    $loop_data['loop_posts'][$post->ID] = array(
+		                    'post_id' => $post->ID,
+		                    'post_type' => get_post_type( $post->ID ),
+		                    'has_post_thumbnail' => has_post_thumbnail( $post->ID ),
+		                    'post_thumbnail_id' => get_post_thumbnail_id( $post->ID ),
+		                    'post_link' => esc_url( get_permalink( $post->ID ) ),
+		                    'post_title' => get_the_title( $post->ID ),
+		                    'post_title_attribute' => esc_attr( strip_tags( get_the_title( $post->ID ) ) ),
+		                    'post_excerpt' => $post->post_excerpt,
+		                    'post_content' => $post->post_content,
+		                    'post_date_unix' =>  get_the_time( 'U', $post->ID ),
+		                    'post_date' => get_the_time( get_option( 'date_format' ), $post->ID ),
+		                    'post_modified' => get_the_modified_date(get_option( 'date_format' ), $post->ID),
+		                    'post_author_url' => get_author_posts_url( $post->post_author ),
+		                    'post_author_name' => get_the_author_meta( 'display_name', $post->post_author ),
+		                    'post_author_email' => get_the_author_meta( 'email', $post->post_author ),
+		                    'post_comments_no' => get_comments_number( $post->ID ),
+		                    'post_comments_link' => get_comments_link( $post->ID ),
+		                    'post_theme_settings' => td_util::get_post_meta_array( $post->ID, 'td_post_theme_settings' ),
+	                    );
+                      }
+
+                }
+
+                //echo '<pre style="white-space: pre-wrap">';
+                //print_r( $this->td_query );
+                //echo '</pre>';
+
+		    }
+
+        }
 
         // pagination
         $pagination = $this->get_att( 'ajax_pagination' );
@@ -1260,51 +1640,44 @@ class tdb_loop_2 extends td_block {
 
 
             $custom_title = $this->get_att( 'custom_title' );
-
             if( $custom_title != '' ) {
                 //get the filter for this block
                 $buffy .= '<div class="td-block-title-wrap">';
-                    $buffy .= '<h4 class="' . $td_css_cls_block_title . '">';
-                        $buffy .= '<span>' . $custom_title . '</span>';
-                    $buffy .= '</h4>';
+                    $buffy .= $this->get_block_title(); //get the block title
                 $buffy .= '</div>';
             }
 
-            $buffy .= '<div  id=' . $this->block_uid . ' class="td_block_inner tdb-block-inner td-fix-index">';
+            $buffy .= '<div id=' . $this->block_uid . ' class="td_block_inner tdb-block-inner td-fix-index">';
+                if ( !empty( $loop_data['loop_posts'] ) ) {
+                    $buffy .= $this->inner( $loop_data['loop_posts'] );  // inner content of the block
+                } else {
 
-            if ( empty( $loop_data['loop_posts'] ) ) {
+	                if ( !empty( tdb_state_template::get_template_type() ) && 'search' === tdb_state_template::get_template_type() ) {
+		                $buffy .= '<div class="no-results td-pb-padding-side">';
+		                $buffy .= '<h2>' . __td('No results', TD_THEME_NAME ) . '</h2>';
+		                $buffy .= '</div>';
+	                } else {
+		                /**
+		                 * no posts to display. This function generates the __td('No posts to display').
+		                 * the text can be overwritten by the template using the global @see td_global::$custom_no_posts_message
+		                 */
+		                $buffy .= td_page_generator::no_posts();
+	                }
 
-                /**
-                 * on composer iframe and on templates that do not have posts we show the no posts message
-                 *  @see td_page_generator::no_posts() - this function generates the __td('No posts to display').
-                 * the text can be overwritten by the template using the global @see td_global::$custom_no_posts_message
-                 */
-//                if ( tdc_state::is_live_editor_ajax() || tdc_state::is_live_editor_iframe() ) {
-//                    $buffy .= td_page_generator::no_posts();
-//                } else {
-//                    $offset = intval($this->get_att('offset'));
-//                    if ( $offset === 0 ) {
-//                        $buffy .= td_page_generator::no_posts();
-//                    }
-//                }
+                }
+	        $buffy .= '</div>';
 
-                $buffy .= '</div>';
+            if ( !empty( $loop_data['loop_posts'] ) && $pagination != '' ) {
+                if ( $pagination === 'numbered' ) {
+                    $buffy .= $this->get_numbered_pagination( $loop_data['loop_pagination'] );
+                } else {
+                    $prev_icon = $this->get_icon_att('prev_tdicon');
+                    $prev_icon_class = $this->get_att('prev_tdicon');
+                    $next_icon = $this->get_icon_att('next_tdicon');
+                    $next_icon_class = $this->get_att('next_tdicon');
 
-            } else {
-                $buffy .= $this->inner( $loop_data['loop_posts'] );  //inner content of the block
-
-	            $buffy .= '</div>';
-
-	            if ( $pagination != '' ) {
-		            if ( $pagination === 'numbered' ) {
-			            $buffy .= $this->get_numbered_pagination( $loop_data['loop_pagination'] );
-		            } else {
-                        $prev_icon = $this->get_att('prev_tdicon');
-                        $next_icon = $this->get_att('next_tdicon');
-
-			            $buffy .= $this->get_block_pagination($prev_icon, $next_icon);
-		            }
-	            }
+                    $buffy .= $this->get_block_pagination($prev_icon, $next_icon, $prev_icon_class, $next_icon_class);
+                }
             }
 
         $buffy .= '</div>';
@@ -1314,19 +1687,82 @@ class tdb_loop_2 extends td_block {
 
     function inner( $posts ) {
 
+        /*
+         * loop ad
+         */
+        // ad code
+        $loop_ad = $this->get_att('ad_loop');
+        if ( $loop_ad != '' ) {
+            $loop_ad = rawurldecode( base64_decode( strip_tags( $loop_ad ) ) );
+        }
+
+        // ad title
+        $loop_ad_title = $this->get_att('ad_loop_title');
+
+        // ad repeat
+        $loop_ad_repeat = $this->get_att('ad_loop_repeat');
+        if ( $loop_ad_repeat == '' ) {
+            $loop_ad_repeat = 2;
+        }
+
+        // ad disable
+        $loop_ad_disable = false;
+        if ( $this->get_att('ad_loop_disable')  !='' && ( current_user_can('administrator') || current_user_can('editor') ) ) {
+            $loop_ad_disable = true;
+        }
+
+
         $buffy = '';
         $td_block_layout = new td_block_layout();
+        $index = 0;
 
         if ( !empty( $posts ) ) {
             foreach ( $posts as $post ) {
                 $tdb_module_loop_2 = new tdb_module_loop_2( $post, $this->get_all_atts() );
-                $buffy .= $tdb_module_loop_2->render( $post );
+                $buffy .= $tdb_module_loop_2->render( __CLASS__ );
+
+                if( $loop_ad != '' ) {
+                    if( !empty( $loop_ad_repeat ) && ( ( $index + 1 ) % $loop_ad_repeat ) == 0 ) {
+                        $buffy .= '<div class="tdb_module_loop td_module_wrap tdb_module_rec">';
+                            $buffy .= $this->build_ad_spot($loop_ad, $loop_ad_title, $loop_ad_disable);
+                        $buffy .= '</div>';
+                    }
+                }
+
+                $index++;
             }
         }
+
         $buffy .= $td_block_layout->close_all_tags();
 
         return $buffy;
 
+    }
+
+    function build_ad_spot( $ad_spot_ad_code, $ad_spot_title, $ad_disable = false ) {
+
+        if ( empty( $ad_spot_ad_code ) ) {
+            return '';
+        }
+
+        //ad spot title
+        $spot_title = '';
+        if( !empty( $ad_spot_title ) ) {
+            $spot_title = $ad_spot_title;
+        }
+
+        $buffy = '';
+
+        if ( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() || $ad_disable ) {
+            $buffy .= '<div class="td-a-ad tdc-a-ad td-spot-id-loop"><span class="td-adspot-title">' . $spot_title . '</span><div class="tdc-placeholder-title"></div></div>';
+        } else {
+            $buffy .= '<div class="td-a-ad id_ad_loop">';
+            $buffy .= '<span class="td-adspot-title">' . $spot_title . '</span>';
+            $buffy .= do_shortcode( stripslashes( $ad_spot_ad_code ) );
+            $buffy .= '</div>';
+        }
+
+        return $buffy;
     }
 
     function get_numbered_pagination( $loop_pagination_data ) {

@@ -54,8 +54,8 @@ class tdb_menu {
             }
         }
 
-        if ( $td_has_subMenu === false ) {
-            $items[1]->classes[] = 'tdb-cur-menu-item';
+        if ( $td_has_subMenu === false && !empty($items[1])) {
+        	$items[1]->classes[] = 'tdb-cur-menu-item';
         }
 
         foreach ( $items as &$item ) {
@@ -115,6 +115,14 @@ class tdb_menu {
                 if ( null !== $content_post ) {
 
                 	$content = $content_post->post_content;
+
+                	$has_content_filter = false;
+
+                	if ( is_plugin_active('td-subscription/td-subscription.php' ) && has_filter('the_content', array( tds_email_locker::instance(), 'lock_content' ) ) ) {
+                		$has_content_filter = true;
+                	    remove_filter( 'the_content', array( tds_email_locker::instance(), 'lock_content' ) );
+	                }
+
 		            $content = apply_filters('the_content', $content);
 		            $content = str_replace(']]>', ']]&gt;', $content);
 
@@ -125,6 +133,10 @@ class tdb_menu {
 //		                $content = apply_filters( 'the_content', $content );
 //		                $content = str_replace( ']]>', ']]&gt;', $content );
 //	                }
+
+	                if ( !empty( $has_content_filter ) ) {
+	                	add_filter('the_content', array(tds_email_locker::instance(), 'lock_content'));
+	                }
 
 	                // the has_filter check is made for plugins, like bbpress, who think it's okay to remove all filters on 'the_content'
 	                if ( ! has_filter( 'the_content', 'do_shortcode' ) ) {
@@ -248,8 +260,11 @@ class tdb_tagdiv_walker_nav_menu extends Walker_Nav_Menu {
         self::$td_firstSubmenuParentID = null;
     }
 
-    function display_element( $element, &$children_elements, $max_depth, $depth = 0, $args, &$output )
+    function display_element( $element, &$children_elements, $max_depth, $depth, $args, &$output )
     {
+    	if (!isset($depth)) {
+    		$depth = 0;
+	    }
         $id_field = $this->db_fields['id'];
         if ( is_object( $args[0] ) ) {
             $args[0]->has_children = ! empty( $children_elements[$element->$id_field] );
@@ -373,25 +388,48 @@ class tdb_tagdiv_walker_nav_menu extends Walker_Nav_Menu {
         $item_output .= $args->link_before . '<div class="tdb-menu-item-text">' . ( $item->is_mega_menu ? $item->title : apply_filters( 'the_title', $item->title, $item->ID ) ) . '</div>' . $args->link_after;
 
         //tagdiv - megamenu disable link from includes/wp_booster/td_menu.php   hook_wp_nav_menu_objects
+        $svg_list = td_global::$svg_theme_font_list;
         $main_sub_menu_icon = isset(self::$atts['main_sub_tdicon']) ? self::$atts['main_sub_tdicon'] : '';
+        $main_sub_menu_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $main_sub_menu_icon_data = 'data-td-svg-icon="' . $main_sub_menu_icon . '"';
+        }
         $sub_menu_icon = isset(self::$atts['sub_tdicon']) ? self::$atts['sub_tdicon'] : '';
+        $sub_menu_icon_data = '';
+        if( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() ) {
+            $sub_menu_icon_data = 'data-td-svg-icon="' . $sub_menu_icon_data . '"';
+        }
         if ($item->is_mega_menu == false) {
             if( $args->has_children ) {
                 if( $item->menu_item_parent == 0 ) {
                     if( $main_sub_menu_icon != '' ) {
-                        $item_output .= '<i class="tdb-sub-menu-icon ' . $main_sub_menu_icon . '"></i>';
+                        if( array_key_exists( $main_sub_menu_icon, $svg_list ) ) {
+                            $item_output .= '<span class="tdb-sub-menu-icon tdb-sub-menu-icon-svg tdb-main-sub-menu-icon" ' . $main_sub_menu_icon_data . '>' . base64_decode($svg_list[$main_sub_menu_icon]) . '</span>';
+                        } else {
+                            $item_output .= '<i class="tdb-sub-menu-icon ' . $main_sub_menu_icon . ' tdb-main-sub-menu-icon"></i>';
+                        }
                     }
                 } else {
-                    if( isset($sub_menu_icon) && $sub_menu_icon != '' )
-                    $item_output .= '<i class="tdb-sub-menu-icon ' . $sub_menu_icon . '"></i>';
+                    if( $sub_menu_icon != '' ) {
+                        if( array_key_exists( $sub_menu_icon, $svg_list ) ) {
+                            $item_output .= '<span class="tdb-sub-menu-icon tdb-sub-menu-icon-svg" ' . $sub_menu_icon_data . '>' . base64_decode($svg_list[$sub_menu_icon]) . '</span>';
+                        } else {
+                            $item_output .= '<i class="tdb-sub-menu-icon ' . $sub_menu_icon . '"></i>';
+                        }
+                    }
                 }
             }
             $item_output .= '</a>';
         }
 
         if( $item->menu_item_parent == 0 ) {
-            if( self::$atts['sep_tdicon'] != '' ) {
-                $item_output .= '<i class="tdb-menu-sep ' . self::$atts['sep_tdicon'] . '"></i>';
+            $sep_icon = isset(self::$atts['sep_tdicon']) ? self::$atts['sep_tdicon'] : '';
+            if( $sep_icon != '' ) {
+                if( array_key_exists( $sep_icon, $svg_list ) ) {
+                    $item_output .= '<span class="tdb-menu-sep tdb-menu-sep-svg">' . base64_decode($svg_list[$sep_icon]) . '</span>';
+                } else {
+                    $item_output .= '<i class="tdb-menu-sep ' . $sep_icon . '"></i>';
+                }
             }
         } else {
             $item_output .= '';
